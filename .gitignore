@@ -1,0 +1,13 @@
+# Folders
+.vs/
+**/Build/
+**/Intermediates/
+**/bin/
+**/obj/
+
+# Files
+*.sln
+*.csproj
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
