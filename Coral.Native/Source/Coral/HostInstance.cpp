@@ -9,6 +9,8 @@ namespace Coral {
 	hostfxr_get_runtime_delegate_fn GetRuntimeDelegate = nullptr;
 	hostfxr_close_fn CloseHostFXR = nullptr;
 
+	load_assembly_and_get_function_pointer_fn LoadAssembly = nullptr;
+
 	ErrorCallbackFn ErrorCallback = nullptr;
 
 	void DefaultErrorCallback(const CharType* InMessage)
@@ -28,7 +30,7 @@ namespace Coral {
 			return;
 		}
 
-		LoadFunctions();
+		LoadHostFXR();
 
 		// Setup settings
 		m_Settings = std::move(InSettings);
@@ -41,6 +43,8 @@ namespace Coral {
 		{
 			ErrorCallback(InMessage);
 		});
+
+		m_CoralManagedAssemblyPath = std::filesystem::path(m_Settings.CoralDirectory) / "Coral.Managed.dll";
 
 		InitializeCoralManaged();
 
@@ -74,7 +78,7 @@ namespace Coral {
 	}
 #endif
 
-	void HostInstance::LoadFunctions() const
+	void HostInstance::LoadHostFXR() const
 	{
 		// Retrieve the file path to the CoreCLR library
 		size_t pathBufferSize = 0;
@@ -107,27 +111,26 @@ namespace Coral {
 		CloseHostFXR = LoadFunctionPtr<hostfxr_close_fn>(libraryHandle, "hostfxr_close");
 	}
 
-	void HostInstance::InitializeCoralManaged() const
+	void DummyFunc()
 	{
-		load_assembly_and_get_function_pointer_fn loadCoralAssemblyFunc = nullptr;
+		std::cout << "Hellllooo" << std::endl;
+	}
 
+	void HostInstance::InitializeCoralManaged()
+	{
 		// Fetch load_assembly_and_get_function_pointer_fn from CoreCLR
 		{
-			hostfxr_handle context = nullptr;
 			auto runtimeConfigPath = std::filesystem::path(m_Settings.CoralDirectory) / "Coral.Managed.runtimeconfig.json";
-			int status = InitHostFXRForRuntimeConfig(runtimeConfigPath.c_str(), nullptr, &context);
-			CORAL_VERIFY(status == StatusCode::Success && context != nullptr);
+			int status = InitHostFXRForRuntimeConfig(runtimeConfigPath.c_str(), nullptr, &m_HostFXRContext);
+			CORAL_VERIFY(status == StatusCode::Success && m_HostFXRContext != nullptr);
 
-			status = GetRuntimeDelegate(context, hdt_load_assembly_and_get_function_pointer, (void**)&loadCoralAssemblyFunc);
-			CORAL_VERIFY(status == StatusCode::Success && loadCoralAssemblyFunc != nullptr);
-
-			CloseHostFXR(context);
+			status = GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**)&LoadAssembly);
+			CORAL_VERIFY(status == StatusCode::Success && LoadAssembly != nullptr);
 		}
 
-		auto coralAssemblyPath = std::filesystem::path(m_Settings.CoralDirectory) / "Coral.Managed.dll";
-		component_entry_point_fn coralManagedEntryPoint = nullptr;
-		int status = loadCoralAssemblyFunc(coralAssemblyPath.c_str(), CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("Initialize"), nullptr, nullptr, (void**)&coralManagedEntryPoint);
-		CORAL_VERIFY(status == StatusCode::Success && coralManagedEntryPoint != nullptr);
+		using InitializeFn = int(*)(void*);
+		InitializeFn coralManagedEntryPoint = nullptr;
+		coralManagedEntryPoint = LoadCoralManagedFunctionPtr<InitializeFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("Initialize"));
 
 		struct DummyData
 		{
@@ -135,7 +138,38 @@ namespace Coral {
 			const CharType* Str = CORAL_STR("Hello from native code!");
 		} dummyData;
 
-		coralManagedEntryPoint(&dummyData, sizeof(dummyData));
+		coralManagedEntryPoint(&dummyData);
+
+		struct InternalCall
+		{
+			const CharType* Name;
+			void* NativeFunctionPtr;
+		};
+
+		struct InternalCallsList
+		{
+			InternalCall** InternalCalls = nullptr;
+			int32_t NumInternalCalls = 0;
+		};
+
+		InternalCall* call = new InternalCall { CORAL_STR("Test"), &DummyFunc };
+		InternalCall* call2 = new InternalCall { CORAL_STR("Test2"), &DummyFunc };
+		InternalCallsList list;
+		list.InternalCalls = new InternalCall*[] { call, call2 };
+		list.NumInternalCalls = 2;
+
+		using SetInternalCallsFn = void(*)(InternalCallsList*);
+		SetInternalCallsFn setInternalCalls = nullptr;
+		setInternalCalls = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("SetInternalCalls"));
+		setInternalCalls(&list);
+	}
+
+	void* HostInstance::LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName) const
+	{
+		void* funcPtr = nullptr;
+		int status = LoadAssembly(InAssemblyPath.c_str(), InTypeName, InMethodName, UNMANAGEDCALLERSONLY_METHOD, nullptr, &funcPtr);
+		CORAL_VERIFY(status == StatusCode::Success && funcPtr != nullptr);
+		return funcPtr;
 	}
 
 }
