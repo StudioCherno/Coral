@@ -5,6 +5,11 @@
 
 #include <Coral/HostInstance.hpp>
 
+void Dummy()
+{
+	std::cout << "Dummy!" << std::endl;
+}
+
 int main()
 {
 #ifdef CORAL_TESTING_DEBUG
@@ -19,6 +24,10 @@ int main()
 	};
 	Coral::HostInstance hostInstance;
 	hostInstance.Initialize(settings);
+
+	hostInstance.AddInternalCall(CORAL_STR("Test1"), &Dummy);
+	hostInstance.AddInternalCall(CORAL_STR("Test2"), &Dummy);
+	hostInstance.UploadInternalCalls();
 
 	return 0;
 }

@@ -6,6 +6,9 @@ The goal of the API is to keep it as simple and flexible as possible, while rema
 Currently the API is basically non-existent, but as I keep developing it I'll update the list below.
 
 ## Features
+- [ ] Array Marshalling abstraction
+    - [ ] Create an `UnmanagedArray` type in C# that provides QOL features such as converting the array to a managed type
+    - [ ] Research how we pass C# arrays to C++ (and how we can work with it in C++)
 - [ ] Mono-like internal calls. Will either be implemented using [Marshal.GetDelegateForFunctionPointer](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal.getdelegateforfunctionpointer?view=net-7.0) or the [calli](https://learn.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.calli?view=net-7.0) instruction
 - [ ] Provide an easy to use system for unloading and reloading assemblies at runtime
 

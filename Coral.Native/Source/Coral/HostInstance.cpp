@@ -13,6 +13,15 @@ namespace Coral {
 
 	ErrorCallbackFn ErrorCallback = nullptr;
 
+	struct UnmanagedArray
+	{
+		void* Ptr;
+		int32_t Length;
+	};
+
+	using SetInternalCallsFn = void (*)(UnmanagedArray*);
+	SetInternalCallsFn SetInternalCalls = nullptr;
+
 	void DefaultErrorCallback(const CharType* InMessage)
 	{
 #if CORAL_WIDE_CHARS
@@ -55,9 +64,16 @@ namespace Coral {
 	{
 		CORAL_VERIFY(InFunctionPtr != nullptr);
 
-		auto& icallData = m_InternalCalls.emplace_back();
-		icallData.MethodName = InMethodName;
-		icallData.NativeFuncPtr = InFunctionPtr;
+		auto* internalCall = new InternalCall();
+		internalCall->Name = InMethodName;
+		internalCall->NativeFunctionPtr = InFunctionPtr;
+		m_InternalCalls.emplace_back(std::move(internalCall));
+	}
+
+	void HostInstance::UploadInternalCalls()
+	{
+		UnmanagedArray arr = { m_InternalCalls.data(), (int32_t)m_InternalCalls.size() };
+		SetInternalCalls(&arr);
 	}
 
 #ifdef _WIN32
@@ -140,34 +156,13 @@ namespace Coral {
 
 		coralManagedEntryPoint(&dummyData);
 
-		struct InternalCall
-		{
-			const CharType* Name;
-			void* NativeFunctionPtr;
-		};
-
-		struct InternalCallsList
-		{
-			InternalCall** InternalCalls = nullptr;
-			int32_t NumInternalCalls = 0;
-		};
-
-		InternalCall* call = new InternalCall { CORAL_STR("Test"), &DummyFunc };
-		InternalCall* call2 = new InternalCall { CORAL_STR("Test2"), &DummyFunc };
-		InternalCallsList list;
-		list.InternalCalls = new InternalCall*[] { call, call2 };
-		list.NumInternalCalls = 2;
-
-		using SetInternalCallsFn = void(*)(InternalCallsList*);
-		SetInternalCallsFn setInternalCalls = nullptr;
-		setInternalCalls = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("SetInternalCalls"));
-		setInternalCalls(&list);
+		SetInternalCalls = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("SetInternalCalls"));
 	}
 
-	void* HostInstance::LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName) const
+	void* HostInstance::LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName, const CharType* InDelegateType) const
 	{
 		void* funcPtr = nullptr;
-		int status = LoadAssembly(InAssemblyPath.c_str(), InTypeName, InMethodName, UNMANAGEDCALLERSONLY_METHOD, nullptr, &funcPtr);
+		int status = LoadAssembly(InAssemblyPath.c_str(), InTypeName, InMethodName, InDelegateType, nullptr, &funcPtr);
 		CORAL_VERIFY(status == StatusCode::Success && funcPtr != nullptr);
 		return funcPtr;
 	}

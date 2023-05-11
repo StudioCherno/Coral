@@ -16,41 +16,40 @@ namespace Coral {
 		ErrorCallbackFn ErrorCallback = nullptr;
 	};
 
-	struct InternalCallInfo
-	{
-		const CharType* MethodName;
-		void* NativeFuncPtr;
-	};
-
 	class HostInstance
 	{
 	public:
 		void Initialize(HostSettings InSettings);
-
 		void AddInternalCall(const CharType* InMethodName, void* InFunctionPtr);
+
+		void UploadInternalCalls();
 
 	private:
 		void LoadHostFXR() const;
 		void InitializeCoralManaged();
 
-		void* LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName) const;
+		void* LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName, const CharType* InDelegateType = CORAL_UNMANAGED_CALLERS_ONLY) const;
 
 		template<typename TFunc>
-		TFunc LoadCoralManagedFunctionPtr(const CharType* InTypeName, const CharType* InMethodName) const
+		TFunc LoadCoralManagedFunctionPtr(const CharType* InTypeName, const CharType* InMethodName, const CharType* InDelegateType = CORAL_UNMANAGED_CALLERS_ONLY) const
 		{
-			return (TFunc)LoadCoralManagedFunctionPtr(m_CoralManagedAssemblyPath, InTypeName, InMethodName);
+			return (TFunc)LoadCoralManagedFunctionPtr(m_CoralManagedAssemblyPath, InTypeName, InMethodName, InDelegateType);
 		}
+
+	public:
+		struct InternalCall
+		{
+			const CharType* Name;
+			void* NativeFunctionPtr;
+		};
 
 	private:
 		HostSettings m_Settings;
-
 		std::filesystem::path m_CoralManagedAssemblyPath;
-
 		void* m_HostFXRContext = nullptr;
-
 		bool m_Initialized = false;
 
-		std::vector<InternalCallInfo> m_InternalCalls;
+		std::vector<InternalCall*> m_InternalCalls;
 	};
 
 }

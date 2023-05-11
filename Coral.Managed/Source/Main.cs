@@ -50,33 +50,39 @@ namespace Coral {
 			public string Name => Marshal.PtrToStringAuto(NamePtr);
 		}
 
-		[StructLayout(LayoutKind.Sequential)]
-		public unsafe struct InternalCallsList
-		{
-			public InternalCall** InternalCalls;
-			public int NumInternalCalls;
+		public delegate void Dummy();
 
-			public List<InternalCall> GetInternalCalls()
+		[StructLayout(LayoutKind.Sequential)]
+		public struct UnmanagedArray
+		{
+			public IntPtr Ptr;
+			public int Length;
+
+			public T[] As<T>() where T : struct
 			{
-				var result = new List<InternalCall>();
-				for (int i = 0; i < NumInternalCalls; i++)
-					result.Add(*InternalCalls[i]);
+				T[] result = new T[Length];
+
+				for (int i = 0; i < Length; i++)
+				{
+					IntPtr elementPtr = Marshal.ReadIntPtr(Ptr, i * Marshal.SizeOf<nint>());
+					result[i] = Marshal.PtrToStructure<T>(elementPtr);
+				}
+
 				return result;
 			}
 		}
 
-		public delegate void Dummy();
-
 		[UnmanagedCallersOnly]
-		public static void SetInternalCalls(InternalCallsList InList)
+		public static void SetInternalCalls(UnmanagedArray InArr)
 		{
-			var internalCalls = InList.GetInternalCalls();
-			Console.WriteLine(internalCalls.Count);
-			foreach (var internalCall in internalCalls)
+			var internalCalls = InArr.As<InternalCall>();
+
+			Console.WriteLine(internalCalls.Length);
+			for (int i = 0; i < internalCalls.Length; i++)
 			{
-				Console.WriteLine($"Name = {Marshal.PtrToStringAuto(internalCall.NamePtr)}");
+				Console.WriteLine($"Name = {Marshal.PtrToStringAuto(internalCalls[i].NamePtr)}");
 				
-				var del = Marshal.GetDelegateForFunctionPointer<Dummy>(internalCall.NativeFunctionPtr);
+				var del = Marshal.GetDelegateForFunctionPointer<Dummy>(internalCalls[i].NativeFunctionPtr);
 				del();
 			}
 		}
