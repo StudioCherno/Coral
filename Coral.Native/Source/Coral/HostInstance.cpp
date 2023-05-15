@@ -9,7 +9,7 @@ namespace Coral {
 	hostfxr_get_runtime_delegate_fn GetRuntimeDelegate = nullptr;
 	hostfxr_close_fn CloseHostFXR = nullptr;
 
-	load_assembly_and_get_function_pointer_fn LoadAssembly = nullptr;
+	load_assembly_and_get_function_pointer_fn LoadAssemblyFnptr = nullptr;
 
 	ErrorCallbackFn ErrorCallback = nullptr;
 
@@ -21,6 +21,19 @@ namespace Coral {
 
 	using SetInternalCallsFn = void (*)(UnmanagedArray*);
 	SetInternalCallsFn SetInternalCalls = nullptr;
+
+	enum class EAssemblyLoadStatus
+	{
+		Success,
+		FileNotFound,
+		FileLoadFailure,
+		InvalidFilePath,
+		InvalidAssembly,
+		UnknownError
+	};
+
+	using LoadManagedAssemblyFn = EAssemblyLoadStatus(*)(const CharType*);
+	LoadManagedAssemblyFn LoadManagedAssembly = nullptr;
 
 	void DefaultErrorCallback(const CharType* InMessage)
 	{
@@ -58,6 +71,12 @@ namespace Coral {
 		InitializeCoralManaged();
 
 		m_Initialized = true;
+	}
+
+	void HostInstance::LoadAssembly(const CharType* InFilePath)
+	{
+		auto status = LoadManagedAssembly(InFilePath);
+		CORAL_VERIFY(status == EAssemblyLoadStatus::Success);
 	}
 
 	void HostInstance::AddInternalCall(const CharType* InMethodName, void* InFunctionPtr)
@@ -140,13 +159,14 @@ namespace Coral {
 			int status = InitHostFXRForRuntimeConfig(runtimeConfigPath.c_str(), nullptr, &m_HostFXRContext);
 			CORAL_VERIFY(status == StatusCode::Success && m_HostFXRContext != nullptr);
 
-			status = GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**)&LoadAssembly);
-			CORAL_VERIFY(status == StatusCode::Success && LoadAssembly != nullptr);
+			status = GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**)&LoadAssemblyFnptr);
+			CORAL_VERIFY(status == StatusCode::Success && LoadAssemblyFnptr != nullptr);
 		}
 
 		using InitializeFn = int(*)(void*);
 		InitializeFn coralManagedEntryPoint = nullptr;
 		coralManagedEntryPoint = LoadCoralManagedFunctionPtr<InitializeFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("Initialize"));
+		LoadManagedAssembly = LoadCoralManagedFunctionPtr<LoadManagedAssemblyFn>(CORAL_STR("Coral.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssembly"));
 
 		struct DummyData
 		{
@@ -162,7 +182,7 @@ namespace Coral {
 	void* HostInstance::LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName, const CharType* InDelegateType) const
 	{
 		void* funcPtr = nullptr;
-		int status = LoadAssembly(InAssemblyPath.c_str(), InTypeName, InMethodName, InDelegateType, nullptr, &funcPtr);
+		int status = LoadAssemblyFnptr(InAssemblyPath.c_str(), InTypeName, InMethodName, InDelegateType, nullptr, &funcPtr);
 		CORAL_VERIFY(status == StatusCode::Success && funcPtr != nullptr);
 		return funcPtr;
 	}
