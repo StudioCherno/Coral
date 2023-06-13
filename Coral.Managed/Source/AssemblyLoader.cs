@@ -9,19 +9,19 @@ using System.Runtime.Loader;
 
 namespace Coral
 {
+
 	public enum AssemblyLoadStatus
 	{
 		Success, FileNotFound, FileLoadFailure, InvalidFilePath, InvalidAssembly, UnknownError
 	}
 
-	public class AssemblyLoader
+	public static class AssemblyLoader
 	{
-
-		internal static Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup;
+		private static Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup = new Dictionary<Type, AssemblyLoadStatus>();
+		private static Dictionary<ushort, Assembly> s_LoadedAssemblies = new Dictionary<ushort, Assembly>();
 
 		static AssemblyLoader()
 		{
-			s_AssemblyLoadErrorLookup = new Dictionary<Type, AssemblyLoadStatus>();
 			s_AssemblyLoadErrorLookup.Add(typeof(BadImageFormatException), AssemblyLoadStatus.InvalidAssembly);
 			s_AssemblyLoadErrorLookup.Add(typeof(FileNotFoundException), AssemblyLoadStatus.FileNotFound);
 			s_AssemblyLoadErrorLookup.Add(typeof(FileLoadException), AssemblyLoadStatus.FileLoadFailure);
@@ -30,7 +30,7 @@ namespace Coral
 		}
 
 		[UnmanagedCallersOnly]
-		public static AssemblyLoadStatus LoadAssembly(UnmanagedString InAssemblyFilePath)
+		public static AssemblyLoadStatus LoadAssembly(ushort InAssemblyID, UnmanagedString InAssemblyFilePath)
 		{
 			if (InAssemblyFilePath == null)
 				return AssemblyLoadStatus.InvalidFilePath;
@@ -46,6 +46,7 @@ namespace Coral
 			try
 			{
 				assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(InAssemblyFilePath);
+				s_LoadedAssemblies.Add(InAssemblyID, assembly);
 			}
 			catch (Exception ex)
 			{

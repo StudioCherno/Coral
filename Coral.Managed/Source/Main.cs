@@ -5,24 +5,14 @@ using System.Runtime.Loader;
 
 using Coral.Interop;
 
-namespace Coral {
+namespace Coral
+{
 
 	public class ManagedHost
 	{
-		[StructLayout(LayoutKind.Sequential)]
-		private struct DummyData
-		{
-			public float X;
-			public IntPtr Str;
-		}
-
 		[UnmanagedCallersOnly]
-		public static int Initialize(IntPtr InArguments)
+		public static void Initialize()
 		{
-			var dummyData = Marshal.PtrToStructure<DummyData>(InArguments);
-			Console.WriteLine($"X={dummyData.X}");
-			Console.WriteLine($"Str={Marshal.PtrToStringAuto(dummyData.Str)}");
-
 			var assemblyLoadContexts = AssemblyLoadContext.All;
 
 			Console.WriteLine($"There are {assemblyLoadContexts.Count()} assembly load contexts.");
@@ -36,8 +26,6 @@ namespace Coral {
 					Console.WriteLine($"\tName: {assembly.FullName}");
 				}
 			}
-
-			return 0;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -50,6 +38,12 @@ namespace Coral {
 		}
 
 		public delegate void Dummy();
+
+		[UnmanagedCallersOnly]
+		public static UnmanagedString GetString()
+		{
+			return UnmanagedString.FromString("Hello, World!");
+		}
 
 		[UnmanagedCallersOnly]
 		public static void SetInternalCalls(UnmanagedArray InArr)

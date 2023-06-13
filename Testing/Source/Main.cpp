@@ -25,7 +25,8 @@ int main()
 	Coral::HostInstance hostInstance;
 	hostInstance.Initialize(settings);
 
-	hostInstance.LoadAssembly(CORAL_STR("F:/Coral/Build/Debug/Testing.Managed.dll"));
+	Coral::AssemblyHandle testingHandle;
+	hostInstance.LoadAssembly(CORAL_STR("F:/Coral/Build/Debug/Testing.Managed.dll"), testingHandle);
 
 	hostInstance.AddInternalCall(CORAL_STR("Coral.ManagedHost+Dummy, Coral.Managed"), &Dummy);
 	hostInstance.AddInternalCall(CORAL_STR("Coral.ManagedHost+Dummy, Coral.Managed"), &Dummy);

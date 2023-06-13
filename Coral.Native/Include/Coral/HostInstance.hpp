@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Core.hpp"
+#include "Assembly.hpp"
+
+#include <unordered_map>
 
 namespace Coral {
 
@@ -20,7 +23,7 @@ namespace Coral {
 	{
 	public:
 		void Initialize(HostSettings InSettings);
-		void LoadAssembly(const CharType* InFilePath);
+		AssemblyLoadStatus LoadAssembly(const CharType* InFilePath, AssemblyHandle& OutHandle);
 
 		void AddInternalCall(const CharType* InMethodName, void* InFunctionPtr);
 
@@ -52,6 +55,8 @@ namespace Coral {
 		bool m_Initialized = false;
 
 		std::vector<InternalCall*> m_InternalCalls;
+
+		//std::unordered_map<uint16_t, AssemblyData> m_LoadedAssemblies;
 	};
 
 }

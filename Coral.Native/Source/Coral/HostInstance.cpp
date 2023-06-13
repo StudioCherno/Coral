@@ -1,39 +1,34 @@
 #include "HostInstance.hpp"
 #include "Verify.hpp"
 #include "HostFXRErrorCodes.hpp"
+#include "Interop.hpp"
 
 namespace Coral {
 
-	hostfxr_set_error_writer_fn SetHostFXRErrorWriter = nullptr;
-	hostfxr_initialize_for_runtime_config_fn InitHostFXRForRuntimeConfig = nullptr;
-	hostfxr_get_runtime_delegate_fn GetRuntimeDelegate = nullptr;
-	hostfxr_close_fn CloseHostFXR = nullptr;
-
-	load_assembly_and_get_function_pointer_fn LoadAssemblyFnptr = nullptr;
+	struct CoreCLRFunctions
+	{
+		hostfxr_set_error_writer_fn SetHostFXRErrorWriter = nullptr;
+		hostfxr_initialize_for_runtime_config_fn InitHostFXRForRuntimeConfig = nullptr;
+		hostfxr_get_runtime_delegate_fn GetRuntimeDelegate = nullptr;
+		hostfxr_close_fn CloseHostFXR = nullptr;
+		load_assembly_and_get_function_pointer_fn GetManagedFunctionPtr = nullptr;
+	};
+	static CoreCLRFunctions s_CoreCLRFunctions;
 
 	ErrorCallbackFn ErrorCallback = nullptr;
-
-	struct UnmanagedArray
-	{
-		void* Ptr;
-		int32_t Length;
-	};
 
 	using SetInternalCallsFn = void (*)(UnmanagedArray*);
 	SetInternalCallsFn SetInternalCalls = nullptr;
 
-	enum class EAssemblyLoadStatus
-	{
-		Success,
-		FileNotFound,
-		FileLoadFailure,
-		InvalidFilePath,
-		InvalidAssembly,
-		UnknownError
-	};
-
-	using LoadManagedAssemblyFn = EAssemblyLoadStatus(*)(const CharType*);
+	using LoadManagedAssemblyFn = AssemblyLoadStatus(*)(uint16_t, const CharType*);
 	LoadManagedAssemblyFn LoadManagedAssembly = nullptr;
+
+	using GetStringFn = const CharType*(*)();
+	GetStringFn GetString = nullptr;
+
+	using FreeManagedStringFn = void(*)(const CharType*);
+	FreeManagedStringFn FreeManagedString = nullptr;
+
 
 	void DefaultErrorCallback(const CharType* InMessage)
 	{
@@ -46,11 +41,7 @@ namespace Coral {
 
 	void HostInstance::Initialize(HostSettings InSettings)
 	{
-		if (m_Initialized)
-		{
-			// TODO: Error here
-			return;
-		}
+		CORAL_VERIFY(!m_Initialized);
 
 		LoadHostFXR();
 
@@ -61,7 +52,7 @@ namespace Coral {
 			m_Settings.ErrorCallback = DefaultErrorCallback;
 		ErrorCallback = m_Settings.ErrorCallback;
 
-		SetHostFXRErrorWriter([](const CharType* InMessage)
+		s_CoreCLRFunctions.SetHostFXRErrorWriter([](const CharType* InMessage)
 		{
 			ErrorCallback(InMessage);
 		});
@@ -73,10 +64,19 @@ namespace Coral {
 		m_Initialized = true;
 	}
 
-	void HostInstance::LoadAssembly(const CharType* InFilePath)
+	AssemblyLoadStatus HostInstance::LoadAssembly(const CharType* InFilePath, AssemblyHandle& OutHandle)
 	{
-		auto status = LoadManagedAssembly(InFilePath);
-		CORAL_VERIFY(status == EAssemblyLoadStatus::Success);
+		static uint16_t s_NextAssemblyID = 0;
+
+		OutHandle.m_AssemblyID = s_NextAssemblyID++;
+		AssemblyLoadStatus loadStatus = LoadManagedAssembly(OutHandle.m_AssemblyID, InFilePath);
+
+		/*if (loadStatus == AssemblyLoadStatus::Success)
+		{
+			auto& assemblyData = m_LoadedAssemblies[OutHandle.m_AssemblyID];
+		}*/
+
+		return loadStatus;
 	}
 
 	void HostInstance::AddInternalCall(const CharType* InMethodName, void* InFunctionPtr)
@@ -140,10 +140,10 @@ namespace Coral {
 		CORAL_VERIFY(libraryHandle != nullptr);
 
 		// Load CoreCLR functions
-		SetHostFXRErrorWriter = LoadFunctionPtr<hostfxr_set_error_writer_fn>(libraryHandle, "hostfxr_set_error_writer");
-		InitHostFXRForRuntimeConfig = LoadFunctionPtr<hostfxr_initialize_for_runtime_config_fn>(libraryHandle, "hostfxr_initialize_for_runtime_config");
-		GetRuntimeDelegate = LoadFunctionPtr<hostfxr_get_runtime_delegate_fn>(libraryHandle, "hostfxr_get_runtime_delegate");
-		CloseHostFXR = LoadFunctionPtr<hostfxr_close_fn>(libraryHandle, "hostfxr_close");
+		s_CoreCLRFunctions.SetHostFXRErrorWriter = LoadFunctionPtr<hostfxr_set_error_writer_fn>(libraryHandle, "hostfxr_set_error_writer");
+		s_CoreCLRFunctions.InitHostFXRForRuntimeConfig = LoadFunctionPtr<hostfxr_initialize_for_runtime_config_fn>(libraryHandle, "hostfxr_initialize_for_runtime_config");
+		s_CoreCLRFunctions.GetRuntimeDelegate = LoadFunctionPtr<hostfxr_get_runtime_delegate_fn>(libraryHandle, "hostfxr_get_runtime_delegate");
+		s_CoreCLRFunctions.CloseHostFXR = LoadFunctionPtr<hostfxr_close_fn>(libraryHandle, "hostfxr_close");
 	}
 
 	void DummyFunc()
@@ -156,33 +156,32 @@ namespace Coral {
 		// Fetch load_assembly_and_get_function_pointer_fn from CoreCLR
 		{
 			auto runtimeConfigPath = std::filesystem::path(m_Settings.CoralDirectory) / "Coral.Managed.runtimeconfig.json";
-			int status = InitHostFXRForRuntimeConfig(runtimeConfigPath.c_str(), nullptr, &m_HostFXRContext);
+			int status = s_CoreCLRFunctions.InitHostFXRForRuntimeConfig(runtimeConfigPath.c_str(), nullptr, &m_HostFXRContext);
 			CORAL_VERIFY(status == StatusCode::Success && m_HostFXRContext != nullptr);
 
-			status = GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**)&LoadAssemblyFnptr);
-			CORAL_VERIFY(status == StatusCode::Success && LoadAssemblyFnptr != nullptr);
+			status = s_CoreCLRFunctions.GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**)&s_CoreCLRFunctions.GetManagedFunctionPtr);
+			CORAL_VERIFY(status == StatusCode::Success);
 		}
 
-		using InitializeFn = int(*)(void*);
+		using InitializeFn = void(*)();
 		InitializeFn coralManagedEntryPoint = nullptr;
 		coralManagedEntryPoint = LoadCoralManagedFunctionPtr<InitializeFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("Initialize"));
 		LoadManagedAssembly = LoadCoralManagedFunctionPtr<LoadManagedAssemblyFn>(CORAL_STR("Coral.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssembly"));
-
-		struct DummyData
-		{
-			float x = 10.0f;
-			const CharType* Str = CORAL_STR("Hello from native code!");
-		} dummyData;
-
-		coralManagedEntryPoint(&dummyData);
-
 		SetInternalCalls = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("SetInternalCalls"));
+		GetString = LoadCoralManagedFunctionPtr<GetStringFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("GetString"));
+		FreeManagedString = LoadCoralManagedFunctionPtr<FreeManagedStringFn>(CORAL_STR("Coral.Interop.UnmanagedString, Coral.Managed"), CORAL_STR("Free"));
+
+		auto msg = GetString();
+		std::wcout << L"Message: " << msg << std::endl;
+		FreeManagedString(msg);
+
+		coralManagedEntryPoint();
 	}
 
 	void* HostInstance::LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName, const CharType* InDelegateType) const
 	{
 		void* funcPtr = nullptr;
-		int status = LoadAssemblyFnptr(InAssemblyPath.c_str(), InTypeName, InMethodName, InDelegateType, nullptr, &funcPtr);
+		int status = s_CoreCLRFunctions.GetManagedFunctionPtr(InAssemblyPath.c_str(), InTypeName, InMethodName, InDelegateType, nullptr, &funcPtr);
 		CORAL_VERIFY(status == StatusCode::Success && funcPtr != nullptr);
 		return funcPtr;
 	}
