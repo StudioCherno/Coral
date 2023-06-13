@@ -19,7 +19,8 @@ int main()
 #endif
 
 	auto coralDir = std::filesystem::current_path().parent_path() / "Build" / ConfigName;
-	Coral::HostSettings settings = {
+	Coral::HostSettings settings =
+	{
 		.CoralDirectory = coralDir.c_str()
 	};
 	Coral::HostInstance hostInstance;
@@ -31,6 +32,10 @@ int main()
 	hostInstance.AddInternalCall(CORAL_STR("Coral.ManagedHost+Dummy, Coral.Managed"), &Dummy);
 	hostInstance.AddInternalCall(CORAL_STR("Coral.ManagedHost+Dummy, Coral.Managed"), &Dummy);
 	hostInstance.UploadInternalCalls();
+
+	Coral::ObjectHandle objectHandle = hostInstance.CreateInstance(CORAL_STR("Testing.MyTestObject, Testing.Managed"));
+	//hostInstance.CallMethod(objectHandle, "MyInstanceMethod", 5.0f, 10.0f, myOtherObjectHandle);
+	hostInstance.DestroyInstance(objectHandle);
 
 	return 0;
 }

@@ -28,6 +28,46 @@ namespace Coral
 			}
 		}
 
+		public class Test
+		{
+			public readonly int X;
+
+			public Test(int x)
+			{
+				X = x;
+			}
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct ObjectCreateInfo
+		{
+			public UnmanagedString TypeName;
+			public bool IsWeakRef;
+		}
+
+		[UnmanagedCallersOnly]
+		public static IntPtr CreateObject(IntPtr InCreateInfo)
+		{
+			var createInfo = Marshal.PtrToStructure<ObjectCreateInfo>(InCreateInfo);
+			var type = Type.GetType(createInfo.TypeName);
+
+			if (type == null)
+			{
+				Console.WriteLine($"[Coral.Managed]: Unknown type name '{createInfo.TypeName}'");
+				return IntPtr.Zero;
+			}
+
+			object result = Activator.CreateInstance(type);
+			var handle = GCHandle.Alloc(result, !createInfo.IsWeakRef ? GCHandleType.Pinned : GCHandleType.Weak);
+			return GCHandle.ToIntPtr(handle);
+		}
+
+		[UnmanagedCallersOnly]
+		public static void DestroyObject(IntPtr InObjectHandle)
+		{
+			GCHandle.FromIntPtr(InObjectHandle).Free();
+		}
+
 		[StructLayout(LayoutKind.Sequential)]
 		public struct InternalCall
 		{

@@ -29,6 +29,16 @@ namespace Coral {
 	using FreeManagedStringFn = void(*)(const CharType*);
 	FreeManagedStringFn FreeManagedString = nullptr;
 
+	struct ObjectCreateInfo
+	{
+		const CharType* TypeName;
+		bool IsWeakRef;
+	};
+	using CreateObjectFn = void*(*)(const ObjectCreateInfo*);
+	CreateObjectFn CreateObject = nullptr;
+
+	using DestroyObjectFn = void(*)(void*);
+	DestroyObjectFn DestroyObject = nullptr;
 
 	void DefaultErrorCallback(const CharType* InMessage)
 	{
@@ -93,6 +103,25 @@ namespace Coral {
 	{
 		UnmanagedArray arr = { m_InternalCalls.data(), (int32_t)m_InternalCalls.size() };
 		SetInternalCalls(&arr);
+	}
+
+	ObjectHandle HostInstance::CreateInstance(const CharType* InTypeName)
+	{
+		ObjectCreateInfo createInfo =
+		{
+			.TypeName = InTypeName,
+			.IsWeakRef = false
+		};
+
+		ObjectHandle handle;
+		handle.m_Handle = CreateObject(&createInfo);
+		return handle;
+	}
+
+	void HostInstance::DestroyInstance(ObjectHandle& InObjectHandle)
+	{
+		DestroyObject(InObjectHandle.m_Handle);
+		InObjectHandle.m_Handle = nullptr;
 	}
 
 #ifdef _WIN32
@@ -170,6 +199,8 @@ namespace Coral {
 		SetInternalCalls = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("SetInternalCalls"));
 		GetString = LoadCoralManagedFunctionPtr<GetStringFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("GetString"));
 		FreeManagedString = LoadCoralManagedFunctionPtr<FreeManagedStringFn>(CORAL_STR("Coral.Interop.UnmanagedString, Coral.Managed"), CORAL_STR("Free"));
+		CreateObject = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("CreateObject"));
+		DestroyObject = LoadCoralManagedFunctionPtr<DestroyObjectFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("DestroyObject"));
 
 		auto msg = GetString();
 		std::wcout << L"Message: " << msg << std::endl;

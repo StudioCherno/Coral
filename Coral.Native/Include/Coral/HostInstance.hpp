@@ -19,6 +19,17 @@ namespace Coral {
 		ErrorCallbackFn ErrorCallback = nullptr;
 	};
 
+	class ObjectHandle
+	{
+	public:
+		bool IsValid() const { return m_Handle != nullptr; }
+
+	private:
+		void* m_Handle;
+
+		friend class HostInstance;
+	};
+
 	class HostInstance
 	{
 	public:
@@ -28,6 +39,9 @@ namespace Coral {
 		void AddInternalCall(const CharType* InMethodName, void* InFunctionPtr);
 
 		void UploadInternalCalls();
+
+		ObjectHandle CreateInstance(const CharType* InTypeName);
+		void DestroyInstance(ObjectHandle& InObjectHandle);
 
 	private:
 		void LoadHostFXR() const;
