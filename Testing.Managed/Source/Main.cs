@@ -10,9 +10,12 @@ namespace Testing {
 	{
 		public readonly int MyValue;
 
-		public MyTestObject()
+		public MyTestObject(int value, float fvalue, IntPtr str)
 		{
-			MyValue = 50;
+			MyValue = value;
+			Console.WriteLine(value);
+			Console.WriteLine(fvalue);
+			Console.WriteLine(Marshal.PtrToStringAuto(str));
 		}
 	}
 

@@ -42,7 +42,7 @@ namespace Coral
 			}
 
 			Assembly assembly = null;
-			
+
 			try
 			{
 				assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(InAssemblyFilePath);

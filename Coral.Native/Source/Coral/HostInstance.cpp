@@ -33,6 +33,9 @@ namespace Coral {
 	{
 		const CharType* TypeName;
 		bool IsWeakRef;
+		const void** Parameters;
+		ManagedType* ParameterTypes;
+		int32_t Length;
 	};
 	using CreateObjectFn = void*(*)(const ObjectCreateInfo*);
 	CreateObjectFn CreateObject = nullptr;
@@ -105,12 +108,15 @@ namespace Coral {
 		SetInternalCalls(&arr);
 	}
 
-	ObjectHandle HostInstance::CreateInstance(const CharType* InTypeName)
+	ObjectHandle HostInstance::CreateInstanceInternal(const CharType* InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength)
 	{
 		ObjectCreateInfo createInfo =
 		{
 			.TypeName = InTypeName,
-			.IsWeakRef = false
+			.IsWeakRef = false,
+			.Parameters = InParameters,
+			.ParameterTypes = InParameterTypes,
+			.Length = int32_t(InLength)
 		};
 
 		ObjectHandle handle;
