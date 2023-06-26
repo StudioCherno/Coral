@@ -81,6 +81,7 @@ namespace Coral {
 	private:
 		void LoadHostFXR() const;
 		void InitializeCoralManaged();
+		void LoadCoralFunctions();
 
 		void* LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName, const CharType* InDelegateType = CORAL_UNMANAGED_CALLERS_ONLY) const;
 
@@ -149,8 +150,6 @@ namespace Coral {
 		bool m_Initialized = false;
 
 		std::vector<InternalCall*> m_InternalCalls;
-
-		//std::unordered_map<uint16_t, AssemblyData> m_LoadedAssemblies;
 	};
 
 }

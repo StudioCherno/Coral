@@ -15,19 +15,18 @@ project "Testing"
 
     externalincludedirs { "../Coral.Native/Include/" }
 
-    libdirs { CoralDotNetPath }
+    libdirs { "%{wks.location}/NetCore/7.0.7/" }
 
     links {
         "Coral.Native",
 
         "nethost",
         "libnethost",
-        "ijwhost",
     }
 
     postbuildcommands {
-        '{ECHO} Copying "' .. CoralDotNetPath .. '/nethost.dll" to "%{cfg.targetdir}"',
-        '{COPYFILE} "' .. CoralDotNetPath .. '/nethost.dll" "%{cfg.targetdir}"',
+        '{ECHO} Copying "%{wks.location}/NetCore/7.0.7/nethost.dll" to "%{cfg.targetdir}"',
+        '{COPYFILE} "%{wks.location}/NetCore/7.0.7/nethost.dll" "%{cfg.targetdir}"',
     }
 
     filter { "configurations:Debug" }

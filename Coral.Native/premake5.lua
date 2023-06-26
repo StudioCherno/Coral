@@ -21,4 +21,4 @@ project "Coral.Native"
     }
 
     includedirs { "Source/", "Include/Coral/" }
-    externalincludedirs { CoralDotNetPath }
+    externalincludedirs { "%{wks.location}/NetCore/7.0.7/" }

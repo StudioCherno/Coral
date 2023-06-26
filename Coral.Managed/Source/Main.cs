@@ -132,12 +132,6 @@ namespace Coral
 		public delegate void Dummy();
 
 		[UnmanagedCallersOnly]
-		public static UnmanagedString GetString()
-		{
-			return UnmanagedString.FromString("Hello, World!");
-		}
-
-		[UnmanagedCallersOnly]
 		public static void SetInternalCalls(UnmanagedArray InArr)
 		{
 			var internalCalls = InArr.ToArray<InternalCall>();

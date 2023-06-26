@@ -51,7 +51,7 @@ namespace Coral.Interop
 		public override string ToString()
 		{
 			if (m_NativeString == IntPtr.Zero)
-				return null;
+				return string.Empty;
 
 			return Marshal.PtrToStringAuto(m_NativeString);
 		}
@@ -70,7 +70,7 @@ namespace Coral.Interop
 			Marshal.FreeCoTaskMem(InString.m_NativeString);
 		}
 
-		public override bool Equals(object? obj) => obj is UnmanagedString other && Equals(other);
+		public override bool Equals(object obj) => obj is UnmanagedString other && Equals(other);
 		public bool Equals(UnmanagedString other) => m_NativeString == other.m_NativeString;
 		public override int GetHashCode() => m_NativeString.GetHashCode();
 

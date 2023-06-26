@@ -2,6 +2,7 @@
 #include "Verify.hpp"
 #include "HostFXRErrorCodes.hpp"
 #include "Interop.hpp"
+#include "CoralManagedFunctions.hpp"
 
 namespace Coral {
 
@@ -17,18 +18,6 @@ namespace Coral {
 
 	ErrorCallbackFn ErrorCallback = nullptr;
 
-	using SetInternalCallsFn = void (*)(UnmanagedArray*);
-	SetInternalCallsFn SetInternalCalls = nullptr;
-
-	using LoadManagedAssemblyFn = AssemblyLoadStatus(*)(uint16_t, const CharType*);
-	LoadManagedAssemblyFn LoadManagedAssembly = nullptr;
-
-	using GetStringFn = const CharType*(*)();
-	GetStringFn GetString = nullptr;
-
-	using FreeManagedStringFn = void(*)(const CharType*);
-	FreeManagedStringFn FreeManagedString = nullptr;
-
 	struct ObjectCreateInfo
 	{
 		const CharType* TypeName;
@@ -37,11 +26,6 @@ namespace Coral {
 		ManagedType* ParameterTypes;
 		int32_t Length;
 	};
-	using CreateObjectFn = void*(*)(const ObjectCreateInfo*);
-	CreateObjectFn CreateObject = nullptr;
-
-	using DestroyObjectFn = void(*)(void*);
-	DestroyObjectFn DestroyObject = nullptr;
 
 	void DefaultErrorCallback(const CharType* InMessage)
 	{
@@ -82,13 +66,7 @@ namespace Coral {
 		static uint16_t s_NextAssemblyID = 0;
 
 		OutHandle.m_AssemblyID = s_NextAssemblyID++;
-		AssemblyLoadStatus loadStatus = LoadManagedAssembly(OutHandle.m_AssemblyID, InFilePath);
-
-		/*if (loadStatus == AssemblyLoadStatus::Success)
-		{
-			auto& assemblyData = m_LoadedAssemblies[OutHandle.m_AssemblyID];
-		}*/
-
+		AssemblyLoadStatus loadStatus = s_ManagedFunctions.LoadManagedAssemblyFptr(OutHandle.m_AssemblyID, InFilePath);
 		return loadStatus;
 	}
 
@@ -105,7 +83,7 @@ namespace Coral {
 	void HostInstance::UploadInternalCalls()
 	{
 		UnmanagedArray arr = { m_InternalCalls.data(), (int32_t)m_InternalCalls.size() };
-		SetInternalCalls(&arr);
+		s_ManagedFunctions.SetInternalCallsFptr(&arr);
 	}
 
 	ObjectHandle HostInstance::CreateInstanceInternal(const CharType* InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength)
@@ -120,13 +98,13 @@ namespace Coral {
 		};
 
 		ObjectHandle handle;
-		handle.m_Handle = CreateObject(&createInfo);
+		handle.m_Handle = s_ManagedFunctions.CreateObjectFptr(&createInfo);
 		return handle;
 	}
 
 	void HostInstance::DestroyInstance(ObjectHandle& InObjectHandle)
 	{
-		DestroyObject(InObjectHandle.m_Handle);
+		s_ManagedFunctions.DestroyObjectFptr(InObjectHandle.m_Handle);
 		InObjectHandle.m_Handle = nullptr;
 	}
 
@@ -180,12 +158,7 @@ namespace Coral {
 		s_CoreCLRFunctions.GetRuntimeDelegate = LoadFunctionPtr<hostfxr_get_runtime_delegate_fn>(libraryHandle, "hostfxr_get_runtime_delegate");
 		s_CoreCLRFunctions.CloseHostFXR = LoadFunctionPtr<hostfxr_close_fn>(libraryHandle, "hostfxr_close");
 	}
-
-	void DummyFunc()
-	{
-		std::cout << "Hellllooo" << std::endl;
-	}
-
+	
 	void HostInstance::InitializeCoralManaged()
 	{
 		// Fetch load_assembly_and_get_function_pointer_fn from CoreCLR
@@ -201,18 +174,19 @@ namespace Coral {
 		using InitializeFn = void(*)();
 		InitializeFn coralManagedEntryPoint = nullptr;
 		coralManagedEntryPoint = LoadCoralManagedFunctionPtr<InitializeFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("Initialize"));
-		LoadManagedAssembly = LoadCoralManagedFunctionPtr<LoadManagedAssemblyFn>(CORAL_STR("Coral.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssembly"));
-		SetInternalCalls = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("SetInternalCalls"));
-		GetString = LoadCoralManagedFunctionPtr<GetStringFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("GetString"));
-		FreeManagedString = LoadCoralManagedFunctionPtr<FreeManagedStringFn>(CORAL_STR("Coral.Interop.UnmanagedString, Coral.Managed"), CORAL_STR("Free"));
-		CreateObject = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("CreateObject"));
-		DestroyObject = LoadCoralManagedFunctionPtr<DestroyObjectFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("DestroyObject"));
 
-		auto msg = GetString();
-		std::wcout << L"Message: " << msg << std::endl;
-		FreeManagedString(msg);
+		LoadCoralFunctions();
 
 		coralManagedEntryPoint();
+	}
+
+	void HostInstance::LoadCoralFunctions()
+	{
+		s_ManagedFunctions.LoadManagedAssemblyFptr = LoadCoralManagedFunctionPtr<LoadManagedAssemblyFn>(CORAL_STR("Coral.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssembly"));
+		s_ManagedFunctions.SetInternalCallsFptr = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("SetInternalCalls"));
+		s_ManagedFunctions.FreeManagedStringFptr = LoadCoralManagedFunctionPtr<FreeManagedStringFn>(CORAL_STR("Coral.Interop.UnmanagedString, Coral.Managed"), CORAL_STR("Free"));
+		s_ManagedFunctions.CreateObjectFptr = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("CreateObject"));
+		s_ManagedFunctions.DestroyObjectFptr = LoadCoralManagedFunctionPtr<DestroyObjectFn>(CORAL_STR("Coral.ManagedHost, Coral.Managed"), CORAL_STR("DestroyObject"));
 	}
 
 	void* HostInstance::LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName, const CharType* InDelegateType) const

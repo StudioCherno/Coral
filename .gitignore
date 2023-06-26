@@ -4,6 +4,7 @@
 **/Intermediates/
 **/bin/
 **/obj/
+**/.vscode/
 
 # Files
 *.sln
@@ -11,3 +12,5 @@
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+
+*.code-workspace
