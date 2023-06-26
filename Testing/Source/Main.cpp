@@ -18,7 +18,7 @@ int main()
 	constexpr std::wstring ConfigName = L"Release";
 #endif
 
-	auto coralDir = std::filesystem::current_path().parent_path() / "Build" / ConfigName;
+	auto coralDir = (std::filesystem::current_path().parent_path() / "Build" / ConfigName).string();
 	Coral::HostSettings settings =
 	{
 		.CoralDirectory = coralDir.c_str()
@@ -27,14 +27,14 @@ int main()
 	hostInstance.Initialize(settings);
 
 	Coral::AssemblyHandle testingHandle;
-	hostInstance.LoadAssembly(CORAL_STR("F:/Coral/Build/Debug/Testing.Managed.dll"), testingHandle);
+	hostInstance.LoadAssembly("F:/Coral/Build/Debug/Testing.Managed.dll", testingHandle);
 
 	// TODO(Peter): hostInstance.AddInternalCall(testingHandle, "Coral.ManagedHost:Dummy", &Dummy)
-	hostInstance.AddInternalCall(CORAL_STR("Coral.ManagedHost+Dummy, Coral.Managed"), &Dummy);
-	hostInstance.AddInternalCall(CORAL_STR("Coral.ManagedHost+Dummy, Coral.Managed"), &Dummy);
+	hostInstance.AddInternalCall("Coral.ManagedHost+Dummy, Coral.Managed", &Dummy);
+	hostInstance.AddInternalCall("Coral.ManagedHost+Dummy, Coral.Managed", &Dummy);
 	hostInstance.UploadInternalCalls();
 
-	Coral::ObjectHandle objectHandle = hostInstance.CreateInstance(CORAL_STR("Testing.MyTestObject, Testing.Managed"), 50, 100.0f, (const CharType*)CORAL_STR("Hello, World?"));
+	Coral::ObjectHandle objectHandle = hostInstance.CreateInstance("Testing.MyTestObject, Testing.Managed", 50, 100.0f, (const CharType*)CORAL_STR("Hello, World?"));
 	//hostInstance.CallMethod(objectHandle, "MyInstanceMethod", 5.0f, 10.0f, myOtherObjectHandle);
 	hostInstance.DestroyInstance(objectHandle);
 

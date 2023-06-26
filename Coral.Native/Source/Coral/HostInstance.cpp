@@ -3,6 +3,7 @@
 #include "HostFXRErrorCodes.hpp"
 #include "Interop.hpp"
 #include "CoralManagedFunctions.hpp"
+#include "StringHelper.hpp"
 
 namespace Coral {
 
@@ -61,21 +62,25 @@ namespace Coral {
 		m_Initialized = true;
 	}
 
-	AssemblyLoadStatus HostInstance::LoadAssembly(const CharType* InFilePath, AssemblyHandle& OutHandle)
+	AssemblyLoadStatus HostInstance::LoadAssembly(std::string_view InFilePath, AssemblyHandle& OutHandle)
 	{
 		static uint16_t s_NextAssemblyID = 0;
 
+		auto filepath = StringHelper::ConvertUtf8ToWide(InFilePath);
+
 		OutHandle.m_AssemblyID = s_NextAssemblyID++;
-		AssemblyLoadStatus loadStatus = s_ManagedFunctions.LoadManagedAssemblyFptr(OutHandle.m_AssemblyID, InFilePath);
+		AssemblyLoadStatus loadStatus = s_ManagedFunctions.LoadManagedAssemblyFptr(OutHandle.m_AssemblyID, filepath.c_str());
 		return loadStatus;
 	}
 
-	void HostInstance::AddInternalCall(const CharType* InMethodName, void* InFunctionPtr)
+	void HostInstance::AddInternalCall(std::string_view InMethodName, void* InFunctionPtr)
 	{
 		CORAL_VERIFY(InFunctionPtr != nullptr);
 
+		const auto& methodName = m_InternalCallNameStorage.emplace_back(StringHelper::ConvertUtf8ToWide(InMethodName));
+
 		auto* internalCall = new InternalCall();
-		internalCall->Name = InMethodName;
+		internalCall->Name = methodName.c_str();
 		internalCall->NativeFunctionPtr = InFunctionPtr;
 		m_InternalCalls.emplace_back(std::move(internalCall));
 	}
@@ -86,11 +91,13 @@ namespace Coral {
 		s_ManagedFunctions.SetInternalCallsFptr(&arr);
 	}
 
-	ObjectHandle HostInstance::CreateInstanceInternal(const CharType* InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength)
+	ObjectHandle HostInstance::CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength)
 	{
+		auto typeName = StringHelper::ConvertUtf8ToWide(InTypeName);
+
 		ObjectCreateInfo createInfo =
 		{
-			.TypeName = InTypeName,
+			.TypeName = typeName.c_str(),
 			.IsWeakRef = false,
 			.Parameters = InParameters,
 			.ParameterTypes = InParameterTypes,

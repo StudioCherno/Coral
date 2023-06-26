@@ -14,7 +14,7 @@ namespace Coral {
 		/// <summary>
 		/// The file path to Coral.runtimeconfig.json (e.g C:\Dev\MyProject\ThirdParty\Coral)
 		/// </summary>
-		const CharType* CoralDirectory;
+		std::string_view CoralDirectory;
 		
 		ErrorCallbackFn ErrorCallback = nullptr;
 	};
@@ -32,6 +32,8 @@ namespace Coral {
 
 	enum class ManagedType
 	{
+		Unknown = -1,
+
 		SByte, Byte,
 		Short, UShort,
 		Int, UInt,
@@ -48,14 +50,14 @@ namespace Coral {
 	{
 	public:
 		void Initialize(HostSettings InSettings);
-		AssemblyLoadStatus LoadAssembly(const CharType* InFilePath, AssemblyHandle& OutHandle);
+		AssemblyLoadStatus LoadAssembly(std::string_view InFilePath, AssemblyHandle& OutHandle);
 
-		void AddInternalCall(const CharType* InMethodName, void* InFunctionPtr);
+		void AddInternalCall(std::string_view InMethodName, void* InFunctionPtr);
 
 		void UploadInternalCalls();
 
 		template<typename... TArgs>
-		ObjectHandle CreateInstance(const CharType* InTypeName, TArgs&&... InArguments)
+		ObjectHandle CreateInstance(std::string_view InTypeName, TArgs&&... InArguments)
 		{
 			constexpr size_t argumentCount = sizeof...(InArguments);
 
@@ -134,7 +136,7 @@ namespace Coral {
 			(AddToArrayI<TArgs, TIndices>(InArgumentsArr, InArgumentTypesArr, std::forward<TArgs>(InArgs)), ...);
 		}
 
-		ObjectHandle CreateInstanceInternal(const CharType* InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength);
+		ObjectHandle CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength);
 
 	public:
 		struct InternalCall
@@ -149,6 +151,11 @@ namespace Coral {
 		void* m_HostFXRContext = nullptr;
 		bool m_Initialized = false;
 
+	#if defined(CORAL_WIDE_CHARS)
+		std::vector<std::wstring> m_InternalCallNameStorage;
+	#else
+		std::vector<std::string> m_InternalCallNameStorage;
+	#endif
 		std::vector<InternalCall*> m_InternalCalls;
 	};
 
