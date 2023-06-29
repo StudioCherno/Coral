@@ -53,7 +53,6 @@ namespace Coral {
 		AssemblyLoadStatus LoadAssembly(std::string_view InFilePath, AssemblyHandle& OutHandle);
 
 		void AddInternalCall(std::string_view InMethodName, void* InFunctionPtr);
-
 		void UploadInternalCalls();
 
 		template<typename... TArgs>

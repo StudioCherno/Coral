@@ -45,7 +45,9 @@ namespace Coral
 
 			try
 			{
-				assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(InAssemblyFilePath);
+				var assm = Assembly.GetAssembly(typeof(AssemblyLoader));
+				var alc = AssemblyLoadContext.GetLoadContext(assm);
+				assembly = alc.LoadFromAssemblyPath(InAssemblyFilePath);
 				s_LoadedAssemblies.Add(InAssemblyID, assembly);
 			}
 			catch (Exception ex)

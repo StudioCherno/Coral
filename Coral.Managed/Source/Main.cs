@@ -103,7 +103,14 @@ namespace Coral
 					constructParameters[i] = s_MarshalFunctions[paramType](Marshal.ReadIntPtr(createInfo.Parameters, i * Marshal.SizeOf<nint>()));
 				}
 
-				result = Activator.CreateInstance(type, constructParameters);
+				try
+				{
+					result = Activator.CreateInstance(type, constructParameters);
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine(ex.ToString());
+				}
 			}
 			else
 			{
@@ -118,33 +125,6 @@ namespace Coral
 		public static void DestroyObject(IntPtr InObjectHandle)
 		{
 			GCHandle.FromIntPtr(InObjectHandle).Free();
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct InternalCall
-		{
-			public IntPtr NamePtr;
-			public IntPtr NativeFunctionPtr;
-
-			public string Name => Marshal.PtrToStringAuto(NamePtr);
-		}
-
-		public delegate void Dummy();
-
-		[UnmanagedCallersOnly]
-		public static void SetInternalCalls(UnmanagedArray InArr)
-		{
-			var internalCalls = InArr.ToArray<InternalCall>();
-
-			Console.WriteLine(internalCalls.Length);
-			for (int i = 0; i < internalCalls.Length; i++)
-			{
-				Console.WriteLine($"Name = {internalCalls[i].Name}");
-
-				var delegateType = Type.GetType(internalCalls[i].Name);
-				var del = Marshal.GetDelegateForFunctionPointer(internalCalls[i].NativeFunctionPtr, delegateType);
-				del.DynamicInvoke();
-			}
 		}
 	}
 
