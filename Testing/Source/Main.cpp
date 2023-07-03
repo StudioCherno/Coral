@@ -5,8 +5,12 @@
 
 #include <Coral/HostInstance.hpp>
 
+uint32_t x = 0;
+
 void Dummy()
 {
+	for (uint32_t i = 0; i < 10; i++)
+		x += i;
 }
 
 int32_t ReturnDummy()
@@ -30,11 +34,13 @@ int main()
 	Coral::HostInstance hostInstance;
 	hostInstance.Initialize(settings);
 
+	auto assemblyPath = std::filesystem::path("F:/Coral/Build") / ConfigName / "Testing.Managed.dll";
+
 	Coral::AssemblyHandle testingHandle;
-	hostInstance.LoadAssembly("F:/Coral/Build/Debug/Testing.Managed.dll", testingHandle);
+	hostInstance.LoadAssembly(assemblyPath.string().c_str(), testingHandle);
 
 	hostInstance.AddInternalCall("Testing.Test+Dummy, Testing.Managed", &Dummy);
-	hostInstance.AddInternalCall("Testing.Test+ReturnIntDel, Testing.Managed", &ReturnDummy);
+	//hostInstance.AddInternalCall("Testing.Test+ReturnIntDel, Testing.Managed", &ReturnDummy);
 	hostInstance.UploadInternalCalls();
 
 	Coral::ObjectHandle objectHandle = hostInstance.CreateInstance("Testing.MyTestObject, Testing.Managed", 5);

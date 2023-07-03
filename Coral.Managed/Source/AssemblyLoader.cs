@@ -17,8 +17,12 @@ namespace Coral
 
 	public static class AssemblyLoader
 	{
-		private static Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup = new Dictionary<Type, AssemblyLoadStatus>();
-		private static Dictionary<ushort, Assembly> s_LoadedAssemblies = new Dictionary<ushort, Assembly>();
+		private static readonly Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup = new();
+		internal static readonly Dictionary<int, Assembly> s_AssemblyCache = new();
+		private static AssemblyLoadStatus s_LastLoadStatus = AssemblyLoadStatus.Success;
+
+		internal static readonly AssemblyLoadContext s_CoralAssemblyLoadContext;
+		internal static readonly AssemblyLoadContext s_AppAssemblyLoadContext;
 
 		static AssemblyLoader()
 		{
@@ -27,39 +31,86 @@ namespace Coral
 			s_AssemblyLoadErrorLookup.Add(typeof(FileLoadException), AssemblyLoadStatus.FileLoadFailure);
 			s_AssemblyLoadErrorLookup.Add(typeof(ArgumentNullException), AssemblyLoadStatus.InvalidFilePath);
 			s_AssemblyLoadErrorLookup.Add(typeof(ArgumentException), AssemblyLoadStatus.InvalidFilePath);
+
+			s_CoralAssemblyLoadContext = AssemblyLoadContext.GetLoadContext(typeof(AssemblyLoader).Assembly);
+			s_CoralAssemblyLoadContext!.Resolving += ResolveAssembly;
+
+			s_AppAssemblyLoadContext = new AssemblyLoadContext("AppAssemblyContext", true);
+			s_AppAssemblyLoadContext.Resolving += ResolveAssembly;
+
+			CacheCoralAssemblies();
+		}
+
+		private static void CacheCoralAssemblies()
+		{
+			foreach (var assembly in s_CoralAssemblyLoadContext.Assemblies)
+			{
+				int assemblyId = assembly.GetName().FullName.GetHashCode();
+				s_AssemblyCache.Add(assemblyId, assembly);
+			}
+		}
+
+		internal static Assembly ResolveAssembly(AssemblyLoadContext InAssemblyLoadContext, AssemblyName InAssemblyName)
+		{
+			int assemblyId = InAssemblyName.FullName.GetHashCode();
+			
+			if (s_AssemblyCache.TryGetValue(assemblyId, out var cachedAssembly))
+			{
+				return cachedAssembly;
+			}
+
+			foreach (var loadContext in AssemblyLoadContext.All)
+			{
+				foreach (var assembly in loadContext.Assemblies)
+				{
+					if (assembly.GetName().Name != InAssemblyName.Name)
+						continue;
+					
+					s_AssemblyCache.Add(assemblyId, assembly);
+					return assembly;
+				}
+			}
+
+			return null;
 		}
 
 		[UnmanagedCallersOnly]
-		public static AssemblyLoadStatus LoadAssembly(ushort InAssemblyID, UnmanagedString InAssemblyFilePath)
+		public static int LoadAssembly(UnmanagedString InAssemblyFilePath)
 		{
-			if (InAssemblyFilePath == null)
-				return AssemblyLoadStatus.InvalidFilePath;
+			if (InAssemblyFilePath.IsNull())
+			{
+				s_LastLoadStatus = AssemblyLoadStatus.InvalidFilePath;
+				return -1;
+			}
 
 			if (!File.Exists(InAssemblyFilePath))
 			{
 				Console.WriteLine($"File {InAssemblyFilePath} not found!");
-				return AssemblyLoadStatus.FileNotFound;
+				s_LastLoadStatus = AssemblyLoadStatus.FileNotFound;
+				return -1;
 			}
 
-			Assembly assembly = null;
+			int assemblyId;
 
 			try
 			{
-				var assm = Assembly.GetAssembly(typeof(AssemblyLoader));
-				var alc = AssemblyLoadContext.GetLoadContext(assm);
-				assembly = alc.LoadFromAssemblyPath(InAssemblyFilePath);
-				s_LoadedAssemblies.Add(InAssemblyID, assembly);
+				var assembly = s_AppAssemblyLoadContext.LoadFromAssemblyPath(InAssemblyFilePath);
+				var assemblyName = assembly.GetName();
+				assemblyId = assemblyName.FullName.GetHashCode();
+				s_AssemblyCache.Add(assemblyId, assembly);
 			}
 			catch (Exception ex)
 			{
-				var error = AssemblyLoadStatus.UnknownError;
-				_ = s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out error);
-				return error;
+				s_LastLoadStatus = !s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out var error) ? AssemblyLoadStatus.UnknownError : error;
+				return -1;
 			}
 
 			Console.WriteLine($"Loaded assembly {InAssemblyFilePath}");
-			return AssemblyLoadStatus.Success;
+			return assemblyId;
 		}
+
+		[UnmanagedCallersOnly]
+		public static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
 
 	}
 }

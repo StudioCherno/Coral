@@ -9,7 +9,8 @@ namespace Coral {
 	struct ObjectCreateInfo;
 
 	using SetInternalCallsFn = void (*)(UnmanagedArray*);
-	using LoadManagedAssemblyFn = AssemblyLoadStatus (*)(uint16_t, const CharType*);
+	using LoadManagedAssemblyFn = int32_t(*)(const CharType*);
+	using GetLastLoadStatusFn = AssemblyLoadStatus(*)();
 	using FreeManagedStringFn = void (*)(const CharType*);
 	using CreateObjectFn = void* (*)(const ObjectCreateInfo*);
 	using DestroyObjectFn = void (*)(void*);
@@ -18,6 +19,7 @@ namespace Coral {
 	{
 		SetInternalCallsFn SetInternalCallsFptr = nullptr;
 		LoadManagedAssemblyFn LoadManagedAssemblyFptr = nullptr;
+		GetLastLoadStatusFn GetLastLoadStatusFptr = nullptr;
 		FreeManagedStringFn FreeManagedStringFptr = nullptr;
 
 		CreateObjectFn CreateObjectFptr = nullptr;

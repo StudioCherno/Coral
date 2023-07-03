@@ -48,6 +48,8 @@ namespace Coral.Interop
 	{
 		private IntPtr m_NativeString;
 
+		public bool IsNull() => m_NativeString == IntPtr.Zero;
+
 		public override string ToString()
 		{
 			if (m_NativeString == IntPtr.Zero)

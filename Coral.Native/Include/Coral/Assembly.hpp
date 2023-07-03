@@ -15,10 +15,10 @@ namespace Coral {
 	class AssemblyHandle
 	{
 	public:
-		uint16_t GetAssemblyID() const { return m_AssemblyID; }
+		int32_t GetAssemblyID() const { return m_AssemblyID; }
 
 	private:
-		uint16_t m_AssemblyID;
+		int32_t m_AssemblyID;
 
 		friend class HostInstance;
 	};

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 
@@ -83,7 +84,7 @@ namespace Coral
 		public static IntPtr CreateObject(IntPtr InCreateInfo)
 		{
 			var createInfo = Marshal.PtrToStructure<ObjectCreateInfo>(InCreateInfo);
-			var type = Type.GetType(createInfo.TypeName);
+			var type = TypeHelper.FindType(createInfo.TypeName);
 
 			if (type == null)
 			{
@@ -105,7 +106,7 @@ namespace Coral
 
 				try
 				{
-					result = Activator.CreateInstance(type, constructParameters);
+					result = TypeHelper.CreateInstance(type, constructParameters);
 				}
 				catch (Exception ex)
 				{
@@ -114,7 +115,7 @@ namespace Coral
 			}
 			else
 			{
-				result = Activator.CreateInstance(type);
+				result = TypeHelper.CreateInstance(type);
 			}
 
 			var handle = GCHandle.Alloc(result, !createInfo.IsWeakRef ? GCHandleType.Pinned : GCHandleType.Weak);
