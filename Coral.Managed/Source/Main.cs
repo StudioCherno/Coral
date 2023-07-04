@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 
-using Coral.Interop;
+using Coral.Managed.Interop;
 
-namespace Coral
+namespace Coral.Managed
 {
 
 	public class ManagedHost
@@ -26,28 +25,26 @@ namespace Coral
 			Pointer
 		};
 
-		private static readonly Dictionary<ManagedType, Func<IntPtr, object>> s_MarshalFunctions = new Dictionary<ManagedType, Func<nint, object>>()
+		private static readonly Dictionary<ManagedType, Func<IntPtr, object>> s_MarshalFunctions = new()
 		{
-			{ ManagedType.SByte, (IntPtr InValue) => { return Marshal.PtrToStructure<sbyte>(InValue); } },
-			{ ManagedType.Byte, (IntPtr InValue) => { return Marshal.PtrToStructure<byte>(InValue); } },
-			{ ManagedType.Short, (IntPtr InValue) => { return Marshal.PtrToStructure<short>(InValue); } },
-			{ ManagedType.UShort, (IntPtr InValue) => { return Marshal.PtrToStructure<ushort>(InValue); } },
-			{ ManagedType.Int, (IntPtr InValue) => { return Marshal.PtrToStructure<int>(InValue); } },
-			{ ManagedType.UInt, (IntPtr InValue) => { return Marshal.PtrToStructure<uint>(InValue); } },
-			{ ManagedType.Long, (IntPtr InValue) => { return Marshal.PtrToStructure<long>(InValue); } },
-			{ ManagedType.ULong, (IntPtr InValue) => { return Marshal.PtrToStructure<ulong>(InValue); } },
-			{ ManagedType.Float, (IntPtr InValue) => { return Marshal.PtrToStructure<float>(InValue); } },
-			{ ManagedType.Double, (IntPtr InValue) => { return Marshal.PtrToStructure<double>(InValue); } },
-			{ ManagedType.Bool, (IntPtr InValue) => { return Marshal.PtrToStructure<bool>(InValue); } },
-			{ ManagedType.Pointer, (IntPtr InValue) => { return InValue; } }
+			{ ManagedType.SByte, InValue => Marshal.PtrToStructure<sbyte>(InValue) },
+			{ ManagedType.Byte, InValue => Marshal.PtrToStructure<byte>(InValue) },
+			{ ManagedType.Short, InValue => Marshal.PtrToStructure<short>(InValue) },
+			{ ManagedType.UShort, InValue => Marshal.PtrToStructure<ushort>(InValue) },
+			{ ManagedType.Int, InValue => Marshal.PtrToStructure<int>(InValue) },
+			{ ManagedType.UInt, InValue => Marshal.PtrToStructure<uint>(InValue) },
+			{ ManagedType.Long, InValue => Marshal.PtrToStructure<long>(InValue) },
+			{ ManagedType.ULong, InValue => Marshal.PtrToStructure<ulong>(InValue) },
+			{ ManagedType.Float, InValue => Marshal.PtrToStructure<float>(InValue) },
+			{ ManagedType.Double, InValue => Marshal.PtrToStructure<double>(InValue) },
+			{ ManagedType.Bool, InValue => Marshal.PtrToStructure<bool>(InValue) },
+			{ ManagedType.Pointer, InValue => InValue }
 		};
 
 		[UnmanagedCallersOnly]
 		public static void Initialize()
 		{
 			var assemblyLoadContexts = AssemblyLoadContext.All;
-
-			Console.WriteLine($"There are {assemblyLoadContexts.Count()} assembly load contexts.");
 
 			foreach (var alc in assemblyLoadContexts)
 			{
@@ -60,24 +57,14 @@ namespace Coral
 			}
 		}
 
-		public class Test
-		{
-			public readonly int X;
-
-			public Test(int x)
-			{
-				X = x;
-			}
-		}
-
 		[StructLayout(LayoutKind.Sequential)]
-		public struct ObjectCreateInfo
+		public readonly struct ObjectCreateInfo
 		{
-			public UnmanagedString TypeName;
-			public bool IsWeakRef;
-			public IntPtr Parameters;
-			public IntPtr ParameterTypes;
-			public int Length;
+			public readonly UnmanagedString TypeName;
+			public readonly bool IsWeakRef;
+			public readonly IntPtr Parameters;
+			public readonly IntPtr ParameterTypes;
+			public readonly int Length;
 		}
 
 		[UnmanagedCallersOnly]
@@ -100,7 +87,7 @@ namespace Coral
 
 				for (int i = 0; i < createInfo.Length; i++)
 				{
-					ManagedType paramType = (ManagedType)Marshal.ReadInt32(createInfo.ParameterTypes, i * Marshal.SizeOf<int>());
+					var paramType = (ManagedType)Marshal.ReadInt32(createInfo.ParameterTypes, i * Marshal.SizeOf<int>());
 					constructParameters[i] = s_MarshalFunctions[paramType](Marshal.ReadIntPtr(createInfo.Parameters, i * Marshal.SizeOf<nint>()));
 				}
 

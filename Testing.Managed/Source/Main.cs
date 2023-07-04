@@ -1,11 +1,10 @@
+using Coral.Managed.Interop;
+
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-using Coral;
-using Coral.Interop;
-
-namespace Testing {
+namespace Testing.Managed {
 
 	internal static class InternalCalls
 	{

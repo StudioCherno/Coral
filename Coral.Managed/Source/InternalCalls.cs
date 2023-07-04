@@ -3,15 +3,15 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Reflection;
 
-namespace Coral.Interop
+namespace Coral.Managed.Interop
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct InternalCall
+	public readonly struct InternalCall
 	{
-		public IntPtr NamePtr;
-		public IntPtr NativeFunctionPtr;
+		private readonly IntPtr m_NamePtr;
+		public readonly IntPtr NativeFunctionPtr;
 
-		public string Name => Marshal.PtrToStringAuto(NamePtr);
+		public string Name => Marshal.PtrToStringAuto(m_NamePtr);
 	}
 
 	public static class InternalCallsManager
@@ -21,15 +21,13 @@ namespace Coral.Interop
 		{
 			var internalCalls = InArr.ToArray<InternalCall>();
 
-			for (int i = 0; i < internalCalls.Length; i++)
+			try
 			{
-				var icall = internalCalls[i];
-
-				try
+				foreach (var internalCall in internalCalls)
 				{
-					var name = icall.Name;
+					var name = internalCall.Name;
 					var fieldNameStart = name.IndexOf('+');
-					var fieldNameEnd = name.IndexOf(",", fieldNameStart);
+					var fieldNameEnd = name.IndexOf(",", fieldNameStart, StringComparison.CurrentCulture);
 					var fieldName = name.Substring(fieldNameStart + 1, fieldNameEnd - fieldNameStart - 1);
 					var containingTypeName = name.Remove(fieldNameStart, fieldNameEnd - fieldNameStart);
 
@@ -51,12 +49,12 @@ namespace Coral.Interop
 						continue;
 					}
 
-					field.SetValue(null, icall.NativeFunctionPtr);
+					field.SetValue(null, internalCall.NativeFunctionPtr);
 				}
-				catch (Exception ex)
-				{
-					Console.WriteLine(ex);
-				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
 			}
 		}
 	}

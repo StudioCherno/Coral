@@ -1,4 +1,4 @@
-﻿using Coral.Interop;
+﻿using Coral.Managed.Interop;
 
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 
-namespace Coral
+namespace Coral.Managed
 {
 
 	public enum AssemblyLoadStatus
@@ -18,11 +18,11 @@ namespace Coral
 	public static class AssemblyLoader
 	{
 		private static readonly Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup = new();
-		internal static readonly Dictionary<int, Assembly> s_AssemblyCache = new();
+		private static readonly Dictionary<int, Assembly> s_AssemblyCache = new();
 		private static AssemblyLoadStatus s_LastLoadStatus = AssemblyLoadStatus.Success;
 
-		internal static readonly AssemblyLoadContext s_CoralAssemblyLoadContext;
-		internal static readonly AssemblyLoadContext s_AppAssemblyLoadContext;
+		private static readonly AssemblyLoadContext s_CoralAssemblyLoadContext;
+		private static readonly AssemblyLoadContext s_AppAssemblyLoadContext;
 
 		static AssemblyLoader()
 		{

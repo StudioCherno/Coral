@@ -3,13 +3,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
 
-namespace Coral.Interop
+namespace Coral.Managed.Interop
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct UnmanagedArray
+	public readonly struct UnmanagedArray
 	{
-		private IntPtr m_NativeArray;
-		private int m_NativeLength;
+		private readonly IntPtr m_NativeArray;
+		private readonly int m_NativeLength;
 
 		public int Length => m_NativeLength;
 
@@ -18,7 +18,7 @@ namespace Coral.Interop
 			if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
 				return Array.Empty<T>();
 
-			T[] result = new T[m_NativeLength];
+			var result = new T[m_NativeLength];
 
 			for (int i = 0; i < m_NativeLength; i++)
 			{
@@ -50,13 +50,7 @@ namespace Coral.Interop
 
 		public bool IsNull() => m_NativeString == IntPtr.Zero;
 
-		public override string ToString()
-		{
-			if (m_NativeString == IntPtr.Zero)
-				return string.Empty;
-
-			return Marshal.PtrToStringAuto(m_NativeString);
-		}
+		public override string ToString() => m_NativeString != IntPtr.Zero ? Marshal.PtrToStringAuto(m_NativeString) : string.Empty;
 
 		public static UnmanagedString FromString(string InValue)
 		{

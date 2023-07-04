@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace Coral
+namespace Coral.Managed
 {
 	public static class TypeHelper
 	{
@@ -18,7 +18,7 @@ namespace Coral
 
 		public static object CreateInstance(Type InType, params object[] InArguments)
 		{
-			return InType.Assembly.CreateInstance(InType.FullName, false, BindingFlags.Default, null, InArguments, null, null);
+			return InType.Assembly.CreateInstance(InType.FullName ?? string.Empty, false, BindingFlags.Default, null, InArguments, null, null);
 		}
 
 	}

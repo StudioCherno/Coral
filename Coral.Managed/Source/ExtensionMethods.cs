@@ -1,6 +1,6 @@
 using System;
 
-namespace Coral
+namespace Coral.Managed
 {
 	public static class ExtensionMethods
 	{
