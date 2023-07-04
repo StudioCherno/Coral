@@ -51,6 +51,7 @@ namespace Coral {
 	public:
 		void Initialize(HostSettings InSettings);
 		AssemblyLoadStatus LoadAssembly(std::string_view InFilePath, AssemblyHandle& OutHandle);
+		void UnloadAssemblyLoadContext(AssemblyHandle InAssemblyHandle);
 
 		void AddInternalCall(std::string_view InMethodName, void* InFunctionPtr);
 		void UploadInternalCalls();

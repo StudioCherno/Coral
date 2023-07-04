@@ -18,6 +18,20 @@ int32_t ReturnDummy()
 	return 50;
 }
 
+void RunTest(Coral::HostInstance& InHostInstance, const std::filesystem::path& InFilePath)
+{
+	Coral::AssemblyHandle testingHandle;
+	auto status = InHostInstance.LoadAssembly(InFilePath.string().c_str(), testingHandle);
+
+	InHostInstance.AddInternalCall("Testing.Managed.InternalCalls+Dummy, Testing.Managed", &Dummy);
+	InHostInstance.UploadInternalCalls();
+
+	Coral::ObjectHandle objectHandle = InHostInstance.CreateInstance("Testing.Managed.MyTestObject, Testing.Managed", 5);
+	InHostInstance.DestroyInstance(objectHandle);
+
+	InHostInstance.UnloadAssemblyLoadContext(testingHandle);
+}
+
 int main()
 {
 #ifdef CORAL_TESTING_DEBUG
@@ -36,16 +50,8 @@ int main()
 
 	auto assemblyPath = std::filesystem::path("F:/Coral/Build") / ConfigName / "Testing.Managed.dll";
 
-	Coral::AssemblyHandle testingHandle;
-	hostInstance.LoadAssembly(assemblyPath.string().c_str(), testingHandle);
-
-	hostInstance.AddInternalCall("Testing.InternalCalls+Dummy, Testing.Managed", &Dummy);
-	//hostInstance.AddInternalCall("Testing.Test+ReturnIntDel, Testing.Managed", &ReturnDummy);
-	hostInstance.UploadInternalCalls();
-
-	Coral::ObjectHandle objectHandle = hostInstance.CreateInstance("Testing.MyTestObject, Testing.Managed", 5);
-	//hostInstance.CallMethod(objectHandle, "MyInstanceMethod", 5.0f, 10.0f, myOtherObjectHandle);
-	hostInstance.DestroyInstance(objectHandle);
+	RunTest(hostInstance, assemblyPath);
+	RunTest(hostInstance, assemblyPath);
 
 	return 0;
 }

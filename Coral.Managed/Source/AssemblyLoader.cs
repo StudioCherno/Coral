@@ -22,7 +22,7 @@ namespace Coral.Managed
 		private static AssemblyLoadStatus s_LastLoadStatus = AssemblyLoadStatus.Success;
 
 		private static readonly AssemblyLoadContext s_CoralAssemblyLoadContext;
-		private static readonly AssemblyLoadContext s_AppAssemblyLoadContext;
+		private static AssemblyLoadContext s_AppAssemblyLoadContext;
 
 		static AssemblyLoader()
 		{
@@ -34,9 +34,6 @@ namespace Coral.Managed
 
 			s_CoralAssemblyLoadContext = AssemblyLoadContext.GetLoadContext(typeof(AssemblyLoader).Assembly);
 			s_CoralAssemblyLoadContext!.Resolving += ResolveAssembly;
-
-			s_AppAssemblyLoadContext = new AssemblyLoadContext("AppAssemblyContext", true);
-			s_AppAssemblyLoadContext.Resolving += ResolveAssembly;
 
 			CacheCoralAssemblies();
 		}
@@ -90,6 +87,17 @@ namespace Coral.Managed
 				return -1;
 			}
 
+			if (s_AppAssemblyLoadContext == null)
+			{
+				s_AppAssemblyLoadContext = new AssemblyLoadContext("AppAssemblyContext", true);
+				s_AppAssemblyLoadContext.Resolving += ResolveAssembly;
+				s_AppAssemblyLoadContext.Unloading += (alc) =>
+				{
+					s_AppAssemblyLoadContext = null;
+					GC.Collect();
+				};
+			}
+
 			int assemblyId;
 
 			try
@@ -101,12 +109,35 @@ namespace Coral.Managed
 			}
 			catch (Exception ex)
 			{
+				Console.WriteLine(ex);
 				s_LastLoadStatus = !s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out var error) ? AssemblyLoadStatus.UnknownError : error;
 				return -1;
 			}
 
+			s_LastLoadStatus = AssemblyLoadStatus.Success;
 			Console.WriteLine($"Loaded assembly {InAssemblyFilePath}");
 			return assemblyId;
+		}
+
+		[UnmanagedCallersOnly]
+		public static void UnloadAssemblyLoadContext(int InAssemblyID)
+		{
+			if (!s_AssemblyCache.TryGetValue(InAssemblyID, out var assembly))
+			{
+				Console.WriteLine($"Tried unloading an assembly that wasn't previously loaded.");
+				return;
+			}
+
+			var loadContext = AssemblyLoadContext.GetLoadContext(assembly);
+
+			if (!loadContext.IsCollectible)
+			{
+				Console.WriteLine($"Tried unloading an assembly load context that isn't collectible!");
+				return;
+			}
+
+			s_AssemblyCache.Remove(InAssemblyID);
+			loadContext.Unload();
 		}
 
 		[UnmanagedCallersOnly]

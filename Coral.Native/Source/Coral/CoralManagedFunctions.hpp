@@ -10,6 +10,7 @@ namespace Coral {
 
 	using SetInternalCallsFn = void (*)(UnmanagedArray*);
 	using LoadManagedAssemblyFn = int32_t(*)(const CharType*);
+	using UnloadAssemblyLoadContextFn = void(*)(int32_t);
 	using GetLastLoadStatusFn = AssemblyLoadStatus(*)();
 	using FreeManagedStringFn = void (*)(const CharType*);
 	using CreateObjectFn = void* (*)(const ObjectCreateInfo*);
@@ -19,6 +20,7 @@ namespace Coral {
 	{
 		SetInternalCallsFn SetInternalCallsFptr = nullptr;
 		LoadManagedAssemblyFn LoadManagedAssemblyFptr = nullptr;
+		UnloadAssemblyLoadContextFn UnloadAssemblyLoadContextFptr = nullptr;
 		GetLastLoadStatusFn GetLastLoadStatusFptr = nullptr;
 		FreeManagedStringFn FreeManagedStringFptr = nullptr;
 
