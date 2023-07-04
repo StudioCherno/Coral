@@ -10,12 +10,6 @@ Currently the API is basically non-existent, but as I keep developing it I'll up
 
 Coral uses the [premake](https://premake.github.io/) meta-build system in order to generate build files for other build systems (e.g Visual Studio Soltuions, Makefiles, etc...)
 
-Before you can use premake on Coral you'll need to install the .NET SDK, and then tell Coral where it can find the HostFXR headers + libraries, this is done by setting an environment variable called `CORAL_DOTNET_PATH`.
-
-On Windows this path should point to e.g `C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Host.win-x64\7.0.4\runtimes\win-x64\native`.
-
-You'll know that you've found the right directory when you see a file called `hostfxr.h` and a file called `nethost.h`.
-
 You'll need to download premake from [https://premake.github.io/](https://premake.github.io/), after that open up a terminal and cd into the root directory of Coral, then run this command:
 
 ```
