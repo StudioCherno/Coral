@@ -1,9 +1,7 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Reflection.Emit;
-using System.Diagnostics;
+using System.Reflection;
 
 namespace Coral.Interop
 {
@@ -18,9 +16,6 @@ namespace Coral.Interop
 
 	public static class InternalCallsManager
 	{
-		private static Dictionary<Type, Delegate> s_InternalCalls = new Dictionary<Type, Delegate>();
-		private static Dictionary<Type, DynamicMethod> s_DynamicMethods = new Dictionary<Type, DynamicMethod>();
-
 		[UnmanagedCallersOnly]
 		public static void SetInternalCalls(UnmanagedArray InArr)
 		{
@@ -29,63 +24,40 @@ namespace Coral.Interop
 			for (int i = 0; i < internalCalls.Length; i++)
 			{
 				var icall = internalCalls[i];
-				var delegateType = TypeHelper.FindType(icall.Name);
 
-				if (delegateType == null || !delegateType.IsDelegate())
+				try
 				{
-					Console.WriteLine($"[Coral.Managed]: Failed to find delegate type '{icall.Name}'");
-					continue;
+					var name = icall.Name;
+					var fieldNameStart = name.IndexOf('+');
+					var fieldNameEnd = name.IndexOf(",", fieldNameStart);
+					var fieldName = name.Substring(fieldNameStart + 1, fieldNameEnd - fieldNameStart - 1);
+					var containingTypeName = name.Remove(fieldNameStart, fieldNameEnd - fieldNameStart);
+
+					var type = TypeHelper.FindType(containingTypeName);
+
+					var bindingFlags = BindingFlags.Static | BindingFlags.NonPublic;
+					var field = type.GetFields(bindingFlags).FirstOrDefault(field => field.Name == fieldName);
+
+					if (field == null)
+					{
+						Console.WriteLine($"Couldn't find field {fieldName} in {containingTypeName}");
+						continue;
+					}
+
+					// TODO(Peter): Changed to !field.FieldType.IsFunctionPointer when .NET 8 is out
+					if (field.FieldType != typeof(IntPtr))
+					{
+						Console.WriteLine($"{fieldName} is not a function pointer!");
+						continue;
+					}
+
+					field.SetValue(null, icall.NativeFunctionPtr);
 				}
-
-				/*var delegateInvoke = delegateType.GetMethod("Invoke");
-				var method = new DynamicMethod("InvokeNative", delegateInvoke.ReturnType, Array.Empty<Type>());
-				var ilGenerator = method.GetILGenerator();
-				ilGenerator.Emit(OpCodes.Ldc_I8, (long)icall.NativeFunctionPtr);
-				ilGenerator.Emit(OpCodes.Conv_I);
-				ilGenerator.EmitCalli(OpCodes.Calli, CallingConvention.StdCall, delegateInvoke.ReturnType, Array.Empty<Type>());
-				ilGenerator.Emit(OpCodes.Ret);
-				s_DynamicMethods.Add(delegateType, method);
-				
-				var del = method.CreateDelegate(delegateType);*/
-
-				var del = Marshal.GetDelegateForFunctionPointer(icall.NativeFunctionPtr, delegateType);
-
-				if (!s_InternalCalls.TryAdd(delegateType, del))
+				catch (Exception ex)
 				{
-					Console.WriteLine($"[Coral.Managed]: Internal call {icall.Name}");
+					Console.WriteLine(ex);
 				}
 			}
-		}
-
-		public static void Invoke<D>(params object[] InArgs)
-		{
-			var delegateType = typeof(D);
-
-			//if (!delegateType.IsDelegate())
-			//	throw new ArgumentException($"{delegateType.AssemblyQualifiedName} is not a delegate type");
-
-			//Delegate delegateInstance;
-			/*if (!s_InternalCalls.TryGetValue(delegateType, out delegateInstance))
-			{
-				throw new ArgumentException($"{delegateType.AssemblyQualifiedName} is not an internal call");
-			}*/
-			s_InternalCalls[delegateType].DynamicInvoke(InArgs);
-		}
-
-		public static R Invoke<D, R>(params object[] InArgs)
-		{
-			var delegateType = typeof(D);
-
-			if (!delegateType.IsDelegate())
-				throw new ArgumentException($"{delegateType.AssemblyQualifiedName} is not a delegate type");
-
-			Delegate delegateInstance;
-			if (!s_InternalCalls.TryGetValue(delegateType, out delegateInstance))
-			{
-				throw new ArgumentException($"{delegateType.AssemblyQualifiedName} is not an internal call");
-			}
-
-			return (R)delegateInstance.DynamicInvoke(InArgs);
 		}
 	}
 

@@ -39,7 +39,7 @@ int main()
 	Coral::AssemblyHandle testingHandle;
 	hostInstance.LoadAssembly(assemblyPath.string().c_str(), testingHandle);
 
-	hostInstance.AddInternalCall("Testing.Test+Dummy, Testing.Managed", &Dummy);
+	hostInstance.AddInternalCall("Testing.InternalCalls+Dummy, Testing.Managed", &Dummy);
 	//hostInstance.AddInternalCall("Testing.Test+ReturnIntDel, Testing.Managed", &ReturnDummy);
 	hostInstance.UploadInternalCalls();
 

@@ -7,19 +7,24 @@ using Coral.Interop;
 
 namespace Testing {
 
+	internal static class InternalCalls
+	{
+		internal static unsafe delegate*<void> Dummy;
+	}
+
 	public class MyTestObject
 	{
 		public MyTestObject(int s)
 		{
-			InternalCallsManager.Invoke<Test.Dummy>();
+			var sw = Stopwatch.StartNew();
+			unsafe { InternalCalls.Dummy(); }
+			sw.Stop();
+			Console.WriteLine($"Elapsed: {sw.Elapsed.TotalMicroseconds} microseconds");
 		}
 	}
 
 	public class Test
 	{
-		public delegate void Dummy();
-		public delegate int ReturnIntDel();
-		
 		[UnmanagedCallersOnly]
 		public static void TestMain(UnmanagedString InString)
 		{
