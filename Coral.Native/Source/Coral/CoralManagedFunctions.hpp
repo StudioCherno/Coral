@@ -8,16 +8,18 @@ namespace Coral {
 	enum class AssemblyLoadStatus;
 	struct ObjectCreateInfo;
 	enum class GCCollectionMode;
+	enum class ManagedType;
 
 	using ExceptionCallbackFn = void(*)(const CharType*);
 
-	using SetInternalCallsFn = void (*)(UnmanagedArray*);
+	using SetInternalCallsFn = void(*)(UnmanagedArray*);
 	using LoadManagedAssemblyFn = int32_t(*)(const CharType*);
 	using UnloadAssemblyLoadContextFn = void(*)(int32_t);
 	using GetLastLoadStatusFn = AssemblyLoadStatus(*)();
-	using FreeManagedStringFn = void (*)(const CharType*);
-	using CreateObjectFn = void* (*)(const ObjectCreateInfo*);
-	using DestroyObjectFn = void (*)(void*);
+	using FreeManagedStringFn = void(*)(const CharType*);
+	using CreateObjectFn = void*(*)(const ObjectCreateInfo*);
+	using InvokeMethodFn = void(*)(void*, const CharType*, const ManagedType*, const void**, int32_t);
+	using DestroyObjectFn = void(*)(void*);
 
 	using SetExceptionCallbackFn = void(*)(ExceptionCallbackFn);
 
@@ -33,6 +35,7 @@ namespace Coral {
 		FreeManagedStringFn FreeManagedStringFptr = nullptr;
 
 		CreateObjectFn CreateObjectFptr = nullptr;
+		InvokeMethodFn InvokeMethodFptr = nullptr;
 		DestroyObjectFn DestroyObjectFptr = nullptr;
 
 		SetExceptionCallbackFn SetExceptionCallbackFptr = nullptr;

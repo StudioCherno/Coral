@@ -78,6 +78,24 @@ namespace Coral {
 			return result;
 		}
 
+		template<typename... TArgs>
+		void InvokeMethod(ObjectHandle InHandle, std::string_view InMethodName, TArgs&&... InParameters)
+		{
+			constexpr size_t parameterCount = sizeof...(InParameters);
+
+			if constexpr (parameterCount > 0)
+			{
+				const void* parameterValues[parameterCount];
+				ManagedType parameterTypes[parameterCount];
+				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount>{});
+				InvokeMethodInternal(InHandle, InMethodName, parameterTypes, parameterValues, parameterCount);
+			}
+			else
+			{
+				InvokeMethodInternal(InHandle, InMethodName, nullptr, nullptr, 0);
+			}
+		}
+
 		void DestroyInstance(ObjectHandle& InObjectHandle);
 
 		using ExceptionCallbackFn = void(*)(const CharType*);
@@ -106,7 +124,7 @@ namespace Coral {
 			}
 			else
 			{
-				InArgumentsArr[TIndex] = reinterpret_cast<const void*>(&InArg);
+				 InArgumentsArr[TIndex] = reinterpret_cast<const void*>(&InArg);
 
 				if constexpr (std::same_as<TArg, uint8_t>)
 					InArgumentTypesArr[TIndex] = ManagedType::Byte;
@@ -140,6 +158,7 @@ namespace Coral {
 		}
 
 		ObjectHandle CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength);
+		void InvokeMethodInternal(ObjectHandle InObjectHandle, std::string_view InMethodName, ManagedType* InParameterTypes, const void** InParameters, size_t InLength);
 
 	public:
 		struct InternalCall

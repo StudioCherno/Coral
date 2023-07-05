@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
-
 using Coral.Managed.Interop;
 
 namespace Coral.Managed
@@ -137,6 +137,47 @@ namespace Coral.Managed
 			try
 			{
 				GCHandle.FromIntPtr(InObjectHandle).Free();
+			}
+			catch (Exception ex)
+			{
+				HandleException(ex);
+			}
+		}
+
+		[UnmanagedCallersOnly]
+		private static void InvokeMethod(IntPtr InObjectHandle, UnmanagedString InMethodName, IntPtr InParameterTypes, IntPtr InParameterValues, int InLength)
+		{
+			try
+			{
+				var target = GCHandle.FromIntPtr(InObjectHandle).Target;
+				var targetType = target.GetType();
+
+				MethodInfo methodInfo = null;
+				foreach (var mi in targetType.GetMethods())
+				{
+					if (mi.Name != InMethodName || mi.GetParameters().Length != InLength)
+						continue;
+					
+					methodInfo = mi;
+					break;
+				}
+
+				//methodInfo = targetType.GetMethods().Single(mi => mi.Name == InMethodName && mi.GetParameters().Length == InLength);
+
+				object[] methodParameters = null;
+				
+				if (InParameterTypes != IntPtr.Zero && InParameterValues != IntPtr.Zero && InLength > 0)
+				{
+					methodParameters = new object[InLength];
+					
+					for (int i = 0; i < InLength; i++)
+					{
+						var paramType = (ManagedType)Marshal.ReadInt32(InParameterTypes, i * Marshal.SizeOf<int>());
+						methodParameters[i] = s_MarshalFunctions[paramType](Marshal.ReadIntPtr(InParameterValues, i * Marshal.SizeOf<nint>()));
+					}
+				}
+
+				methodInfo.Invoke(target, methodParameters);
 			}
 			catch (Exception ex)
 			{

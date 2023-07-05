@@ -1,7 +1,7 @@
 #include <iostream>
-#include <vector>
 #include <string>
 #include <filesystem>
+#include <chrono>
 
 #include <Coral/HostInstance.hpp>
 #include <Coral/GC.h>
@@ -23,6 +23,11 @@ void RunTest(Coral::HostInstance& InHostInstance, const std::filesystem::path& I
 	InHostInstance.UploadInternalCalls();
 
 	Coral::ObjectHandle objectHandle = InHostInstance.CreateInstance("Testing.Managed.MyTestObject, Testing.Managed", 5);
+	auto start = std::chrono::steady_clock::now();
+	for (uint32_t i = 0; i < 1000 * 1000; i++)
+		InHostInstance.InvokeMethod(objectHandle, "InvokeThis");
+	auto elapsed = std::chrono::steady_clock::now() - start;
+	std::cout << "InvokeMethod Elapsed: " << std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / (1000.0f * 1000.0f) << std::endl;
 	InHostInstance.DestroyInstance(objectHandle);
 
 	InHostInstance.UnloadAssemblyLoadContext(testingHandle);

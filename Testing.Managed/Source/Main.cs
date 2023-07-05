@@ -25,6 +25,14 @@ namespace Testing.Managed {
 			sw.Stop();
 			Console.WriteLine($"Elapsed (Avg): {sw.Elapsed.TotalMicroseconds / iterations} microseconds (Total Iterations: {iterations}, Total Time: {sw.Elapsed.TotalMilliseconds}ms)");
 		}
+
+		private int x = 0;
+
+		public void InvokeThis()
+		{
+			for (int i = 0; i < 10; i++)
+				x += i;
+		}
 	}
 
 	public class Test
