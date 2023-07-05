@@ -23,3 +23,9 @@
 #endif
 
 #define CORAL_UNMANAGED_CALLERS_ONLY ((const CharType*)-1)
+
+namespace Coral {
+
+	using Bool32 = uint32_t;
+	
+}

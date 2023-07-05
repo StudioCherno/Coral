@@ -80,6 +80,9 @@ namespace Coral {
 
 		void DestroyInstance(ObjectHandle& InObjectHandle);
 
+		using ExceptionCallbackFn = void(*)(const CharType*);
+		void SetExceptionCallback(ExceptionCallbackFn InCallback);
+
 	private:
 		void LoadHostFXR() const;
 		void InitializeCoralManaged();

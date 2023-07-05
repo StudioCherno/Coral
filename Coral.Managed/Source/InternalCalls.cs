@@ -14,10 +14,10 @@ namespace Coral.Managed.Interop
 		public string Name => Marshal.PtrToStringAuto(m_NamePtr);
 	}
 
-	public static class InternalCallsManager
+	internal static class InternalCallsManager
 	{
 		[UnmanagedCallersOnly]
-		public static void SetInternalCalls(UnmanagedArray InArr)
+		private static void SetInternalCalls(UnmanagedArray InArr)
 		{
 			var internalCalls = InArr.ToArray<InternalCall>();
 

@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include <Coral/HostInstance.hpp>
+#include <Coral/GC.h>
 
 uint32_t x = 0;
 
@@ -11,11 +12,6 @@ void Dummy()
 {
 	for (uint32_t i = 0; i < 10; i++)
 		x += i;
-}
-
-int32_t ReturnDummy()
-{
-	return 50;
 }
 
 void RunTest(Coral::HostInstance& InHostInstance, const std::filesystem::path& InFilePath)
@@ -30,6 +26,16 @@ void RunTest(Coral::HostInstance& InHostInstance, const std::filesystem::path& I
 	InHostInstance.DestroyInstance(objectHandle);
 
 	InHostInstance.UnloadAssemblyLoadContext(testingHandle);
+	Coral::GC::Collect();
+}
+
+void ExceptionCallback(const CharType* InMessage)
+{
+#if CORAL_WIDE_CHARS
+	std::wcout << L"Unhandled native exception: " << InMessage << std::endl;
+#else
+	std::cout << "Unhandled native exception: " << InMessage << std::endl;
+#endif
 }
 
 int main()
@@ -47,6 +53,7 @@ int main()
 	};
 	Coral::HostInstance hostInstance;
 	hostInstance.Initialize(settings);
+	hostInstance.SetExceptionCallback(ExceptionCallback);
 
 	auto assemblyPath = std::filesystem::path("F:/Coral/Build") / ConfigName / "Testing.Managed.dll";
 

@@ -9,7 +9,7 @@ using Coral.Managed.Interop;
 namespace Coral.Managed
 {
 
-	public class ManagedHost
+	internal static class ManagedHost
 	{
 		private enum ManagedType
 		{
@@ -41,11 +41,13 @@ namespace Coral.Managed
 			{ ManagedType.Pointer, InValue => InValue }
 		};
 
+		private static unsafe delegate*<UnmanagedString, void> s_ExceptionCallback;
+
 		[UnmanagedCallersOnly]
-		public static void Initialize()
+		private static void Initialize()
 		{
 			var assemblyLoadContexts = AssemblyLoadContext.All;
-
+			
 			foreach (var alc in assemblyLoadContexts)
 			{
 				Console.WriteLine($"Name: {alc.Name}");
@@ -54,6 +56,25 @@ namespace Coral.Managed
 				{
 					Console.WriteLine($"\tName: {assembly.FullName}");
 				}
+			}
+		}
+
+		[UnmanagedCallersOnly]
+		private static unsafe void SetExceptionCallback(delegate*<UnmanagedString, void> InCallback)
+		{
+			s_ExceptionCallback = InCallback;
+		}
+
+		internal static void HandleException(Exception InException)
+		{
+			unsafe
+			{
+				if (s_ExceptionCallback == null)
+					return;
+
+				var message = UnmanagedString.FromString(InException.ToString());
+				s_ExceptionCallback(message);
+				message.Free();
 			}
 		}
 
@@ -70,49 +91,57 @@ namespace Coral.Managed
 		[UnmanagedCallersOnly]
 		public static IntPtr CreateObject(IntPtr InCreateInfo)
 		{
-			var createInfo = Marshal.PtrToStructure<ObjectCreateInfo>(InCreateInfo);
-			var type = TypeHelper.FindType(createInfo.TypeName);
-
-			if (type == null)
+			try
 			{
-				Console.WriteLine($"[Coral.Managed]: Unknown type name '{createInfo.TypeName}'");
-				return IntPtr.Zero;
-			}
+				var createInfo = Marshal.PtrToStructure<ObjectCreateInfo>(InCreateInfo);
+				var type = TypeHelper.FindType(createInfo.TypeName);
 
-			object result = null;
-
-			if (createInfo.Parameters != IntPtr.Zero && createInfo.ParameterTypes != IntPtr.Zero && createInfo.Length != 0)
-			{
-				object[] constructParameters = new object[createInfo.Length];
-
-				for (int i = 0; i < createInfo.Length; i++)
+				if (type == null)
 				{
-					var paramType = (ManagedType)Marshal.ReadInt32(createInfo.ParameterTypes, i * Marshal.SizeOf<int>());
-					constructParameters[i] = s_MarshalFunctions[paramType](Marshal.ReadIntPtr(createInfo.Parameters, i * Marshal.SizeOf<nint>()));
+					Console.WriteLine($"[Coral.Managed]: Unknown type name '{createInfo.TypeName}'");
+					return IntPtr.Zero;
 				}
 
-				try
+				object result;
+
+				if (createInfo.Parameters != IntPtr.Zero && createInfo.ParameterTypes != IntPtr.Zero && createInfo.Length != 0)
 				{
+					object[] constructParameters = new object[createInfo.Length];
+
+					for (int i = 0; i < createInfo.Length; i++)
+					{
+						var paramType = (ManagedType)Marshal.ReadInt32(createInfo.ParameterTypes, i * Marshal.SizeOf<int>());
+						constructParameters[i] = s_MarshalFunctions[paramType](Marshal.ReadIntPtr(createInfo.Parameters, i * Marshal.SizeOf<nint>()));
+					}
+
 					result = TypeHelper.CreateInstance(type, constructParameters);
 				}
-				catch (Exception ex)
+				else
 				{
-					Console.WriteLine(ex.ToString());
+					result = TypeHelper.CreateInstance(type);
 				}
-			}
-			else
-			{
-				result = TypeHelper.CreateInstance(type);
-			}
 
-			var handle = GCHandle.Alloc(result, !createInfo.IsWeakRef ? GCHandleType.Pinned : GCHandleType.Weak);
-			return GCHandle.ToIntPtr(handle);
+				var handle = GCHandle.Alloc(result, !createInfo.IsWeakRef ? GCHandleType.Pinned : GCHandleType.Weak);
+				return GCHandle.ToIntPtr(handle);
+			}
+			catch (Exception ex)
+			{
+				HandleException(ex);
+				return IntPtr.Zero;
+			}
 		}
 
 		[UnmanagedCallersOnly]
 		public static void DestroyObject(IntPtr InObjectHandle)
 		{
-			GCHandle.FromIntPtr(InObjectHandle).Free();
+			try
+			{
+				GCHandle.FromIntPtr(InObjectHandle).Free();
+			}
+			catch (Exception ex)
+			{
+				HandleException(ex);
+			}
 		}
 	}
 

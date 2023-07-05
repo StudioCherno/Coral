@@ -15,31 +15,47 @@ namespace Coral.Managed.Interop
 
 		public T[] ToArray<T>() where T : struct
 		{
-			if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
-				return Array.Empty<T>();
-
-			var result = new T[m_NativeLength];
-
-			for (int i = 0; i < m_NativeLength; i++)
+			try
 			{
-				IntPtr elementPtr = Marshal.ReadIntPtr(m_NativeArray, i * Marshal.SizeOf<nint>());
-				result[i] = Marshal.PtrToStructure<T>(elementPtr);
-			}
+				if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
+					return Array.Empty<T>();
 
-			return result;
+				var result = new T[m_NativeLength];
+
+				for (int i = 0; i < m_NativeLength; i++)
+				{
+					IntPtr elementPtr = Marshal.ReadIntPtr(m_NativeArray, i * Marshal.SizeOf<nint>());
+					result[i] = Marshal.PtrToStructure<T>(elementPtr);
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				ManagedHost.HandleException(ex);
+				return Array.Empty<T>();
+			}
 		}
 
 		public IntPtr[] ToIntPtrArray()
 		{
-			if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
+			try
+			{
+				if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
+					return Array.Empty<IntPtr>();
+
+				IntPtr[] result = new IntPtr[m_NativeLength];
+
+				for (int i = 0; i < m_NativeLength; i++)
+					result[i] = Marshal.ReadIntPtr(m_NativeArray, i * Marshal.SizeOf<nint>());
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				ManagedHost.HandleException(ex);
 				return Array.Empty<IntPtr>();
-
-			IntPtr[] result = new IntPtr[m_NativeLength];
-
-			for (int i = 0; i < m_NativeLength; i++)
-				result[i] = Marshal.ReadIntPtr(m_NativeArray, i * Marshal.SizeOf<nint>());
-
-			return result;
+			}
 		}
 	}
 
@@ -61,10 +77,12 @@ namespace Coral.Managed.Interop
 		}
 
 		[UnmanagedCallersOnly]
-		public static void Free(UnmanagedString InString)
+		internal static void FreeUnmanaged(UnmanagedString InString)
 		{
-			Marshal.FreeCoTaskMem(InString.m_NativeString);
+			InString.Free();
 		}
+
+		public void Free() => Marshal.FreeCoTaskMem(m_NativeString);
 
 		public override bool Equals(object obj) => obj is UnmanagedString other && Equals(other);
 		public bool Equals(UnmanagedString other) => m_NativeString == other.m_NativeString;
@@ -74,6 +92,12 @@ namespace Coral.Managed.Interop
 		public static bool operator!=(UnmanagedString left, UnmanagedString right) => !(left == right);
 
 		public static implicit operator string(UnmanagedString InUnmanagedString) => InUnmanagedString.ToString();
+	}
+
+	public struct Bool32
+	{
+		private readonly uint m_Value;
+		public static implicit operator bool(Bool32 InBool32) => InBool32.m_Value > 0;
 	}
 
 }

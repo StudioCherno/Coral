@@ -34,7 +34,7 @@ namespace Coral.Managed
 
 			s_CoralAssemblyLoadContext = AssemblyLoadContext.GetLoadContext(typeof(AssemblyLoader).Assembly);
 			s_CoralAssemblyLoadContext!.Resolving += ResolveAssembly;
-
+			
 			CacheCoralAssemblies();
 		}
 
@@ -72,76 +72,76 @@ namespace Coral.Managed
 		}
 
 		[UnmanagedCallersOnly]
-		public static int LoadAssembly(UnmanagedString InAssemblyFilePath)
+		private static int LoadAssembly(UnmanagedString InAssemblyFilePath)
 		{
-			if (InAssemblyFilePath.IsNull())
-			{
-				s_LastLoadStatus = AssemblyLoadStatus.InvalidFilePath;
-				return -1;
-			}
-
-			if (!File.Exists(InAssemblyFilePath))
-			{
-				Console.WriteLine($"File {InAssemblyFilePath} not found!");
-				s_LastLoadStatus = AssemblyLoadStatus.FileNotFound;
-				return -1;
-			}
-
-			if (s_AppAssemblyLoadContext == null)
-			{
-				s_AppAssemblyLoadContext = new AssemblyLoadContext("AppAssemblyContext", true);
-				s_AppAssemblyLoadContext.Resolving += ResolveAssembly;
-				s_AppAssemblyLoadContext.Unloading += (alc) =>
-				{
-					s_AppAssemblyLoadContext = null;
-					GC.Collect();
-				};
-			}
-
-			int assemblyId;
-
 			try
 			{
+				if (InAssemblyFilePath.IsNull())
+				{
+					s_LastLoadStatus = AssemblyLoadStatus.InvalidFilePath;
+					return -1;
+				}
+
+				if (!File.Exists(InAssemblyFilePath))
+				{
+					Console.WriteLine($"File {InAssemblyFilePath} not found!");
+					s_LastLoadStatus = AssemblyLoadStatus.FileNotFound;
+					return -1;
+				}
+
+				if (s_AppAssemblyLoadContext == null)
+				{
+					s_AppAssemblyLoadContext = new AssemblyLoadContext("AppAssemblyContext", true);
+					s_AppAssemblyLoadContext.Resolving += ResolveAssembly;
+					s_AppAssemblyLoadContext.Unloading += _ => { s_AppAssemblyLoadContext = null; };
+				}
+
 				var assembly = s_AppAssemblyLoadContext.LoadFromAssemblyPath(InAssemblyFilePath);
 				var assemblyName = assembly.GetName();
-				assemblyId = assemblyName.FullName.GetHashCode();
+				int assemblyId = assemblyName.FullName.GetHashCode();
 				s_AssemblyCache.Add(assemblyId, assembly);
+				s_LastLoadStatus = AssemblyLoadStatus.Success;
+				Console.WriteLine($"Loaded assembly {InAssemblyFilePath}");
+				return assemblyId;
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex);
-				s_LastLoadStatus = !s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out var error) ? AssemblyLoadStatus.UnknownError : error;
+				s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out s_LastLoadStatus);
+				ManagedHost.HandleException(ex);
 				return -1;
 			}
-
-			s_LastLoadStatus = AssemblyLoadStatus.Success;
-			Console.WriteLine($"Loaded assembly {InAssemblyFilePath}");
-			return assemblyId;
 		}
 
 		[UnmanagedCallersOnly]
-		public static void UnloadAssemblyLoadContext(int InAssemblyID)
+		private static void UnloadAssemblyLoadContext(int InAssemblyId)
 		{
-			if (!s_AssemblyCache.TryGetValue(InAssemblyID, out var assembly))
+			try
 			{
-				Console.WriteLine($"Tried unloading an assembly that wasn't previously loaded.");
-				return;
+
+				if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
+				{
+					Console.WriteLine("Tried unloading an assembly that wasn't previously loaded.");
+					return;
+				}
+
+				var loadContext = AssemblyLoadContext.GetLoadContext(assembly);
+				if (!loadContext!.IsCollectible)
+				{
+					Console.WriteLine("Tried unloading an assembly load context that isn't collectible!");
+					return;
+				}
+
+				s_AssemblyCache.Remove(InAssemblyId);
+				loadContext.Unload();
 			}
-
-			var loadContext = AssemblyLoadContext.GetLoadContext(assembly);
-
-			if (!loadContext.IsCollectible)
+			catch (Exception ex)
 			{
-				Console.WriteLine($"Tried unloading an assembly load context that isn't collectible!");
-				return;
+				ManagedHost.HandleException(ex);
 			}
-
-			s_AssemblyCache.Remove(InAssemblyID);
-			loadContext.Unload();
 		}
 
 		[UnmanagedCallersOnly]
-		public static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
+		private static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
 
 	}
 }
