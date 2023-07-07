@@ -1,47 +1,204 @@
-using Coral.Managed.Interop;
-
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Testing.Managed {
 
-	internal static class InternalCalls
+	public class Tests
 	{
-		internal static unsafe delegate*<void> Dummy;
-	}
 
-	public class MyTestObject
-	{
-		public MyTestObject(int s)
+		internal static unsafe delegate*<sbyte, sbyte> SByteMarshalIcall;
+		internal static unsafe delegate*<byte, byte> ByteMarshalIcall;
+		internal static unsafe delegate*<short, short> ShortMarshalIcall;
+		internal static unsafe delegate*<ushort, ushort> UShortMarshalIcall;
+		internal static unsafe delegate*<int, int> IntMarshalIcall;
+		internal static unsafe delegate*<uint, uint> UIntMarshalIcall;
+		internal static unsafe delegate*<long, long> LongMarshalIcall;
+		internal static unsafe delegate*<ulong, ulong> ULongMarshalIcall;
+		internal static unsafe delegate*<float, float> FloatMarshalIcall;
+		internal static unsafe delegate*<double, double> DoubleMarshalIcall;
+		internal static unsafe delegate*<bool, bool> BoolMarshalIcall;
+		internal static unsafe delegate*<IntPtr, IntPtr> IntPtrMarshalIcall;
+
+		private struct DummyStruct
 		{
-			const int iterations = 1000 * 1000;
-			var sw = Stopwatch.StartNew();
+			public int X;
+			public float Y;
+			public int Z;
+		}
+		internal static unsafe delegate*<DummyStruct, DummyStruct> DummyStructMarshalIcall;
+		internal static unsafe delegate*<DummyStruct*, DummyStruct*> DummyStructPtrMarshalIcall;
+		
+		[Test]
+		public bool SByteMarshalTest()
+		{
+			unsafe { return SByteMarshalIcall(10) == 20; }
+		}
+		
+		[Test]
+		public bool ByteMarshalTest()
+		{
+			unsafe { return ByteMarshalIcall(10) == 20; }
+		}
+		
+		[Test]
+		public bool ShortMarshalTest()
+		{
+			unsafe { return ShortMarshalIcall(10) == 20; }
+		}
+		
+		[Test]
+		public bool UShortMarshalTest()
+		{
+			unsafe { return UShortMarshalIcall(10) == 20; }
+		}
+		
+		[Test]
+		public bool IntMarshalTest()
+		{
+			unsafe { return IntMarshalIcall(10) == 20; }
+		}
+		
+		[Test]
+		public bool UIntMarshalTest()
+		{
+			unsafe { return UIntMarshalIcall(10) == 20; }
+		}
+		
+		[Test]
+		public bool LongMarshalTest()
+		{
+			unsafe { return LongMarshalIcall(10) == 20; }
+		}
+		
+		[Test]
+		public bool ULongMarshalTest()
+		{
+			unsafe { return ULongMarshalIcall(10) == 20; }
+		}
+		
+		[Test]
+		public bool FloatMarshalTest()
+		{
+			unsafe { return Math.Abs(FloatMarshalIcall(10.0f) - 20.0f) < 0.001f; }
+		}
+		
+		[Test]
+		public bool DoubleMarshalTest()
+		{
+			unsafe { return Math.Abs(DoubleMarshalIcall(10.0) - 20.0) < 0.001; }
+		}
+		
+		[Test]
+		public bool BoolMarshalTest()
+		{
+			unsafe { return BoolMarshalIcall(false); }
+		}
+		
+		[Test]
+		public bool IntPtrMarshalTest()
+		{
+			IntPtr data = Marshal.AllocCoTaskMem(Marshal.SizeOf<int>());
+			Marshal.WriteInt32(data, 50);
+			bool success;
+			unsafe { success = Marshal.ReadInt32(IntPtrMarshalIcall(data), 0) == 100; }
+			Marshal.FreeCoTaskMem(data);
+			return success;
+		}
+
+		[Test]
+		public bool DummyStructMarshalTest()
+		{
+			DummyStruct s = new()
+			{
+				X = 10,
+				Y = 15.0f,
+				Z = 100
+			};
+
 			unsafe
 			{
-				for (int i = 0; i < iterations; i++)
-					InternalCalls.Dummy();
+				var newS = DummyStructMarshalIcall(s);
+				return newS.X == 20 && Math.Abs(newS.Y) - 30.0f < 0.001f && newS.Z == 200;
 			}
-			sw.Stop();
-			Console.WriteLine($"Elapsed (Avg): {sw.Elapsed.TotalMicroseconds / iterations} microseconds (Total Iterations: {iterations}, Total Time: {sw.Elapsed.TotalMilliseconds}ms)");
 		}
-
-		private int x = 0;
-
-		public void InvokeThis()
+		
+		[Test]
+		public bool DummyStructPtrMarshalTest()
 		{
-			for (int i = 0; i < 10; i++)
-				x += i;
+			DummyStruct s = new()
+			{
+				X = 10,
+				Y = 15.0f,
+				Z = 100
+			};
+			
+			unsafe
+			{
+				var newS = DummyStructPtrMarshalIcall(&s);
+				return newS->X == 20 && Math.Abs(newS->Y) - 30.0f < 0.001f && newS->Z == 200;
+			}
 		}
-	}
-
-	public class Test
-	{
-		[UnmanagedCallersOnly]
-		public static void TestMain(UnmanagedString InString)
+		
+		public void RunManagedTests()
 		{
-			Console.WriteLine(InString);
+			CollectTests();
+			
+			foreach (var test in s_Tests)
+				test.Run();
+			
+			Console.WriteLine($"[Test]: Done. {s_PassedTests} passed, {s_Tests.Count - s_PassedTests} failed.");
 		}
+
+		private void CollectTests()
+		{
+			var methods = GetType().GetMethods().Where(methodInfo => methodInfo.GetCustomAttributes(typeof(TestAttribute), false).Any());
+			foreach (var method in methods)
+				s_Tests.Add(new TestContainer(method.Name, s_Tests.Count + 1, () => (bool)method.Invoke(this, null)));
+		}
+		
+		[AttributeUsage(AttributeTargets.Method)]
+		private class TestAttribute : Attribute {}
+		
+		private class TestContainer
+		{
+			private readonly string m_Name;
+			private readonly int m_TestIndex;
+			private readonly Func<bool> m_Func;
+			
+			internal TestContainer(string InName, int InTestIndex, Func<bool> InFunction)
+			{
+				m_Name = InName;
+				m_TestIndex = InTestIndex;
+				m_Func = InFunction;
+			}
+
+			public void Run()
+			{
+				bool result = m_Func();
+				if (result)
+				{
+					Console.ForegroundColor = ConsoleColor.Green;
+					Console.WriteLine($"[{m_TestIndex} / {s_Tests.Count} ({m_Name})]: Passed");
+					s_PassedTests++;
+				}
+				else
+				{
+					Console.ForegroundColor = ConsoleColor.DarkRed;
+					Console.WriteLine($"[{m_TestIndex} / {s_Tests.Count} ({m_Name})]: Failed");
+				}
+			}
+		}
+
+		private static List<TestContainer> s_Tests;
+		private static int s_PassedTests;
+
+		public Tests()
+		{
+			s_Tests = new List<TestContainer>();
+		}
+
 	}
 
 }

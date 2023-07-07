@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -162,10 +163,8 @@ namespace Coral.Managed
 					break;
 				}
 
-				//methodInfo = targetType.GetMethods().Single(mi => mi.Name == InMethodName && mi.GetParameters().Length == InLength);
-
 				object[] methodParameters = null;
-				
+
 				if (InParameterTypes != IntPtr.Zero && InParameterValues != IntPtr.Zero && InLength > 0)
 				{
 					methodParameters = new object[InLength];
