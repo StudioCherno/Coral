@@ -16,6 +16,7 @@ namespace Coral {
 	using LoadManagedAssemblyFn = int32_t(*)(const CharType*);
 	using UnloadAssemblyLoadContextFn = void(*)(int32_t);
 	using GetLastLoadStatusFn = AssemblyLoadStatus(*)();
+	using GetAssemblyNameFn = const CharType*(*)(int32_t);
 	using FreeManagedStringFn = void(*)(const CharType*);
 	using CreateObjectFn = void*(*)(const ObjectCreateInfo*);
 	using InvokeMethodFn = void(*)(void*, const CharType*, const ManagedType*, const void**, int32_t);
@@ -33,6 +34,7 @@ namespace Coral {
 		LoadManagedAssemblyFn LoadManagedAssemblyFptr = nullptr;
 		UnloadAssemblyLoadContextFn UnloadAssemblyLoadContextFptr = nullptr;
 		GetLastLoadStatusFn GetLastLoadStatusFptr = nullptr;
+		GetAssemblyNameFn GetAssemblyNameFptr = nullptr;
 		FreeManagedStringFn FreeManagedStringFptr = nullptr;
 
 		CreateObjectFn CreateObjectFptr = nullptr;

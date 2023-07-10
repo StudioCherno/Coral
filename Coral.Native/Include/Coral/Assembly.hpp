@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core.hpp"
+
 namespace Coral {
 
 	enum class AssemblyLoadStatus
@@ -12,20 +14,35 @@ namespace Coral {
 		UnknownError
 	};
 
-	class AssemblyHandle
+	class ManagedAssembly
 	{
 	public:
 		int32_t GetAssemblyID() const { return m_AssemblyID; }
+		AssemblyLoadStatus GetLoadStatus() const { return m_LoadStatus; }
 
+		void AddInternalCall(std::string_view InClassName, std::string_view InVariableName, void* InFunctionPtr);
+		void UploadInternalCalls();
+		
 	private:
-		int32_t m_AssemblyID;
+		int32_t m_AssemblyID = -1;
+		AssemblyLoadStatus m_LoadStatus = AssemblyLoadStatus::UnknownError;
+		std::string m_Name;
+		
+		struct InternalCall
+		{
+			const CharType* Name;
+			void* NativeFunctionPtr;
+		};
 
+	#if defined(CORAL_WIDE_CHARS)
+		std::vector<std::wstring> m_InternalCallNameStorage;
+	#else
+		std::vector<std::string> m_InternalCallNameStorage;
+	#endif
+		
+		std::vector<InternalCall*> m_InternalCalls;
+		
 		friend class HostInstance;
-	};
-
-	struct AssemblyData
-	{
-		std::string Name;
 	};
 
 }

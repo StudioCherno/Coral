@@ -61,23 +61,23 @@ DummyStruct* DummyStructPtrMarshalIcall(DummyStruct* InStruct)
 	return InStruct;
 }
 
-void RegisterTestInternalCalls(Coral::HostInstance& InHost)
+void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 {
-	InHost.AddInternalCall("Testing.Managed.Tests+SByteMarshalIcall, Testing.Managed", &SByteMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+ByteMarshalIcall, Testing.Managed", &ByteMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+ShortMarshalIcall, Testing.Managed", &ShortMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+UShortMarshalIcall, Testing.Managed", &UShortMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+IntMarshalIcall, Testing.Managed", &IntMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+UIntMarshalIcall, Testing.Managed", &UIntMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+LongMarshalIcall, Testing.Managed", &LongMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+ULongMarshalIcall, Testing.Managed", &ULongMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+FloatMarshalIcall, Testing.Managed", &FloatMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+DoubleMarshalIcall, Testing.Managed", &DoubleMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+BoolMarshalIcall, Testing.Managed", &BoolMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+IntPtrMarshalIcall, Testing.Managed", &IntPtrMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+StringMarshalIcall, Testing.Managed", &StringMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+DummyStructMarshalIcall, Testing.Managed", &DummyStructMarshalIcall);
-	InHost.AddInternalCall("Testing.Managed.Tests+DummyStructPtrMarshalIcall, Testing.Managed", &DummyStructPtrMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "SByteMarshalIcall", &SByteMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "ByteMarshalIcall", &ByteMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "ShortMarshalIcall", &ShortMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "UShortMarshalIcall", &UShortMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "IntMarshalIcall", &IntMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "UIntMarshalIcall", &UIntMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "LongMarshalIcall", &LongMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "ULongMarshalIcall", &ULongMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "FloatMarshalIcall", &FloatMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "DoubleMarshalIcall", &DoubleMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "BoolMarshalIcall", &BoolMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "IntPtrMarshalIcall", &IntPtrMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "StringMarshalIcall", &StringMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructMarshalIcall", &DummyStructMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructPtrMarshalIcall", &DummyStructPtrMarshalIcall);
 }
 
 struct Test
@@ -92,20 +92,20 @@ void RegisterTest(std::string_view InName, std::function<bool()> InFunc)
 	tests.emplace_back(std::string(InName), std::move(InFunc));
 }
 
-void RegisterMemeberMethodTests(Coral::HostInstance& InHost, Coral::ObjectHandle InObject)
+void RegisterMemeberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject InObject)
 {
-	RegisterTest("SByteTest", [&](){ return InHost.InvokeMethodRet<char8_t, char8_t>(InObject, "SByteTest", 10) == 20; });
-	RegisterTest("ByteTest", [&](){ return InHost.InvokeMethodRet<uint8_t, uint8_t>(InObject, "ByteTest", 10) == 20; });
-	RegisterTest("ShortTest", [&](){ return InHost.InvokeMethodRet<int16_t, int16_t>(InObject, "ShortTest", 10) == 20; });
-	RegisterTest("UShortTest", [&](){ return InHost.InvokeMethodRet<uint16_t, uint16_t>(InObject, "UShortTest", 10) == 20; });
-	RegisterTest("IntTest", [&](){ return InHost.InvokeMethodRet<int32_t, int32_t>(InObject, "IntTest", 10) == 20; });
-	RegisterTest("UIntTest", [&](){ return InHost.InvokeMethodRet<uint32_t, uint32_t>(InObject, "UIntTest", 10) == 20; });
-	RegisterTest("LongTest", [&](){ return InHost.InvokeMethodRet<int64_t, int64_t>(InObject, "LongTest", 10) == 20; });
-	RegisterTest("ULongTest", [&](){ return InHost.InvokeMethodRet<uint64_t, uint64_t>(InObject, "ULongTest", 10) == 20; });
-	RegisterTest("FloatTest", [&](){ return InHost.InvokeMethodRet<float, float>(InObject, "FloatTest", 10.0f) - 20.0f < 0.001f; });
-	RegisterTest("DoubleTest", [&](){ return InHost.InvokeMethodRet<double, double>(InObject, "DoubleTest", 10.0) - 20.0 < 0.001; });
-	RegisterTest("BoolTest", [&](){ return InHost.InvokeMethodRet<bool, bool>(InObject, "BoolTest", false); });
-	RegisterTest("IntPtrTest", [&](){ int32_t v = 10; return *InHost.InvokeMethodRet<int32_t*, int32_t*>(InObject, "IntPtrTest", &v) == 50; });
+	RegisterTest("SByteTest", [&](){ return InObject.InvokeMethod<char8_t, char8_t>("SByteTest", 10) == 20; });
+	RegisterTest("ByteTest", [&](){ return InObject.InvokeMethod<uint8_t, uint8_t>("ByteTest", 10) == 20; });
+	RegisterTest("ShortTest", [&](){ return InObject.InvokeMethod<int16_t, int16_t>("ShortTest", 10) == 20; });
+	RegisterTest("UShortTest", [&](){ return InObject.InvokeMethod<uint16_t, uint16_t>("UShortTest", 10) == 20; });
+	RegisterTest("IntTest", [&](){ return InObject.InvokeMethod<int32_t, int32_t>("IntTest", 10) == 20; });
+	RegisterTest("UIntTest", [&](){ return InObject.InvokeMethod<uint32_t, uint32_t>("UIntTest", 10) == 20; });
+	RegisterTest("LongTest", [&](){ return InObject.InvokeMethod<int64_t, int64_t>("LongTest", 10) == 20; });
+	RegisterTest("ULongTest", [&](){ return InObject.InvokeMethod<uint64_t, uint64_t>("ULongTest", 10) == 20; });
+	RegisterTest("FloatTest", [&](){ return InObject.InvokeMethod<float, float>("FloatTest", 10.0f) - 20.0f < 0.001f; });
+	RegisterTest("DoubleTest", [&](){ return InObject.InvokeMethod<double, double>("DoubleTest", 10.0) - 20.0 < 0.001; });
+	RegisterTest("BoolTest", [&](){ return InObject.InvokeMethod<bool, bool>("BoolTest", false); });
+	RegisterTest("IntPtrTest", [&](){ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
 #if CORAL_WIDE_CHARS
 	//RegisterTest("StringTest", [&](){ return wcscmp(InHost.InvokeMethodRet<const CharType*, const CharType*>(InObject, "StringTest", CORAL_STR("Hello")), CORAL_STR("Hello, World!")) == 0; });
 #else
@@ -155,19 +155,13 @@ int main()
 	hostInstance.SetExceptionCallback(ExceptionCallback);
 
 	auto assemblyPath = std::filesystem::path("F:/Coral/Build") / ConfigName / "Testing.Managed.dll";
+	auto assembly = hostInstance.LoadAssembly(assemblyPath.string().c_str());
 
-	Coral::AssemblyHandle testingHandle;
-	auto status = hostInstance.LoadAssembly(assemblyPath.string().c_str(), testingHandle);
+	RegisterTestInternalCalls(assembly);
+	assembly.UploadInternalCalls();
 
-	RegisterTestInternalCalls(hostInstance);
-	hostInstance.UploadInternalCalls();
-
-	Coral::ObjectHandle objectHandle = hostInstance.CreateInstance("Testing.Managed.Tests, Testing.Managed");
-
-	{
-		hostInstance.InvokeMethod(objectHandle, "RunManagedTests");
-	}
-
+	Coral::ManagedObject objectHandle = hostInstance.CreateInstance("Testing.Managed.Tests, Testing.Managed");
+	objectHandle.InvokeMethod("RunManagedTests");
 	hostInstance.DestroyInstance(objectHandle);
 
 	auto object = hostInstance.CreateInstance("Testing.Managed.MemberMethodTest, Testing.Managed");
@@ -175,7 +169,7 @@ int main()
 	RunTests();
 	hostInstance.DestroyInstance(object);
 
-	hostInstance.UnloadAssemblyLoadContext(testingHandle);
+	hostInstance.UnloadAssemblyLoadContext(assembly);
 	Coral::GC::Collect();
 
 	return 0;

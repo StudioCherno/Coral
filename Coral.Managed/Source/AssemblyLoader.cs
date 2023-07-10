@@ -143,5 +143,14 @@ namespace Coral.Managed
 		[UnmanagedCallersOnly]
 		private static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
 
+		[UnmanagedCallersOnly]
+		private static UnmanagedString GetAssemblyName(int InAssemblyId)
+		{
+			if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
+				return UnmanagedString.Null();
+
+			return UnmanagedString.FromString(assembly.GetName().Name);
+		}
+
 	}
 }

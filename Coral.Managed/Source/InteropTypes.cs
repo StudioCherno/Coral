@@ -75,6 +75,11 @@ namespace Coral.Managed.Interop
 				m_NativeString = Marshal.StringToCoTaskMemAuto(InValue)
 			};
 		}
+		
+		public static UnmanagedString Null()
+		{
+			return new UnmanagedString(){ m_NativeString = IntPtr.Zero };
+		}
 
 		[UnmanagedCallersOnly]
 		internal static void FreeUnmanaged(UnmanagedString InString)

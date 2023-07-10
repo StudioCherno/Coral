@@ -62,37 +62,30 @@ namespace Coral {
 		m_Initialized = true;
 	}
 
-	AssemblyLoadStatus HostInstance::LoadAssembly(std::string_view InFilePath, AssemblyHandle& OutHandle)
+	ManagedAssembly HostInstance::LoadAssembly(std::string_view InFilePath)
 	{
+		ManagedAssembly result = {};
 		auto filepath = StringHelper::ConvertUtf8ToWide(InFilePath);
-		OutHandle.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(filepath.c_str());
-		return s_ManagedFunctions.GetLastLoadStatusFptr();
+		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(filepath.c_str());
+		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
+
+		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
+		{
+			const auto* name = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
+			result.m_Name = StringHelper::ConvertWideToUtf8(name);
+			s_ManagedFunctions.FreeManagedStringFptr(name);
+		}
+		
+		return result;
 	}
 
-	void HostInstance::UnloadAssemblyLoadContext(AssemblyHandle InAssemblyHandle)
+	void HostInstance::UnloadAssemblyLoadContext(ManagedAssembly& InAssembly)
 	{
-		s_ManagedFunctions.UnloadAssemblyLoadContextFptr(InAssemblyHandle.GetAssemblyID());
+		s_ManagedFunctions.UnloadAssemblyLoadContextFptr(InAssembly.m_AssemblyID);
+		InAssembly.m_AssemblyID = -1;
 	}
 	
-	void HostInstance::AddInternalCall(std::string_view InMethodName, void* InFunctionPtr)
-	{
-		CORAL_VERIFY(InFunctionPtr != nullptr);
-
-		const auto& methodName = m_InternalCallNameStorage.emplace_back(StringHelper::ConvertUtf8ToWide(InMethodName));
-
-		auto* internalCall = new InternalCall();
-		internalCall->Name = methodName.c_str();
-		internalCall->NativeFunctionPtr = InFunctionPtr;
-		m_InternalCalls.emplace_back(std::move(internalCall));
-	}
-
-	void HostInstance::UploadInternalCalls()
-	{
-		UnmanagedArray arr = { m_InternalCalls.data(), (int32_t)m_InternalCalls.size() };
-		s_ManagedFunctions.SetInternalCallsFptr(&arr);
-	}
-
-	ObjectHandle HostInstance::CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength)
+	ManagedObject HostInstance::CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength)
 	{
 		auto typeName = StringHelper::ConvertUtf8ToWide(InTypeName);
 
@@ -105,24 +98,12 @@ namespace Coral {
 			.Length = int32_t(InLength)
 		};
 
-		ObjectHandle handle;
+		ManagedObject handle;
 		handle.m_Handle = s_ManagedFunctions.CreateObjectFptr(&createInfo);
 		return handle;
 	}
 
-	void HostInstance::InvokeMethodInternal(ObjectHandle InObjectHandle, std::string_view InMethodName, ManagedType* InParameterTypes, const void** InParameters, size_t InLength)
-	{
-		auto methodName = StringHelper::ConvertUtf8ToWide(InMethodName);
-		s_ManagedFunctions.InvokeMethodFptr(InObjectHandle.m_Handle, methodName.c_str(), InParameterTypes, InParameters, static_cast<int32_t>(InLength));
-	}
-
-	void HostInstance::InvokeMethodRetInternal(ObjectHandle InObjectHandle, std::string_view InMethodName, ManagedType* InParameterTypes, const void** InParameters, size_t InLength, void* InResultStorage, uint64_t InResultSize, ManagedType InResultType)
-	{
-		auto methodName = StringHelper::ConvertUtf8ToWide(InMethodName);
-		s_ManagedFunctions.InvokeMethodRetFptr(InObjectHandle.m_Handle, methodName.c_str(), InParameterTypes, InParameters, static_cast<int32_t>(InLength), InResultStorage, InResultSize, InResultType);
-	}
-
-	void HostInstance::DestroyInstance(ObjectHandle& InObjectHandle)
+	void HostInstance::DestroyInstance(ManagedObject& InObjectHandle)
 	{
 		if (!InObjectHandle.m_Handle)
 			return;
@@ -213,12 +194,13 @@ namespace Coral {
 		s_ManagedFunctions.LoadManagedAssemblyFptr = LoadCoralManagedFunctionPtr<LoadManagedAssemblyFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssembly"));
 		s_ManagedFunctions.UnloadAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<UnloadAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("UnloadAssemblyLoadContext"));
 		s_ManagedFunctions.GetLastLoadStatusFptr = LoadCoralManagedFunctionPtr<GetLastLoadStatusFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("GetLastLoadStatus"));
+		s_ManagedFunctions.GetAssemblyNameFptr = LoadCoralManagedFunctionPtr<GetAssemblyNameFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("GetAssemblyName"));
 		s_ManagedFunctions.SetInternalCallsFptr = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.Managed.Interop.InternalCallsManager, Coral.Managed"), CORAL_STR("SetInternalCalls"));
 		s_ManagedFunctions.FreeManagedStringFptr = LoadCoralManagedFunctionPtr<FreeManagedStringFn>(CORAL_STR("Coral.Managed.Interop.UnmanagedString, Coral.Managed"), CORAL_STR("FreeUnmanaged"));
-		s_ManagedFunctions.CreateObjectFptr = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("CreateObject"));
-		s_ManagedFunctions.InvokeMethodFptr = LoadCoralManagedFunctionPtr<InvokeMethodFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("InvokeMethod"));
-		s_ManagedFunctions.InvokeMethodRetFptr = LoadCoralManagedFunctionPtr<InvokeMethodRetFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("InvokeMethodRet"));
-		s_ManagedFunctions.DestroyObjectFptr = LoadCoralManagedFunctionPtr<DestroyObjectFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("DestroyObject"));
+		s_ManagedFunctions.CreateObjectFptr = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("CreateObject"));
+		s_ManagedFunctions.InvokeMethodFptr = LoadCoralManagedFunctionPtr<InvokeMethodFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("InvokeMethod"));
+		s_ManagedFunctions.InvokeMethodRetFptr = LoadCoralManagedFunctionPtr<InvokeMethodRetFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("InvokeMethodRet"));
+		s_ManagedFunctions.DestroyObjectFptr = LoadCoralManagedFunctionPtr<DestroyObjectFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("DestroyObject"));
 		s_ManagedFunctions.SetExceptionCallbackFptr = LoadCoralManagedFunctionPtr<SetExceptionCallbackFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("SetExceptionCallback"));
 		s_ManagedFunctions.CollectGarbageFptr = LoadCoralManagedFunctionPtr<CollectGarbageFn>(CORAL_STR("Coral.Managed.GarbageCollector, Coral.Managed"), CORAL_STR("CollectGarbage"));
 		s_ManagedFunctions.WaitForPendingFinalizersFptr = LoadCoralManagedFunctionPtr<WaitForPendingFinalizersFn>(CORAL_STR("Coral.Managed.GarbageCollector, Coral.Managed"), CORAL_STR("WaitForPendingFinalizers"));
