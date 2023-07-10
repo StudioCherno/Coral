@@ -1,7 +1,10 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include <filesystem>
 #include <chrono>
+#include <functional>
+#include <source_location>
 
 #include <Coral/HostInstance.hpp>
 #include <Coral/GC.h>
@@ -30,6 +33,10 @@ int32_t* IntPtrMarshalIcall(int32_t* InValue)
 {
 	*InValue *= 2;
 	return InValue;
+}
+const CharType* StringMarshalIcall(const CharType* InStr)
+{
+	return InStr;
 }
 
 struct DummyStruct
@@ -68,8 +75,66 @@ void RegisterTestInternalCalls(Coral::HostInstance& InHost)
 	InHost.AddInternalCall("Testing.Managed.Tests+DoubleMarshalIcall, Testing.Managed", &DoubleMarshalIcall);
 	InHost.AddInternalCall("Testing.Managed.Tests+BoolMarshalIcall, Testing.Managed", &BoolMarshalIcall);
 	InHost.AddInternalCall("Testing.Managed.Tests+IntPtrMarshalIcall, Testing.Managed", &IntPtrMarshalIcall);
+	InHost.AddInternalCall("Testing.Managed.Tests+StringMarshalIcall, Testing.Managed", &StringMarshalIcall);
 	InHost.AddInternalCall("Testing.Managed.Tests+DummyStructMarshalIcall, Testing.Managed", &DummyStructMarshalIcall);
 	InHost.AddInternalCall("Testing.Managed.Tests+DummyStructPtrMarshalIcall, Testing.Managed", &DummyStructPtrMarshalIcall);
+}
+
+struct Test
+{
+	std::string Name;
+	std::function<bool()> Func;
+};
+std::vector<Test> tests;
+
+void RegisterTest(std::string_view InName, std::function<bool()> InFunc)
+{
+	tests.emplace_back(std::string(InName), std::move(InFunc));
+}
+
+void RegisterMemeberMethodTests(Coral::HostInstance& InHost, Coral::ObjectHandle InObject)
+{
+	RegisterTest("SByteTest", [&](){ return InHost.InvokeMethodRet<char8_t, char8_t>(InObject, "SByteTest", 10) == 20; });
+	RegisterTest("ByteTest", [&](){ return InHost.InvokeMethodRet<uint8_t, uint8_t>(InObject, "ByteTest", 10) == 20; });
+	RegisterTest("ShortTest", [&](){ return InHost.InvokeMethodRet<int16_t, int16_t>(InObject, "ShortTest", 10) == 20; });
+	RegisterTest("UShortTest", [&](){ return InHost.InvokeMethodRet<uint16_t, uint16_t>(InObject, "UShortTest", 10) == 20; });
+	RegisterTest("IntTest", [&](){ return InHost.InvokeMethodRet<int32_t, int32_t>(InObject, "IntTest", 10) == 20; });
+	RegisterTest("UIntTest", [&](){ return InHost.InvokeMethodRet<uint32_t, uint32_t>(InObject, "UIntTest", 10) == 20; });
+	RegisterTest("LongTest", [&](){ return InHost.InvokeMethodRet<int64_t, int64_t>(InObject, "LongTest", 10) == 20; });
+	RegisterTest("ULongTest", [&](){ return InHost.InvokeMethodRet<uint64_t, uint64_t>(InObject, "ULongTest", 10) == 20; });
+	RegisterTest("FloatTest", [&](){ return InHost.InvokeMethodRet<float, float>(InObject, "FloatTest", 10.0f) - 20.0f < 0.001f; });
+	RegisterTest("DoubleTest", [&](){ return InHost.InvokeMethodRet<double, double>(InObject, "DoubleTest", 10.0) - 20.0 < 0.001; });
+	RegisterTest("BoolTest", [&](){ return InHost.InvokeMethodRet<bool, bool>(InObject, "BoolTest", false); });
+	RegisterTest("IntPtrTest", [&](){ int32_t v = 10; return *InHost.InvokeMethodRet<int32_t*, int32_t*>(InObject, "IntPtrTest", &v) == 50; });
+#if CORAL_WIDE_CHARS
+	//RegisterTest("StringTest", [&](){ return wcscmp(InHost.InvokeMethodRet<const CharType*, const CharType*>(InObject, "StringTest", CORAL_STR("Hello")), CORAL_STR("Hello, World!")) == 0; });
+#else
+	//RegisterTest("SByteTest", [&](){ return strcmp(InHost.InvokeMethodRet<const CharType*, const CharType*>(InObject, "SByteTest", CORAL_STR("Hello")), CORAL_STR("Hello, World!")) == 0; });
+#endif
+	
+	// TODO(Peter): Struct Marshalling
+	//RegisterTest("SByteTest", [&](){ return InHost.InvokeMethodRet<char8_t, char8_t>(InObject, "SByteTest", 10) == 20; });
+	//RegisterTest("SByteTest", [&](){ return InHost.InvokeMethodRet<char8_t, char8_t>(InObject, "SByteTest", 10) == 20; });
+}
+
+void RunTests()
+{
+	size_t passedTests = 0;
+	for (size_t i = 0; i < tests.size(); i++)
+	{
+		const auto& test = tests[i];
+		bool result = test.Func();
+		if (result)
+		{
+			std::cout << "[" << i + 1 << " / " << tests.size() << " (" << test.Name << "): Passed\n";
+			passedTests++;
+		}
+		else
+		{
+			std::cout << "[" << i + 1 << " / " << tests.size() << " (" << test.Name << "): Failed\n"; 
+		}
+	}
+	std::cout << "[NativeTest]: Done. " << passedTests << " passed, " << tests.size() - passedTests  << " failed.";
 }
 
 int main()
@@ -95,7 +160,6 @@ int main()
 	auto status = hostInstance.LoadAssembly(assemblyPath.string().c_str(), testingHandle);
 
 	RegisterTestInternalCalls(hostInstance);
-
 	hostInstance.UploadInternalCalls();
 
 	Coral::ObjectHandle objectHandle = hostInstance.CreateInstance("Testing.Managed.Tests, Testing.Managed");
@@ -105,6 +169,11 @@ int main()
 	}
 
 	hostInstance.DestroyInstance(objectHandle);
+
+	auto object = hostInstance.CreateInstance("Testing.Managed.MemberMethodTest, Testing.Managed");
+	RegisterMemeberMethodTests(hostInstance, object);
+	RunTests();
+	hostInstance.DestroyInstance(object);
 
 	hostInstance.UnloadAssemblyLoadContext(testingHandle);
 	Coral::GC::Collect();

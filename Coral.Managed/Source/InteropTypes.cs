@@ -88,16 +88,15 @@ namespace Coral.Managed.Interop
 		public bool Equals(UnmanagedString other) => m_NativeString == other.m_NativeString;
 		public override int GetHashCode() => m_NativeString.GetHashCode();
 
-		public static bool operator==(UnmanagedString left, UnmanagedString right) => left.Equals(right);
-		public static bool operator!=(UnmanagedString left, UnmanagedString right) => !(left == right);
+		public static bool operator ==(UnmanagedString left, UnmanagedString right) => left.Equals(right);
+		public static bool operator !=(UnmanagedString left, UnmanagedString right) => !(left == right);
 
 		public static implicit operator string(UnmanagedString InUnmanagedString) => InUnmanagedString.ToString();
 	}
 
 	public struct Bool32
 	{
-		private readonly uint m_Value;
+		public readonly uint m_Value;
 		public static implicit operator bool(Bool32 InBool32) => InBool32.m_Value > 0;
 	}
-
 }

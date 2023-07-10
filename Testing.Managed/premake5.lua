@@ -13,5 +13,5 @@ project "Testing.Managed"
     files {
         "Source/**.cs"
     }
-
+    
     links { "Coral.Managed" }

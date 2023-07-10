@@ -96,6 +96,28 @@ namespace Coral {
 			}
 		}
 
+		template<typename TRet, typename... TArgs>
+		TRet InvokeMethodRet(ObjectHandle InHandle, std::string_view InMethodName, TArgs&&... InParameters)
+		{
+			constexpr size_t parameterCount = sizeof...(InParameters);
+
+			TRet result;
+			ManagedType resultType = GetManagedType<TRet>();
+			
+			if constexpr (parameterCount > 0)
+			{
+				const void* parameterValues[parameterCount];
+				ManagedType parameterTypes[parameterCount];
+				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount>{});
+				InvokeMethodRetInternal(InHandle, InMethodName, parameterTypes, parameterValues, parameterCount, &result, sizeof(TRet), resultType);
+			}
+			else
+			{
+				InvokeMethodRetInternal(InHandle, InMethodName, nullptr, nullptr, 0, &result, sizeof(TRet), resultType);
+			}
+
+			return result;
+		}
 		void DestroyInstance(ObjectHandle& InObjectHandle);
 
 		using ExceptionCallbackFn = void(*)(const CharType*);
@@ -114,6 +136,37 @@ namespace Coral {
 			return (TFunc)LoadCoralManagedFunctionPtr(m_CoralManagedAssemblyPath, InTypeName, InMethodName, InDelegateType);
 		}
 
+		template<typename TArg>
+		constexpr ManagedType GetManagedType() const
+		{
+			if constexpr (std::is_pointer_v<std::remove_reference_t<TArg>>)
+				return ManagedType::Pointer;
+			else if constexpr (std::same_as<TArg, uint8_t>)
+				return ManagedType::Byte;
+			else if constexpr (std::same_as<TArg, uint16_t>)
+				return ManagedType::UShort;
+			else if constexpr (std::same_as<TArg, uint32_t> || (std::same_as<TArg, unsigned long> && sizeof(TArg) == 4))
+				return ManagedType::UInt;
+			else if constexpr (std::same_as<TArg, uint64_t> || (std::same_as<TArg, unsigned long> && sizeof(TArg) == 8))
+				return ManagedType::ULong;
+			else if constexpr (std::same_as<TArg, char8_t>)
+				return ManagedType::SByte;
+			else if constexpr (std::same_as<TArg, int16_t>)
+				return ManagedType::Short;
+			else if constexpr (std::same_as<TArg, int32_t> || (std::same_as<TArg, long> && sizeof(TArg) == 4))
+				return ManagedType::Int;
+			else if constexpr (std::same_as<TArg, int64_t> || (std::same_as<TArg, long> && sizeof(TArg) == 8))
+				return ManagedType::Long;
+			else if constexpr (std::same_as<TArg, float>)
+				return ManagedType::Float;
+			else if constexpr (std::same_as<TArg, double>)
+				return ManagedType::Double;
+			else if constexpr (std::same_as<TArg, bool>)
+				return ManagedType::Bool;
+			else
+				return ManagedType::Unknown;
+		}
+		
 		template<typename TArg, size_t TIndex>
 		void AddToArrayI(const void** InArgumentsArr, ManagedType* InArgumentTypesArr, TArg&& InArg) const
 		{
@@ -124,30 +177,8 @@ namespace Coral {
 			}
 			else
 			{
-				 InArgumentsArr[TIndex] = reinterpret_cast<const void*>(&InArg);
-
-				if constexpr (std::same_as<TArg, uint8_t>)
-					InArgumentTypesArr[TIndex] = ManagedType::Byte;
-				else if constexpr (std::same_as<TArg, uint16_t>)
-					InArgumentTypesArr[TIndex] = ManagedType::UShort;
-				else if constexpr (std::same_as<TArg, uint32_t> || (std::same_as<TArg, unsigned long> && sizeof(TArg) == 4))
-					InArgumentTypesArr[TIndex] = ManagedType::UInt;
-				else if constexpr (std::same_as<TArg, uint64_t> || (std::same_as<TArg, unsigned long> && sizeof(TArg) == 8))
-					InArgumentTypesArr[TIndex] = ManagedType::ULong;
-				else if constexpr (std::same_as<TArg, char8_t>)
-					InArgumentTypesArr[TIndex] = ManagedType::SByte;
-				else if constexpr (std::same_as<TArg, int16_t>)
-					InArgumentTypesArr[TIndex] = ManagedType::Short;
-				else if constexpr (std::same_as<TArg, int32_t> || (std::same_as<TArg, long> && sizeof(TArg) == 4))
-					InArgumentTypesArr[TIndex] = ManagedType::Int;
-				else if constexpr (std::same_as<TArg, int64_t> || (std::same_as<TArg, long> && sizeof(TArg) == 8))
-					InArgumentTypesArr[TIndex] = ManagedType::Long;
-				else if constexpr (std::same_as<TArg, float>)
-					InArgumentTypesArr[TIndex] = ManagedType::Float;
-				else if constexpr (std::same_as<TArg, double>)
-					InArgumentTypesArr[TIndex] = ManagedType::Double;
-				else if constexpr (std::same_as<TArg, bool>)
-					InArgumentTypesArr[TIndex] = ManagedType::Bool;
+				InArgumentsArr[TIndex] = reinterpret_cast<const void*>(&InArg);
+				InArgumentTypesArr[TIndex] = GetManagedType<TArg>();
 			}
 		}
 
@@ -159,6 +190,7 @@ namespace Coral {
 
 		ObjectHandle CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength);
 		void InvokeMethodInternal(ObjectHandle InObjectHandle, std::string_view InMethodName, ManagedType* InParameterTypes, const void** InParameters, size_t InLength);
+		void InvokeMethodRetInternal(ObjectHandle InObjectHandle, std::string_view InMethodName, ManagedType* InParameterTypes, const void** InParameters, size_t InLength, void* InResultStorage, uint64_t InResultSize, ManagedType InResultType);
 
 	public:
 		struct InternalCall

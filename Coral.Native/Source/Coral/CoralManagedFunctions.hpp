@@ -19,6 +19,7 @@ namespace Coral {
 	using FreeManagedStringFn = void(*)(const CharType*);
 	using CreateObjectFn = void*(*)(const ObjectCreateInfo*);
 	using InvokeMethodFn = void(*)(void*, const CharType*, const ManagedType*, const void**, int32_t);
+	using InvokeMethodRetFn = void(*)(void*, const CharType*, const ManagedType*, const void**, int32_t, void*, uint64_t, ManagedType);
 	using DestroyObjectFn = void(*)(void*);
 
 	using SetExceptionCallbackFn = void(*)(ExceptionCallbackFn);
@@ -36,6 +37,7 @@ namespace Coral {
 
 		CreateObjectFn CreateObjectFptr = nullptr;
 		InvokeMethodFn InvokeMethodFptr = nullptr;
+		InvokeMethodRetFn InvokeMethodRetFptr = nullptr;
 		DestroyObjectFn DestroyObjectFptr = nullptr;
 
 		SetExceptionCallbackFn SetExceptionCallbackFptr = nullptr;

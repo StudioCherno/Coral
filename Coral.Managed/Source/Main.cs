@@ -38,7 +38,7 @@ namespace Coral.Managed
 			{ ManagedType.ULong, InValue => Marshal.PtrToStructure<ulong>(InValue) },
 			{ ManagedType.Float, InValue => Marshal.PtrToStructure<float>(InValue) },
 			{ ManagedType.Double, InValue => Marshal.PtrToStructure<double>(InValue) },
-			{ ManagedType.Bool, InValue => Marshal.PtrToStructure<bool>(InValue) },
+			{ ManagedType.Bool, InValue => Marshal.PtrToStructure<sbyte>(InValue) > 0 },
 			{ ManagedType.Pointer, InValue => InValue }
 		};
 
@@ -175,7 +175,7 @@ namespace Coral.Managed
 						methodParameters[i] = s_MarshalFunctions[paramType](Marshal.ReadIntPtr(InParameterValues, i * Marshal.SizeOf<nint>()));
 					}
 				}
-
+				
 				methodInfo.Invoke(target, methodParameters);
 			}
 			catch (Exception ex)
@@ -183,6 +183,123 @@ namespace Coral.Managed
 				HandleException(ex);
 			}
 		}
-	}
 
+		private static void CopyToUnmanaged<T>(object InValue, IntPtr InResultStorage, ulong InResultSize)
+		{
+			var value = (T)InValue;
+			unsafe
+			{
+				Buffer.MemoryCopy(&value, InResultStorage.ToPointer(), InResultSize, InResultSize);
+			}
+		}
+		
+		[UnmanagedCallersOnly]
+		private static void InvokeMethodRet(IntPtr InObjectHandle, UnmanagedString InMethodName, IntPtr InParameterTypes, IntPtr InParameterValues, int InLength, IntPtr InResultStorage, ulong InResultSize, ManagedType InResultType)
+		{
+			try
+			{
+				var target = GCHandle.FromIntPtr(InObjectHandle).Target;
+				var targetType = target.GetType();
+
+				MethodInfo methodInfo = null;
+				foreach (var mi in targetType.GetMethods())
+				{
+					if (mi.Name != InMethodName || mi.GetParameters().Length != InLength)
+						continue;
+					
+					methodInfo = mi;
+					break;
+				}
+
+				if (methodInfo == null)
+				{
+					HandleException(new MissingMethodException($"Couldn't find method called {InMethodName}"));
+					return;
+				}
+
+				object[] methodParameters = null;
+
+				if (InParameterTypes != IntPtr.Zero && InParameterValues != IntPtr.Zero && InLength > 0)
+				{
+					methodParameters = new object[InLength];
+					
+					for (int i = 0; i < InLength; i++)
+					{
+						var paramType = (ManagedType)Marshal.ReadInt32(InParameterTypes, i * Marshal.SizeOf<int>());
+						methodParameters[i] = s_MarshalFunctions[paramType](Marshal.ReadIntPtr(InParameterValues, i * Marshal.SizeOf<nint>()));
+					}
+				}
+				
+				object value = methodInfo.Invoke(target, methodParameters);
+
+				switch (InResultType)
+				{
+				case ManagedType.SByte:
+				{
+					CopyToUnmanaged<sbyte>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.Byte:
+				{
+					CopyToUnmanaged<byte>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.Short:
+				{
+					CopyToUnmanaged<short>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.UShort:
+				{
+					CopyToUnmanaged<ushort>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.Int:
+				{
+					CopyToUnmanaged<int>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.UInt:
+				{
+					CopyToUnmanaged<uint>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.Long:
+				{
+					CopyToUnmanaged<long>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.ULong:
+				{
+					CopyToUnmanaged<ulong>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.Float:
+				{
+					CopyToUnmanaged<float>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.Double:
+				{
+					CopyToUnmanaged<double>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.Bool:
+				{
+					CopyToUnmanaged<bool>(value, InResultStorage, InResultSize);
+					break;
+				}
+				case ManagedType.Pointer:
+				{
+					CopyToUnmanaged<IntPtr>(value, InResultStorage, InResultSize);
+					break;
+				}
+				}
+			}
+			catch (Exception ex)
+			{
+				HandleException(ex);
+			}
+		}
+	}
 }

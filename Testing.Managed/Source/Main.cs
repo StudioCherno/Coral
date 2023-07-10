@@ -20,8 +20,9 @@ namespace Testing.Managed {
 		internal static unsafe delegate*<double, double> DoubleMarshalIcall;
 		internal static unsafe delegate*<bool, bool> BoolMarshalIcall;
 		internal static unsafe delegate*<IntPtr, IntPtr> IntPtrMarshalIcall;
+		internal static unsafe delegate*<string, string> StringMarshalIcall;
 
-		private struct DummyStruct
+		internal struct DummyStruct
 		{
 			public int X;
 			public float Y;
@@ -105,6 +106,12 @@ namespace Testing.Managed {
 			unsafe { success = Marshal.ReadInt32(IntPtrMarshalIcall(data), 0) == 100; }
 			Marshal.FreeCoTaskMem(data);
 			return success;
+		}
+		
+		[Test]
+		public bool StringMarshalTest()
+		{
+			unsafe { return StringMarshalIcall("Hello") == "Hello"; }
 		}
 
 		[Test]
