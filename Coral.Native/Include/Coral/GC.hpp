@@ -14,7 +14,7 @@ namespace Coral {
 		Optimized,
 
 		// Requests that the garbage collector decommit as much memory as possible
-		Aggressize
+		Aggressive
 	};
 	
 	class GC
