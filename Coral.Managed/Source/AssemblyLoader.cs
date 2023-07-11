@@ -21,8 +21,8 @@ namespace Coral.Managed
 		private static readonly Dictionary<int, Assembly> s_AssemblyCache = new();
 		private static AssemblyLoadStatus s_LastLoadStatus = AssemblyLoadStatus.Success;
 
-		private static readonly AssemblyLoadContext s_CoralAssemblyLoadContext;
-		private static AssemblyLoadContext s_AppAssemblyLoadContext;
+		private static readonly AssemblyLoadContext? s_CoralAssemblyLoadContext;
+		private static AssemblyLoadContext? s_AppAssemblyLoadContext;
 
 		static AssemblyLoader()
 		{
@@ -40,14 +40,14 @@ namespace Coral.Managed
 
 		private static void CacheCoralAssemblies()
 		{
-			foreach (var assembly in s_CoralAssemblyLoadContext.Assemblies)
+			foreach (var assembly in s_CoralAssemblyLoadContext!.Assemblies)
 			{
 				int assemblyId = assembly.GetName().FullName.GetHashCode();
 				s_AssemblyCache.Add(assemblyId, assembly);
 			}
 		}
 
-		internal static Assembly ResolveAssembly(AssemblyLoadContext InAssemblyLoadContext, AssemblyName InAssemblyName)
+		internal static Assembly? ResolveAssembly(AssemblyLoadContext? InAssemblyLoadContext, AssemblyName InAssemblyName)
 		{
 			int assemblyId = InAssemblyName.FullName.GetHashCode();
 			
@@ -96,7 +96,7 @@ namespace Coral.Managed
 					s_AppAssemblyLoadContext.Unloading += _ => { s_AppAssemblyLoadContext = null; };
 				}
 
-				var assembly = s_AppAssemblyLoadContext.LoadFromAssemblyPath(InAssemblyFilePath);
+				var assembly = s_AppAssemblyLoadContext.LoadFromAssemblyPath(InAssemblyFilePath!);
 				var assemblyName = assembly.GetName();
 				int assemblyId = assemblyName.FullName.GetHashCode();
 				s_AssemblyCache.Add(assemblyId, assembly);
@@ -149,7 +149,8 @@ namespace Coral.Managed
 			if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
 				return UnmanagedString.Null();
 
-			return UnmanagedString.FromString(assembly.GetName().Name);
+			var assemblyName = assembly.GetName();
+			return UnmanagedString.FromString(assemblyName.Name);
 		}
 
 	}

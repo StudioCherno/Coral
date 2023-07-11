@@ -23,9 +23,7 @@ namespace Coral {
 	{
 		const CharType* TypeName;
 		bool IsWeakRef;
-		const void** Parameters;
-		ManagedType* ParameterTypes;
-		int32_t Length;
+		UnmanagedArray Parameters;
 	};
 
 	void DefaultErrorCallback(const CharType* InMessage)
@@ -85,7 +83,7 @@ namespace Coral {
 		InAssembly.m_AssemblyID = -1;
 	}
 	
-	ManagedObject HostInstance::CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength)
+	ManagedObject HostInstance::CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, size_t InLength)
 	{
 		auto typeName = StringHelper::ConvertUtf8ToWide(InTypeName);
 
@@ -93,9 +91,7 @@ namespace Coral {
 		{
 			.TypeName = typeName.c_str(),
 			.IsWeakRef = false,
-			.Parameters = InParameters,
-			.ParameterTypes = InParameterTypes,
-			.Length = int32_t(InLength)
+			.Parameters = { InParameters, int32_t(InLength) },
 		};
 
 		ManagedObject handle;

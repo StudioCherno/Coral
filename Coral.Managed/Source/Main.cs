@@ -6,20 +6,6 @@ using Coral.Managed.Interop;
 
 namespace Coral.Managed
 {
-
-	internal enum ManagedType
-	{
-		SByte, Byte,
-		Short, UShort,
-		Int, UInt,
-		Long, ULong,
-
-		Float, Double,
-
-		Bool,
-
-		Pointer
-	}
 	
 	internal static class ManagedHost
 	{

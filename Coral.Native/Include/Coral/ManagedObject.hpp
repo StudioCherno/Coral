@@ -20,11 +20,11 @@ namespace Coral {
 				const void* parameterValues[parameterCount];
 				ManagedType parameterTypes[parameterCount];
 				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount>{});
-				InvokeMethodRetInternal(InMethodName, parameterTypes, parameterValues, parameterCount, &result, sizeof(TReturn), resultType);
+				InvokeMethodRetInternal(InMethodName, parameterValues, parameterCount, &result);
 			}
 			else
 			{
-				InvokeMethodRetInternal(InMethodName, nullptr, nullptr, 0, &result, sizeof(TReturn), resultType);
+				InvokeMethodRetInternal(InMethodName, nullptr, 0, &result);
 			}
 
 			return result;
@@ -40,17 +40,17 @@ namespace Coral {
 				const void* parameterValues[parameterCount];
 				ManagedType parameterTypes[parameterCount];
 				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount>{});
-				InvokeMethodInternal(InMethodName, parameterTypes, parameterValues, parameterCount);
+				InvokeMethodInternal(InMethodName, parameterValues, parameterCount);
 			}
 			else
 			{
-				InvokeMethodInternal(InMethodName, nullptr, nullptr, 0);
+				InvokeMethodInternal(InMethodName, nullptr, 0);
 			}
 		}
 
 	private:
-		void InvokeMethodInternal(std::string_view InMethodName, ManagedType* InParameterTypes, const void** InParameters, size_t InLength) const;
-		void InvokeMethodRetInternal(std::string_view InMethodName, ManagedType* InParameterTypes, const void** InParameters, size_t InLength, void* InResultStorage, uint64_t InResultSize, ManagedType InResultType) const;
+		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, size_t InLength) const;
+		void InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, size_t InLength, void* InResultStorage) const;
 
 	private:
 		template<typename TArg, size_t TIndex>

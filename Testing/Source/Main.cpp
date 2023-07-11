@@ -7,7 +7,7 @@
 #include <source_location>
 
 #include <Coral/HostInstance.hpp>
-#include <Coral/GC.h>
+#include <Coral/GC.hpp>
 
 void ExceptionCallback(const CharType* InMessage)
 {
@@ -159,6 +159,12 @@ int main()
 
 	RegisterTestInternalCalls(assembly);
 	assembly.UploadInternalCalls();
+
+	/*
+		Coral::ReflectionType type = object.GetType();
+		type.GetName();
+		Coral::ReflectionType parentType = type.GetBaseType();
+	*/
 
 	Coral::ManagedObject objectHandle = hostInstance.CreateInstance("Testing.Managed.Tests, Testing.Managed");
 	objectHandle.InvokeMethod("RunManagedTests");

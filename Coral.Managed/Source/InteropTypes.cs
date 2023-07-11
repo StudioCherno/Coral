@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
 
 namespace Coral.Managed.Interop
@@ -37,6 +35,8 @@ namespace Coral.Managed.Interop
 			}
 		}
 
+		public bool IsEmpty() => m_NativeArray == IntPtr.Zero || Length == 0;
+		
 		public IntPtr[] ToIntPtrArray()
 		{
 			try
@@ -66,9 +66,9 @@ namespace Coral.Managed.Interop
 
 		public bool IsNull() => m_NativeString == IntPtr.Zero;
 
-		public override string ToString() => m_NativeString != IntPtr.Zero ? Marshal.PtrToStringAuto(m_NativeString) : string.Empty;
+		public override string? ToString() => m_NativeString != IntPtr.Zero ? Marshal.PtrToStringAuto(m_NativeString) : string.Empty;
 
-		public static UnmanagedString FromString(string InValue)
+		public static UnmanagedString FromString(string? InValue)
 		{
 			return new UnmanagedString()
 			{
@@ -89,14 +89,14 @@ namespace Coral.Managed.Interop
 
 		public void Free() => Marshal.FreeCoTaskMem(m_NativeString);
 
-		public override bool Equals(object obj) => obj is UnmanagedString other && Equals(other);
+		public override bool Equals(object? obj) => obj is UnmanagedString other && Equals(other);
 		public bool Equals(UnmanagedString other) => m_NativeString == other.m_NativeString;
 		public override int GetHashCode() => m_NativeString.GetHashCode();
 
 		public static bool operator ==(UnmanagedString left, UnmanagedString right) => left.Equals(right);
 		public static bool operator !=(UnmanagedString left, UnmanagedString right) => !(left == right);
 
-		public static implicit operator string(UnmanagedString InUnmanagedString) => InUnmanagedString.ToString();
+		public static implicit operator string?(UnmanagedString InUnmanagedString) => InUnmanagedString.ToString();
 	}
 
 	public struct Bool32

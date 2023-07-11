@@ -39,11 +39,11 @@ namespace Coral {
 				const void* argumentsArr[argumentCount];
 				ManagedType argumentTypes[argumentCount];
 				AddToArray<TArgs...>(argumentsArr, argumentTypes, std::forward<TArgs>(InArguments)..., std::make_index_sequence<argumentCount> {});
-				result = CreateInstanceInternal(InTypeName, argumentsArr, argumentTypes, argumentCount);
+				result = CreateInstanceInternal(InTypeName, argumentsArr, argumentCount);
 			}
 			else
 			{
-				result = CreateInstanceInternal(InTypeName, nullptr, nullptr, 0);
+				result = CreateInstanceInternal(InTypeName, nullptr, 0);
 			}
 
 			return result;
@@ -68,7 +68,7 @@ namespace Coral {
 			return (TFunc)LoadCoralManagedFunctionPtr(m_CoralManagedAssemblyPath, InTypeName, InMethodName, InDelegateType);
 		}
 
-		ManagedObject CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, ManagedType* InParameterTypes, size_t InLength);
+		ManagedObject CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, size_t InLength);
 
 	private:
 		HostSettings m_Settings;

@@ -19,8 +19,8 @@ namespace Coral {
 	using GetAssemblyNameFn = const CharType*(*)(int32_t);
 	using FreeManagedStringFn = void(*)(const CharType*);
 	using CreateObjectFn = void*(*)(const ObjectCreateInfo*);
-	using InvokeMethodFn = void(*)(void*, const CharType*, const ManagedType*, const void**, int32_t);
-	using InvokeMethodRetFn = void(*)(void*, const CharType*, const ManagedType*, const void**, int32_t, void*, uint64_t, ManagedType);
+	using InvokeMethodFn = void(*)(void*, const CharType*, UnmanagedArray*);
+	using InvokeMethodRetFn = void(*)(void*, const CharType*, UnmanagedArray*, void*);
 	using DestroyObjectFn = void(*)(void*);
 
 	using SetExceptionCallbackFn = void(*)(ExceptionCallbackFn);

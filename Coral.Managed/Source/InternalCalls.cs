@@ -11,7 +11,7 @@ namespace Coral.Managed.Interop
 		private readonly IntPtr m_NamePtr;
 		public readonly IntPtr NativeFunctionPtr;
 
-		public string Name => Marshal.PtrToStringAuto(m_NamePtr);
+		public string? Name => Marshal.PtrToStringAuto(m_NamePtr);
 	}
 
 	internal static class InternalCallsManager
@@ -26,12 +26,19 @@ namespace Coral.Managed.Interop
 				foreach (var internalCall in internalCalls)
 				{
 					var name = internalCall.Name;
+
+					if (name == null)
+						throw new ArgumentNullException(nameof(name), "Internal call name is null!");
+
 					var fieldNameStart = name.IndexOf('+');
 					var fieldNameEnd = name.IndexOf(",", fieldNameStart, StringComparison.CurrentCulture);
 					var fieldName = name.Substring(fieldNameStart + 1, fieldNameEnd - fieldNameStart - 1);
 					var containingTypeName = name.Remove(fieldNameStart, fieldNameEnd - fieldNameStart);
 
 					var type = TypeHelper.FindType(containingTypeName);
+
+					if (type == null)
+						throw new TypeAccessException($"Can't find internal call type '{containingTypeName}'");
 
 					var bindingFlags = BindingFlags.Static | BindingFlags.NonPublic;
 					var field = type.GetFields(bindingFlags).FirstOrDefault(field => field.Name == fieldName);
