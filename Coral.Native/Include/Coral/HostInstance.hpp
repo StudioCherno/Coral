@@ -4,6 +4,7 @@
 #include "Assembly.hpp"
 #include "ManagedType.hpp"
 #include "ManagedObject.hpp"
+#include "ReflectionType.hpp"
 
 namespace Coral {
 
@@ -55,6 +56,9 @@ namespace Coral {
 		using ExceptionCallbackFn = void(*)(const CharType*);
 		void SetExceptionCallback(ExceptionCallbackFn InCallback);
 
+		ReflectionType& GetReflectionType(const CharType* InTypeName);
+		ReflectionType& GetReflectionType(ManagedObject InObject);
+		
 	private:
 		void LoadHostFXR() const;
 		void InitializeCoralManaged();
@@ -75,6 +79,8 @@ namespace Coral {
 		std::filesystem::path m_CoralManagedAssemblyPath;
 		void* m_HostFXRContext = nullptr;
 		bool m_Initialized = false;
+
+		std::unordered_map<size_t, ReflectionType> m_ReflectionTypes;
 	};
 
 }

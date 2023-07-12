@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.hpp"
+#include "ReflectionType.hpp"
 
 namespace Coral {
 
@@ -41,6 +42,8 @@ namespace Coral {
 	#endif
 		
 		std::vector<InternalCall*> m_InternalCalls;
+
+		std::vector<ReflectionType> m_ReflectionTypes;
 		
 		friend class HostInstance;
 	};

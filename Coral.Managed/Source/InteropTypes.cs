@@ -101,7 +101,9 @@ namespace Coral.Managed.Interop
 
 	public struct Bool32
 	{
-		public readonly uint m_Value;
-		public static implicit operator bool(Bool32 InBool32) => InBool32.m_Value > 0;
+		public uint Value;
+
+		public static implicit operator Bool32(bool InValue) => new() { Value = InValue ? 1u : 0u };
+		public static implicit operator bool(Bool32 InBool32) => InBool32.Value > 0;
 	}
 }

@@ -14,9 +14,15 @@ internal static class ManagedObject
 		public readonly bool IsWeakRef;
 		public readonly UnmanagedArray Parameters;
 	}
+
+	private struct ObjectData
+	{
+		public IntPtr Handle;
+		public UnmanagedString FullName;
+	}
 	
 	[UnmanagedCallersOnly]
-	private static unsafe IntPtr CreateObject(ObjectCreateInfo* InCreateInfo)
+	private static unsafe ObjectData CreateObject(ObjectCreateInfo* InCreateInfo)
 	{
 		try
 		{
@@ -25,7 +31,7 @@ internal static class ManagedObject
 			if (type == null)
 			{
 				Console.WriteLine($"[Coral.Managed]: Unknown type name '{InCreateInfo->TypeName}'");
-				return IntPtr.Zero;
+				return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() };
 			}
 
 			ConstructorInfo? constructor = null;
@@ -40,21 +46,25 @@ internal static class ManagedObject
 			}
 
 			if (constructor == null)
-				return IntPtr.Zero; // TODO(Peter): Throw
+				return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() };
 
 			var parameters = Marshalling.MarshalParameterArray(InCreateInfo->Parameters, constructor);
 			object? result = parameters != null ? TypeHelper.CreateInstance(type, parameters) : TypeHelper.CreateInstance(type);
 
 			if (result == null)
-				return IntPtr.Zero;
-			
+				return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() };
+
 			var handle = GCHandle.Alloc(result, InCreateInfo->IsWeakRef ? GCHandleType.Weak : GCHandleType.Normal);
-			return GCHandle.ToIntPtr(handle);
+			return new()
+			{
+				Handle = GCHandle.ToIntPtr(handle),
+				FullName = UnmanagedString.FromString(type.FullName)
+			};
 		}
 		catch (Exception ex)
 		{
 			ManagedHost.HandleException(ex);
-			return IntPtr.Zero;
+			return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() };
 		}
 	}
 

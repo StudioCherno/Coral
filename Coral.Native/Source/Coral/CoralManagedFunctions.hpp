@@ -7,8 +7,10 @@ namespace Coral {
 	struct UnmanagedArray;
 	enum class AssemblyLoadStatus;
 	struct ObjectCreateInfo;
+	class ManagedObject;
 	enum class GCCollectionMode;
 	enum class ManagedType;
+	struct ReflectionType;
 
 	using ExceptionCallbackFn = void(*)(const CharType*);
 
@@ -17,8 +19,13 @@ namespace Coral {
 	using UnloadAssemblyLoadContextFn = void(*)(int32_t);
 	using GetLastLoadStatusFn = AssemblyLoadStatus(*)();
 	using GetAssemblyNameFn = const CharType*(*)(int32_t);
+	using QueryAssemblyTypesFn = void(*)(int32_t, ReflectionType*, int32_t*);
+	using GetReflectionTypeFn = Bool32(*)(const CharType*, ReflectionType*);
+	using GetReflectionTypeFromObjectFn = Bool32(*)(void*, ReflectionType*);
+	
 	using FreeManagedStringFn = void(*)(const CharType*);
-	using CreateObjectFn = void*(*)(const ObjectCreateInfo*);
+	
+	using CreateObjectFn = ManagedObject(*)(const ObjectCreateInfo*);
 	using InvokeMethodFn = void(*)(void*, const CharType*, UnmanagedArray*);
 	using InvokeMethodRetFn = void(*)(void*, const CharType*, UnmanagedArray*, void*);
 	using SetFieldValueFn = void(*)(void*, const CharType*, void*);
@@ -39,6 +46,10 @@ namespace Coral {
 		UnloadAssemblyLoadContextFn UnloadAssemblyLoadContextFptr = nullptr;
 		GetLastLoadStatusFn GetLastLoadStatusFptr = nullptr;
 		GetAssemblyNameFn GetAssemblyNameFptr = nullptr;
+		QueryAssemblyTypesFn QueryAssemblyTypesFptr = nullptr;
+		GetReflectionTypeFn GetReflectionTypeFptr = nullptr;
+		GetReflectionTypeFromObjectFn GetReflectionTypeFromObjectFptr = nullptr;
+		
 		FreeManagedStringFn FreeManagedStringFptr = nullptr;
 
 		CreateObjectFn CreateObjectFptr = nullptr;

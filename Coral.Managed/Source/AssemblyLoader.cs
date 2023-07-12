@@ -113,6 +113,37 @@ namespace Coral.Managed
 		}
 
 		[UnmanagedCallersOnly]
+		private static unsafe void QueryAssemblyTypes(int InAssemblyId, ManagedHost.ReflectionType* OutTypes, int* OutTypeCount)
+		{
+			if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
+			{
+				return;
+			}
+
+			var assemblyTypes = assembly.GetTypes();
+
+			if (OutTypeCount != null)
+				*OutTypeCount = assemblyTypes.Length;
+
+			if (OutTypes == null)
+				return;
+
+			for (int i = 0; i < assemblyTypes.Length; i++)
+			{
+				var type = assemblyTypes[i];
+				
+				var reflectionType = new ManagedHost.ReflectionType
+				{
+					FullName = UnmanagedString.FromString(type.FullName),
+					Name = UnmanagedString.FromString(type.Name),
+					Namespace = UnmanagedString.FromString(type.Namespace),
+				};
+
+				OutTypes[i] = reflectionType;
+			}
+		}
+		
+		[UnmanagedCallersOnly]
 		private static void UnloadAssemblyLoadContext(int InAssemblyId)
 		{
 			try

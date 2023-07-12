@@ -1,4 +1,5 @@
 ﻿#include "ManagedObject.hpp"
+#include "HostInstance.hpp"
 #include "CoralManagedFunctions.hpp"
 #include "StringHelper.hpp"
 #include "Interop.hpp"
@@ -42,6 +43,8 @@ namespace Coral {
 		auto propertyName = StringHelper::ConvertUtf8ToWide(InPropertyName);
 		s_ManagedFunctions.GetPropertyValueFptr(m_Handle, propertyName.c_str(), OutValue);
 	}
+
+	ReflectionType& ManagedObject::GetType() { return m_Host->GetReflectionType(*this); }
 	
 }
 

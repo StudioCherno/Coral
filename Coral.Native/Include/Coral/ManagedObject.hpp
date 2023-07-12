@@ -1,8 +1,12 @@
 ﻿#pragma once
 
+#include "Core.hpp"
 #include "ManagedType.hpp"
+#include "ReflectionType.hpp"
 
 namespace Coral {
+
+	class HostInstance;
 	
 	class ManagedObject
 	{
@@ -75,6 +79,8 @@ namespace Coral {
 			GetPropertyValueInternal(InPropertyName, &result);
 			return result;
 		}
+
+		ReflectionType& GetType();
 		
 	private:
 		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, size_t InLength) const;
@@ -108,6 +114,8 @@ namespace Coral {
 		
 	private:
 		void* m_Handle = nullptr;
+		const CharType* m_FullName = nullptr;
+		HostInstance* m_Host = nullptr;
 
 	private:
 		friend class HostInstance;

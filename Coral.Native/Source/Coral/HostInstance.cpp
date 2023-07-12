@@ -72,6 +72,11 @@ namespace Coral {
 			const auto* name = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
 			result.m_Name = StringHelper::ConvertWideToUtf8(name);
 			s_ManagedFunctions.FreeManagedStringFptr(name);
+
+			int32_t typeCount;
+			s_ManagedFunctions.QueryAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);
+			result.m_ReflectionTypes.resize(typeCount);
+			s_ManagedFunctions.QueryAssemblyTypesFptr(result.m_AssemblyID, result.m_ReflectionTypes.data(), &typeCount);
 		}
 		
 		return result;
@@ -94,9 +99,9 @@ namespace Coral {
 			.Parameters = { InParameters, int32_t(InLength) },
 		};
 
-		ManagedObject handle;
-		handle.m_Handle = s_ManagedFunctions.CreateObjectFptr(&createInfo);
-		return handle;
+		auto result = s_ManagedFunctions.CreateObjectFptr(&createInfo);
+		result.m_Host = this;
+		return result;
 	}
 
 	void HostInstance::DestroyInstance(ManagedObject& InObjectHandle)
@@ -116,6 +121,36 @@ namespace Coral {
 	void HostInstance::SetExceptionCallback(ExceptionCallbackFn InCallback)
 	{
 		s_ManagedFunctions.SetExceptionCallbackFptr(InCallback);
+	}
+
+	ReflectionType& HostInstance::GetReflectionType(const CharType* InTypeName)
+	{
+		size_t id = std::hash<const CharType*>()(InTypeName);
+
+		if (!m_ReflectionTypes.contains(id))
+		{
+			ReflectionType reflectionType;
+			s_ManagedFunctions.GetReflectionTypeFptr(InTypeName, &reflectionType);
+			reflectionType.m_Host = this;
+			m_ReflectionTypes[id] = std::move(reflectionType);
+		}
+		
+		return m_ReflectionTypes.at(id);
+	}
+	
+	ReflectionType& HostInstance::GetReflectionType(ManagedObject InObject)
+	{
+		size_t id = std::hash<const CharType*>()(InObject.m_FullName);
+
+		if (!m_ReflectionTypes.contains(id))
+		{
+			ReflectionType reflectionType;
+			s_ManagedFunctions.GetReflectionTypeFromObjectFptr(InObject.m_Handle, &reflectionType);
+			reflectionType.m_Host = this;
+			m_ReflectionTypes[id] = std::move(reflectionType);
+		}
+		
+		return m_ReflectionTypes.at(id);
 	}
 	
 #ifdef _WIN32
@@ -196,6 +231,9 @@ namespace Coral {
 		s_ManagedFunctions.UnloadAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<UnloadAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("UnloadAssemblyLoadContext"));
 		s_ManagedFunctions.GetLastLoadStatusFptr = LoadCoralManagedFunctionPtr<GetLastLoadStatusFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("GetLastLoadStatus"));
 		s_ManagedFunctions.GetAssemblyNameFptr = LoadCoralManagedFunctionPtr<GetAssemblyNameFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("GetAssemblyName"));
+		s_ManagedFunctions.QueryAssemblyTypesFptr = LoadCoralManagedFunctionPtr<QueryAssemblyTypesFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("QueryAssemblyTypes"));
+		s_ManagedFunctions.GetReflectionTypeFptr = LoadCoralManagedFunctionPtr<GetReflectionTypeFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("GetReflectionType"));
+		s_ManagedFunctions.GetReflectionTypeFromObjectFptr = LoadCoralManagedFunctionPtr<GetReflectionTypeFromObjectFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("GetReflectionTypeFromObject"));
 		s_ManagedFunctions.SetInternalCallsFptr = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.Managed.Interop.InternalCallsManager, Coral.Managed"), CORAL_STR("SetInternalCalls"));
 		s_ManagedFunctions.FreeManagedStringFptr = LoadCoralManagedFunctionPtr<FreeManagedStringFn>(CORAL_STR("Coral.Managed.Interop.UnmanagedString, Coral.Managed"), CORAL_STR("FreeUnmanaged"));
 		s_ManagedFunctions.CreateObjectFptr = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("CreateObject"));
