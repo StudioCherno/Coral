@@ -18,6 +18,18 @@ namespace Coral {
 		UnmanagedArray parameterArray = { InParameters, int32_t(InLength) };
 		s_ManagedFunctions.InvokeMethodRetFptr(m_Handle, methodName.c_str(), &parameterArray, InResultStorage);
 	}
+
+	void ManagedObject::SetFieldValueInternal(std::string_view InFieldName, void* InValue) const
+	{
+		auto fieldName = StringHelper::ConvertUtf8ToWide(InFieldName);
+		s_ManagedFunctions.SetFieldValueFptr(m_Handle, fieldName.c_str(), InValue);
+	}
+
+	void ManagedObject::GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const
+	{
+		auto fieldName = StringHelper::ConvertUtf8ToWide(InFieldName);
+		s_ManagedFunctions.GetFieldValueFptr(m_Handle, fieldName.c_str(), OutValue);
+	}
 	
 }
 

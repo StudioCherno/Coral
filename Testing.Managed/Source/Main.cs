@@ -7,7 +7,6 @@ namespace Testing.Managed {
 
 	public class Tests
 	{
-
 		internal static unsafe delegate*<sbyte, sbyte> SByteMarshalIcall;
 		internal static unsafe delegate*<byte, byte> ByteMarshalIcall;
 		internal static unsafe delegate*<short, short> ShortMarshalIcall;

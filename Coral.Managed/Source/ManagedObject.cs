@@ -13,9 +13,6 @@ internal static class ManagedObject
 		public readonly UnmanagedString TypeName;
 		public readonly bool IsWeakRef;
 		public readonly UnmanagedArray Parameters;
-		/*public readonly IntPtr Parameters;
-		public readonly IntPtr ParameterTypes;
-		public readonly int Length;*/
 	}
 	
 	[UnmanagedCallersOnly]
@@ -182,6 +179,79 @@ internal static class ManagedObject
 		catch (Exception ex)
 		{
 			ManagedHost.HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static void SetFieldValue(IntPtr InTarget, UnmanagedString InFieldName, IntPtr InValue)
+	{
+		var target = GCHandle.FromIntPtr(InTarget).Target;
+
+		if (target == null)
+		{
+			Console.WriteLine("Target is null");
+			return;
+		}
+
+		var targetType = target.GetType();
+		var fieldInfo = targetType.GetField(InFieldName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+		if (fieldInfo == null)
+		{
+			Console.WriteLine("FieldInfo is null");
+			return;
+		}
+
+		var value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
+		fieldInfo.SetValue(target, value);
+	}
+	
+	[UnmanagedCallersOnly]
+	private static void GetFieldValue(IntPtr InTarget, UnmanagedString InFieldName, IntPtr OutValue)
+	{
+		var target = GCHandle.FromIntPtr(InTarget).Target;
+
+		if (target == null)
+		{
+			Console.WriteLine("Target is null");
+			return;
+		}
+
+		var targetType = target.GetType();
+		var fieldInfo = targetType.GetField(InFieldName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+		if (fieldInfo == null)
+		{
+			Console.WriteLine("FieldInfo is null");
+			return;
+		}
+
+		var value = fieldInfo.GetValue(target);
+			
+		if (value is string s)
+		{
+			var nativeString = UnmanagedString.FromString(s);
+			Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);
+		}
+		else if (fieldInfo.FieldType.IsPointer)
+		{
+			unsafe
+			{
+				void* valuePointer = Pointer.Unbox(value);
+				Buffer.MemoryCopy(&valuePointer, OutValue.ToPointer(), IntPtr.Size, IntPtr.Size);
+			}
+		}
+		else
+		{
+			var valueSize = Marshal.SizeOf(fieldInfo.FieldType);
+			var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
+
+			unsafe
+			{
+				Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), OutValue.ToPointer(), valueSize, valueSize);
+			}
+				
+			handle.Free();
 		}
 	}
 }

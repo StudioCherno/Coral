@@ -48,9 +48,25 @@ namespace Coral {
 			}
 		}
 
+		template<typename TValue>
+		void SetFieldValue(std::string_view InFieldName, TValue InValue)
+		{
+			SetFieldValueInternal(InFieldName, &InValue);
+		}
+
+		template<typename TReturn>
+		TReturn GetFieldValue(std::string_view InFieldName)
+		{
+			TReturn result;
+			GetFieldValueInternal(InFieldName, &result);
+			return result;
+		}
+		
 	private:
 		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, size_t InLength) const;
 		void InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, size_t InLength, void* InResultStorage) const;
+		void SetFieldValueInternal(std::string_view InFieldName, void* InValue) const;
+		void GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const;
 
 	private:
 		template<typename TArg, size_t TIndex>
