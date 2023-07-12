@@ -47,8 +47,8 @@ internal static class ManagedObject
 
 			if (result == null)
 				return IntPtr.Zero;
-
-			var handle = GCHandle.Alloc(result, InCreateInfo->IsWeakRef ? GCHandleType.Weak : GCHandleType.Pinned);
+			
+			var handle = GCHandle.Alloc(result, InCreateInfo->IsWeakRef ? GCHandleType.Weak : GCHandleType.Normal);
 			return GCHandle.ToIntPtr(handle);
 		}
 		catch (Exception ex)
@@ -122,7 +122,7 @@ internal static class ManagedObject
 		try
 		{
 			var target = GCHandle.FromIntPtr(InObjectHandle).Target;
-
+			
 			if (target == null)
 				return;
 			
@@ -202,7 +202,17 @@ internal static class ManagedObject
 			return;
 		}
 
-		var value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
+		object? value;
+
+		if (fieldInfo.FieldType == typeof(string) || fieldInfo.FieldType.IsPointer || fieldInfo.FieldType == typeof(IntPtr))
+		{
+			value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), fieldInfo.FieldType);
+		}
+		else
+		{
+			value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
+		}
+		
 		fieldInfo.SetValue(target, value);
 	}
 	
@@ -244,6 +254,92 @@ internal static class ManagedObject
 		else
 		{
 			var valueSize = Marshal.SizeOf(fieldInfo.FieldType);
+			var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
+
+			unsafe
+			{
+				Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), OutValue.ToPointer(), valueSize, valueSize);
+			}
+				
+			handle.Free();
+		}
+	}
+	
+	[UnmanagedCallersOnly]
+	private static void SetPropertyValue(IntPtr InTarget, UnmanagedString InPropertyName, IntPtr InValue)
+	{
+		var target = GCHandle.FromIntPtr(InTarget).Target;
+
+		if (target == null)
+		{
+			Console.WriteLine("Target is null");
+			return;
+		}
+
+		var targetType = target.GetType();
+		var propertyInfo = targetType.GetProperty(InPropertyName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+		
+		if (propertyInfo == null)
+		{
+			Console.WriteLine("FieldInfo is null");
+			return;
+		}
+
+		if (propertyInfo.SetMethod == null)
+			return; // TODO(Peter): Throw
+
+		object? value;
+		
+		if (propertyInfo.PropertyType == typeof(string) || propertyInfo.PropertyType.IsPointer || propertyInfo.PropertyType == typeof(IntPtr))
+		{
+			value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), propertyInfo.PropertyType);
+		}
+		else
+		{
+			value = Marshalling.MarshalPointer(InValue, propertyInfo.PropertyType);
+		}
+		
+		propertyInfo.SetValue(target, value);
+	}
+	
+	[UnmanagedCallersOnly]
+	private static void GetPropertyValue(IntPtr InTarget, UnmanagedString InPropertyName, IntPtr OutValue)
+	{
+		var target = GCHandle.FromIntPtr(InTarget).Target;
+
+		if (target == null)
+		{
+			Console.WriteLine("Target is null");
+			return;
+		}
+
+		var targetType = target.GetType();
+		var propertyInfo = targetType.GetProperty(InPropertyName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+		if (propertyInfo == null)
+		{
+			Console.WriteLine("FieldInfo is null");
+			return;
+		}
+
+		var value = propertyInfo.GetValue(target);
+		
+		if (value is string s)
+		{
+			var nativeString = UnmanagedString.FromString(s);
+			Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);
+		}
+		else if (propertyInfo.PropertyType.IsPointer)
+		{
+			unsafe
+			{
+				void* valuePointer = Pointer.Unbox(value);
+				Buffer.MemoryCopy(&valuePointer, OutValue.ToPointer(), IntPtr.Size, IntPtr.Size);
+			}
+		}
+		else
+		{
+			var valueSize = Marshal.SizeOf(propertyInfo.PropertyType);
 			var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
 
 			unsafe

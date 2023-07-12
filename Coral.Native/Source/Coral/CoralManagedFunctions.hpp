@@ -23,6 +23,8 @@ namespace Coral {
 	using InvokeMethodRetFn = void(*)(void*, const CharType*, UnmanagedArray*, void*);
 	using SetFieldValueFn = void(*)(void*, const CharType*, void*);
 	using GetFieldValueFn = void(*)(void*, const CharType*, void*);
+	using SetPropertyValueFn = void(*)(void*, const CharType*, void*);
+	using GetPropertyValueFn = void(*)(void*, const CharType*, void*);
 	using DestroyObjectFn = void(*)(void*);
 
 	using SetExceptionCallbackFn = void(*)(ExceptionCallbackFn);
@@ -44,6 +46,8 @@ namespace Coral {
 		InvokeMethodRetFn InvokeMethodRetFptr = nullptr;
 		SetFieldValueFn SetFieldValueFptr = nullptr;
 		GetFieldValueFn GetFieldValueFptr = nullptr;
+		SetPropertyValueFn SetPropertyValueFptr = nullptr;
+		GetPropertyValueFn GetPropertyValueFptr = nullptr;
 		DestroyObjectFn DestroyObjectFptr = nullptr;
 
 		SetExceptionCallbackFn SetExceptionCallbackFptr = nullptr;

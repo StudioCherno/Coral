@@ -30,6 +30,18 @@ namespace Coral {
 		auto fieldName = StringHelper::ConvertUtf8ToWide(InFieldName);
 		s_ManagedFunctions.GetFieldValueFptr(m_Handle, fieldName.c_str(), OutValue);
 	}
+
+	void ManagedObject::SetPropertyValueInternal(std::string_view InPropertyName, void* InValue) const
+	{
+		auto propertyName = StringHelper::ConvertUtf8ToWide(InPropertyName);
+		s_ManagedFunctions.SetPropertyValueFptr(m_Handle, propertyName.c_str(), InValue);
+	}
+	
+	void ManagedObject::GetPropertyValueInternal(std::string_view InPropertyName, void* OutValue) const
+	{
+		auto propertyName = StringHelper::ConvertUtf8ToWide(InPropertyName);
+		s_ManagedFunctions.GetPropertyValueFptr(m_Handle, propertyName.c_str(), OutValue);
+	}
 	
 }
 
