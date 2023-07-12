@@ -62,7 +62,7 @@ namespace Coral.Managed.Interop
 	[StructLayout(LayoutKind.Sequential)]
 	public struct UnmanagedString : IEquatable<UnmanagedString>
 	{
-		private IntPtr m_NativeString;
+		internal IntPtr m_NativeString;
 
 		public bool IsNull() => m_NativeString == IntPtr.Zero;
 

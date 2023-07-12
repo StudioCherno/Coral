@@ -151,15 +151,33 @@ internal static class ManagedObject
 			if (value == null)
 				return;
 
-			var valueSize = Marshal.SizeOf(value.GetType());
-			var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
-
-			unsafe
-			{
-				Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), InResultStorage.ToPointer(), valueSize, valueSize);
-			}
+			var returnType = methodInfo.ReturnType;
 			
-			handle.Free();
+			if (value is string s)
+			{
+				var nativeString = UnmanagedString.FromString(s);
+				Marshal.WriteIntPtr(InResultStorage, nativeString.m_NativeString);
+			}
+			else if (returnType.IsPointer)
+			{
+				unsafe
+				{
+					void* valuePointer = Pointer.Unbox(value);
+					Buffer.MemoryCopy(&valuePointer, InResultStorage.ToPointer(), IntPtr.Size, IntPtr.Size);
+				}
+			}
+			else
+			{
+				var valueSize = Marshal.SizeOf(returnType);
+				var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
+
+				unsafe
+				{
+					Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), InResultStorage.ToPointer(), valueSize, valueSize);
+				}
+				
+				handle.Free();
+			}
 		}
 		catch (Exception ex)
 		{

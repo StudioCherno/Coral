@@ -48,9 +48,9 @@ namespace Coral {
 
 			return result;
 		}
-
-		
 		void DestroyInstance(ManagedObject& InObjectHandle);
+
+		void FreeString(const CharType* InString);
 
 		using ExceptionCallbackFn = void(*)(const CharType*);
 		void SetExceptionCallback(ExceptionCallbackFn InCallback);

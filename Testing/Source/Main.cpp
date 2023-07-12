@@ -107,14 +107,40 @@ void RegisterMemeberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObjec
 	RegisterTest("BoolTest", [&](){ return InObject.InvokeMethod<bool, bool>("BoolTest", false); });
 	RegisterTest("IntPtrTest", [&](){ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
 #if CORAL_WIDE_CHARS
-	//RegisterTest("StringTest", [&](){ return wcscmp(InHost.InvokeMethodRet<const CharType*, const CharType*>(InObject, "StringTest", CORAL_STR("Hello")), CORAL_STR("Hello, World!")) == 0; });
+	RegisterTest("StringTest", [&]()
+	{
+		const auto* str = InObject.InvokeMethod<const CharType*, const CharType*>("StringTest", CORAL_STR("Hello"));
+		bool success = wcscmp(str, CORAL_STR("Hello, World!")) == 0;
+		InHost.FreeString(str);
+		return success;
+	});
 #else
-	//RegisterTest("SByteTest", [&](){ return strcmp(InHost.InvokeMethodRet<const CharType*, const CharType*>(InObject, "SByteTest", CORAL_STR("Hello")), CORAL_STR("Hello, World!")) == 0; });
+	RegisterTest("SByteTest", [&](){ return strcmp(InObject.InvokeMethod<const CharType*, const CharType*>("SByteTest", CORAL_STR("Hello")), CORAL_STR("Hello, World!")) == 0; });
 #endif
 	
 	// TODO(Peter): Struct Marshalling
-	//RegisterTest("SByteTest", [&](){ return InHost.InvokeMethodRet<char8_t, char8_t>(InObject, "SByteTest", 10) == 20; });
-	//RegisterTest("SByteTest", [&](){ return InHost.InvokeMethodRet<char8_t, char8_t>(InObject, "SByteTest", 10) == 20; });
+	RegisterTest("DummyStructTest", [&]()
+	{
+		DummyStruct value =
+		{
+			.X = 10,
+			.Y = 10.0f,
+			.Z = 10,
+		};
+		auto result = InObject.InvokeMethod<DummyStruct, DummyStruct&>("DummyStructTest", value);
+		return result.X == 20 && result.Y - 20.0f < 0.001f && result.Z == 20;
+	});
+	RegisterTest("DummyStructPtrTest", [&]()
+	{
+		DummyStruct value =
+		{
+			.X = 10,
+			.Y = 10.0f,
+			.Z = 10,
+		};
+		auto* result = InObject.InvokeMethod<DummyStruct*, DummyStruct*>("DummyStructPtrTest", &value);
+		return result->X == 20 && result->Y - 20.0f < 0.001f && result->Z == 20;
+	});
 }
 
 void RunTests()

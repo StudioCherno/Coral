@@ -108,6 +108,11 @@ namespace Coral {
 		InObjectHandle.m_Handle = nullptr;
 	}
 
+	void HostInstance::FreeString(const CharType* InString)
+	{
+		s_ManagedFunctions.FreeManagedStringFptr(InString);
+	}
+
 	void HostInstance::SetExceptionCallback(ExceptionCallbackFn InCallback)
 	{
 		s_ManagedFunctions.SetExceptionCallbackFptr(InCallback);

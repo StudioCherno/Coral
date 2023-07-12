@@ -64,6 +64,9 @@ public static class Marshalling
 		//				instead we have to read it as a single byte and check the raw value
 		if (InType == typeof(bool))
 			return Marshal.PtrToStructure<byte>(InValue) > 0;
+
+		if (InType == typeof(string))
+			return Marshal.PtrToStringAuto(InValue);
 		
 		return Marshal.PtrToStructure(InValue, InType);	
 	}
