@@ -60,10 +60,17 @@ namespace Coral {
 		m_Initialized = true;
 	}
 
+	static bool IsInvalidType(const ReflectionType& InType)
+	{
+		static ReflectionType s_NullType;
+		return memcmp(&InType, &s_NullType, sizeof(ReflectionType)) == 0;
+	}
+	
 	ManagedAssembly HostInstance::LoadAssembly(std::string_view InFilePath)
 	{
 		ManagedAssembly result = {};
 		auto filepath = StringHelper::ConvertUtf8ToWide(InFilePath);
+		result.m_Host = this;
 		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(filepath.c_str());
 		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
 
@@ -77,6 +84,11 @@ namespace Coral {
 			s_ManagedFunctions.QueryAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);
 			result.m_ReflectionTypes.resize(typeCount);
 			s_ManagedFunctions.QueryAssemblyTypesFptr(result.m_AssemblyID, result.m_ReflectionTypes.data(), &typeCount);
+
+			std::erase_if(result.m_ReflectionTypes, [](const ReflectionType& InType)
+			{
+				return IsInvalidType(InType);
+			});
 		}
 		
 		return result;
@@ -151,6 +163,21 @@ namespace Coral {
 		}
 		
 		return m_ReflectionTypes.at(id);
+	}
+
+	const std::vector<ManagedField>& HostInstance::GetFields(const CharType* InTypeName)
+	{
+		size_t id = std::hash<const CharType*>()(InTypeName);
+
+		if (!m_Fields.contains(id))
+		{
+			int32_t fieldCount;
+			s_ManagedFunctions.GetFieldsFptr(InTypeName, nullptr, &fieldCount);
+			m_Fields[id].resize(fieldCount);
+			s_ManagedFunctions.GetFieldsFptr(InTypeName, m_Fields[id].data(), &fieldCount);
+		}
+
+		return m_Fields.at(id);
 	}
 	
 #ifdef _WIN32
@@ -234,6 +261,7 @@ namespace Coral {
 		s_ManagedFunctions.QueryAssemblyTypesFptr = LoadCoralManagedFunctionPtr<QueryAssemblyTypesFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("QueryAssemblyTypes"));
 		s_ManagedFunctions.GetReflectionTypeFptr = LoadCoralManagedFunctionPtr<GetReflectionTypeFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("GetReflectionType"));
 		s_ManagedFunctions.GetReflectionTypeFromObjectFptr = LoadCoralManagedFunctionPtr<GetReflectionTypeFromObjectFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("GetReflectionTypeFromObject"));
+		s_ManagedFunctions.GetFieldsFptr = LoadCoralManagedFunctionPtr<GetFieldsFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("QueryObjectFields"));
 		s_ManagedFunctions.SetInternalCallsFptr = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.Managed.Interop.InternalCallsManager, Coral.Managed"), CORAL_STR("SetInternalCalls"));
 		s_ManagedFunctions.FreeManagedStringFptr = LoadCoralManagedFunctionPtr<FreeManagedStringFn>(CORAL_STR("Coral.Managed.Interop.UnmanagedString, Coral.Managed"), CORAL_STR("FreeUnmanaged"));
 		s_ManagedFunctions.CreateObjectFptr = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("CreateObject"));

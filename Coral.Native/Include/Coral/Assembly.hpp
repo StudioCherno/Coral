@@ -23,8 +23,11 @@ namespace Coral {
 
 		void AddInternalCall(std::string_view InClassName, std::string_view InVariableName, void* InFunctionPtr);
 		void UploadInternalCalls();
+
+		const std::vector<ReflectionType>& GetTypes() const { return m_ReflectionTypes; }
 		
 	private:
+		HostInstance* m_Host = nullptr;
 		int32_t m_AssemblyID = -1;
 		AssemblyLoadStatus m_LoadStatus = AssemblyLoadStatus::UnknownError;
 		std::string m_Name;

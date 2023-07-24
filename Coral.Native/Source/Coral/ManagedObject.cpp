@@ -45,6 +45,6 @@ namespace Coral {
 	}
 
 	ReflectionType& ManagedObject::GetType() { return m_Host->GetReflectionType(*this); }
-	
+
 }
 

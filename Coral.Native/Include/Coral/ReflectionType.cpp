@@ -7,5 +7,10 @@ namespace Coral {
 	{
 		return m_Host->GetReflectionType(BaseTypeName);
 	}
+
+	const std::vector<ManagedField>& ReflectionType::GetFields()
+	{
+		return m_Host->GetFields(AssemblyQualifiedName);
+	}
 	
 }

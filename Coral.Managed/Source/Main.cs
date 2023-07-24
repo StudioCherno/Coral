@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using Coral.Managed.Interop;
@@ -39,9 +40,20 @@ namespace Coral.Managed
 			public UnmanagedString Name;
 			public UnmanagedString Namespace;
 			public UnmanagedString BaseTypeName;
+			public UnmanagedString AssemblyQualifiedName;
 		}
 
-		private static ReflectionType? BuildReflectionType(Type? InType)
+		internal enum TypeVisibility
+		{
+			Public,
+			Private,
+			Protected,
+			Internal,
+			ProtectedPublic,
+			PrivateProtected
+		}
+		
+		internal static ReflectionType? BuildReflectionType(Type? InType)
 		{
 			if (InType == null)
 				return null;
@@ -50,13 +62,22 @@ namespace Coral.Managed
 			{
 				FullName = UnmanagedString.FromString(InType.FullName),
 				Name = UnmanagedString.FromString(InType.Name),
-				Namespace = UnmanagedString.FromString(InType.Namespace)
+				Namespace = UnmanagedString.FromString(InType.Namespace),
+				AssemblyQualifiedName = UnmanagedString.FromString(InType.AssemblyQualifiedName)
 			};
 
 			if (InType.BaseType != null)
 			{
 				reflectionType.BaseTypeName = UnmanagedString.FromString(InType.BaseType.FullName);
 			}
+			
+			Console.WriteLine($"Building ReflectionType...");
+			Console.WriteLine($"FullName: {reflectionType.FullName}");
+			Console.WriteLine($"Name: {reflectionType.Name}");
+			Console.WriteLine($"Namespace: {reflectionType.Namespace}");
+			Console.WriteLine($"BaseTypeName: {reflectionType.BaseTypeName}");
+			Console.WriteLine($"AssemblyQualifiedName: {reflectionType.AssemblyQualifiedName}");
+			Console.WriteLine($"Done Building ReflectionType...");
 
 			return reflectionType;
 		}
@@ -102,7 +123,49 @@ namespace Coral.Managed
 				return false;
 			}
 		}
-		
+
+		internal struct ManagedField
+		{
+			public UnmanagedString Name;
+			public TypeVisibility Visibility;
+		}
+
+		[UnmanagedCallersOnly]
+		private static unsafe void QueryObjectFields(UnmanagedString InTypeName, ManagedField* InFieldsArray, int* OutFieldCount)
+		{
+			var type = TypeHelper.FindType(InTypeName);
+
+			if (type == null)
+			{
+				Console.WriteLine("Invalid type");
+				*OutFieldCount = 0;
+				return;
+			}
+
+			var fields = type.GetFields();
+			*OutFieldCount = fields.Length;
+
+			if (InFieldsArray == null)
+				return;
+			
+			for (int i = 0; i < fields.Length; i++)
+			{
+				var field = fields[i];
+				var managedField = new ManagedField();
+				
+				managedField.Name = UnmanagedString.FromString(field.Name);
+				
+				if (field.IsPublic) managedField.Visibility = TypeVisibility.Public;
+				else if (field.IsPrivate) managedField.Visibility = TypeVisibility.Private;
+				else if (field.IsFamily) managedField.Visibility = TypeVisibility.Protected;
+				else if (field.IsAssembly) managedField.Visibility = TypeVisibility.Internal;
+				else if (field.IsFamilyOrAssembly) managedField.Visibility = TypeVisibility.ProtectedPublic;
+				else if (field.IsFamilyAndAssembly) managedField.Visibility = TypeVisibility.PrivateProtected;
+
+				InFieldsArray[i] = managedField;
+			}
+		}
+
 		internal static void HandleException(Exception InException)
 		{
 			unsafe

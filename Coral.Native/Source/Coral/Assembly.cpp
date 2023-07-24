@@ -1,4 +1,5 @@
 #include "Assembly.hpp"
+#include "HostInstance.hpp"
 #include "CoralManagedFunctions.hpp"
 #include "Interop.hpp"
 #include "Verify.hpp"
@@ -29,5 +30,5 @@ namespace Coral {
 		UnmanagedArray arr = { m_InternalCalls.data(), static_cast<int32_t>(m_InternalCalls.size()) };
 		s_ManagedFunctions.SetInternalCallsFptr(&arr);
 	}
-	
+
 }

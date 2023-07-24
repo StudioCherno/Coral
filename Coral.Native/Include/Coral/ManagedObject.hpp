@@ -7,7 +7,7 @@
 namespace Coral {
 
 	class HostInstance;
-	
+
 	class ManagedObject
 	{
 	public:

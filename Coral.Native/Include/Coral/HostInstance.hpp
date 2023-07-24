@@ -5,6 +5,7 @@
 #include "ManagedType.hpp"
 #include "ManagedObject.hpp"
 #include "ReflectionType.hpp"
+#include "ManagedField.hpp"
 
 namespace Coral {
 
@@ -58,6 +59,8 @@ namespace Coral {
 
 		ReflectionType& GetReflectionType(const CharType* InTypeName);
 		ReflectionType& GetReflectionType(ManagedObject InObject);
+
+		const std::vector<ManagedField>& GetFields(const CharType* InTypeName);
 		
 	private:
 		void LoadHostFXR() const;
@@ -81,6 +84,7 @@ namespace Coral {
 		bool m_Initialized = false;
 
 		std::unordered_map<size_t, ReflectionType> m_ReflectionTypes;
+		std::unordered_map<size_t, std::vector<ManagedField>> m_Fields;
 	};
 
 }

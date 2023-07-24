@@ -131,15 +131,13 @@ namespace Coral.Managed
 			for (int i = 0; i < assemblyTypes.Length; i++)
 			{
 				var type = assemblyTypes[i];
-				
-				var reflectionType = new ManagedHost.ReflectionType
-				{
-					FullName = UnmanagedString.FromString(type.FullName),
-					Name = UnmanagedString.FromString(type.Name),
-					Namespace = UnmanagedString.FromString(type.Namespace),
-				};
 
-				OutTypes[i] = reflectionType;
+				var reflectionType = ManagedHost.BuildReflectionType(type);
+
+				if (reflectionType == null)
+					continue;
+				
+				OutTypes[i] = reflectionType.Value;
 			}
 		}
 		

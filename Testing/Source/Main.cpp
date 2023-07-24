@@ -430,6 +430,8 @@ int main()
 	auto assemblyPath = std::filesystem::path("F:/Coral/Build") / ConfigName / "Testing.Managed.dll";
 	auto assembly = hostInstance.LoadAssembly(assemblyPath.string().c_str());
 
+	const auto& assemblyTypes = assembly.GetTypes();
+
 	RegisterTestInternalCalls(assembly);
 	assembly.UploadInternalCalls();
 
@@ -446,13 +448,15 @@ int main()
 	*/
 
 	Coral::ManagedObject objectHandle = hostInstance.CreateInstance("Testing.Managed.Tests, Testing.Managed");
-	auto& objectType = objectHandle.GetType();
-	auto& objectBaseType = objectType.GetBaseType();
-
 	objectHandle.InvokeMethod("RunManagedTests");
 	hostInstance.DestroyInstance(objectHandle);
 
 	auto fieldTestObject = hostInstance.CreateInstance("Testing.Managed.FieldMarshalTest, Testing.Managed");
+
+	auto& objectType = fieldTestObject.GetType();
+	auto& objectBaseType = objectType.GetBaseType();
+	const auto& fields = objectType.GetFields();
+
 	auto object = hostInstance.CreateInstance("Testing.Managed.MemberMethodTest, Testing.Managed");
 
 	RegisterMemeberMethodTests(hostInstance, object);
