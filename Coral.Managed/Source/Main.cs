@@ -156,6 +156,38 @@ namespace Coral.Managed
 			}
 		}
 
+		private struct MethodInfo
+		{
+			public UnmanagedString Name;
+			public TypeVisibility Visibility;
+		}
+
+		[UnmanagedCallersOnly]
+		private static unsafe void GetTypeMethods(UnmanagedString InTypeName, int* InMethodCount, MethodInfo* InMethodArray)
+		{
+			try
+			{
+				var type = TypeHelper.FindType(InTypeName);
+
+				if (type == null)
+					return;
+
+				var methods = type.GetMethods();
+
+				if (methods == null || methods.Length == 0)
+				{
+					*InMethodCount = 0;
+					return;
+				}
+
+
+			}
+			catch (Exception e)
+			{
+				HandleException(e);
+			}
+		}
+
 		internal struct ManagedField
 		{
 			public UnmanagedString Name;

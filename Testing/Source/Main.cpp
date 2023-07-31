@@ -435,18 +435,6 @@ int main()
 	RegisterTestInternalCalls(assembly);
 	assembly.UploadInternalCalls();
 
-	/*
-		Coral::ReflectionType type = object.GetType();
-		type.GetName();
-		Coral::ReflectionType parentType = type.GetBaseType();
-
-		type.GetFieldInfos();
-		type.GetPropertyInfos();
-		type.GetMethodInfos();
-
-		std::vector<Coral::ReflectionType> types = assembly.GetTypes();
-	*/
-
 	Coral::ManagedObject objectHandle = hostInstance.CreateInstance("Testing.Managed.Tests, Testing.Managed");
 	objectHandle.InvokeMethod("RunManagedTests");
 	hostInstance.DestroyInstance(objectHandle);
