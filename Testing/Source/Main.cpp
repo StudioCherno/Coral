@@ -92,7 +92,7 @@ void RegisterTest(std::string_view InName, std::function<bool()> InFunc)
 	tests.emplace_back(std::string(InName), std::move(InFunc));
 }
 
-void RegisterMemeberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject InObject)
+void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject InObject)
 {
 	RegisterTest("SByteTest", [InObject]() mutable{ return InObject.InvokeMethod<char8_t, char8_t>("SByteTest", 10) == 20; });
 	RegisterTest("ByteTest", [InObject]() mutable{ return InObject.InvokeMethod<uint8_t, uint8_t>("ByteTest", 10) == 20; });
@@ -404,7 +404,7 @@ void RunTests()
 		}
 		else
 		{
-			std::cout << "[" << i + 1 << " / " << tests.size() << " (" << test.Name << "): Failed\n"; 
+			std::cerr << "[" << i + 1 << " / " << tests.size() << " (" << test.Name << "): Failed\n"; 
 		}
 	}
 	std::cout << "[NativeTest]: Done. " << passedTests << " passed, " << tests.size() - passedTests  << " failed.";
@@ -456,10 +456,11 @@ int main()
 	auto& objectType = fieldTestObject.GetType();
 	auto& objectBaseType = objectType.GetBaseType();
 	const auto& fields = objectType.GetFields();
+	bool f = objectType.IsAssignableTo(objectType.GetBaseType());
 
 	auto object = hostInstance.CreateInstance("Testing.Managed.MemberMethodTest, Testing.Managed");
 
-	RegisterMemeberMethodTests(hostInstance, object);
+	RegisterMemberMethodTests(hostInstance, object);
 	RegisterFieldMarshalTests(hostInstance, fieldTestObject);
 	RunTests();
 

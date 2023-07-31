@@ -20,6 +20,9 @@ namespace Coral {
 
 		const std::vector<ManagedField>& GetFields();
 
+		bool IsAssignableTo(const ReflectionType& InOther) const;
+		bool IsAssignableFrom(const ReflectionType& InOther) const;
+
 	private:
 		HostInstance* m_Host = nullptr;
 

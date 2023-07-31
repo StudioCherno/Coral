@@ -22,8 +22,7 @@ namespace Coral {
 			if constexpr (parameterCount > 0)
 			{
 				const void* parameterValues[parameterCount];
-				ManagedType parameterTypes[parameterCount];
-				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount>{});
+				AddToArray<TArgs...>(parameterValues, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount>{});
 				InvokeMethodRetInternal(InMethodName, parameterValues, parameterCount, &result);
 			}
 			else
@@ -42,8 +41,7 @@ namespace Coral {
 			if constexpr (parameterCount > 0)
 			{
 				const void* parameterValues[parameterCount];
-				ManagedType parameterTypes[parameterCount];
-				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount>{});
+				AddToArray<TArgs...>(parameterValues, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount>{});
 				InvokeMethodInternal(InMethodName, parameterValues, parameterCount);
 			}
 			else
@@ -92,24 +90,22 @@ namespace Coral {
 
 	private:
 		template<typename TArg, size_t TIndex>
-		void AddToArrayI(const void** InArgumentsArr, ManagedType* InArgumentTypesArr, TArg&& InArg) const
+		void AddToArrayI(const void** InArgumentsArr, TArg&& InArg) const
 		{
 			if constexpr (std::is_pointer_v<std::remove_reference_t<TArg>>)
 			{
 				InArgumentsArr[TIndex] = reinterpret_cast<const void*>(InArg);
-				InArgumentTypesArr[TIndex] = ManagedType::Pointer;
 			}
 			else
 			{
 				InArgumentsArr[TIndex] = reinterpret_cast<const void*>(&InArg);
-				InArgumentTypesArr[TIndex] = GetManagedType<TArg>();
 			}
 		}
 
 		template<typename... TArgs, size_t... TIndices>
-		void AddToArray(const void** InArgumentsArr, ManagedType* InArgumentTypesArr, TArgs&&... InArgs, const std::index_sequence<TIndices...>&)
+		void AddToArray(const void** InArgumentsArr, TArgs&&... InArgs, const std::index_sequence<TIndices...>&)
 		{
-			(AddToArrayI<TArgs, TIndices>(InArgumentsArr, InArgumentTypesArr, std::forward<TArgs>(InArgs)), ...);
+			(AddToArrayI<TArgs, TIndices>(InArgumentsArr, std::forward<TArgs>(InArgs)), ...);
 		}
 		
 	private:

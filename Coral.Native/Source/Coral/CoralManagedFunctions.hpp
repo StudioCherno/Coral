@@ -36,6 +36,9 @@ namespace Coral {
 	using GetPropertyValueFn = void(*)(void*, const CharType*, void*);
 	using DestroyObjectFn = void(*)(void*);
 
+	using IsAssignableToFn = Bool32(*)(const CharType*, const CharType*);
+	using IsAssignableFromFn = Bool32(*)(const CharType*, const CharType*);
+
 	using SetExceptionCallbackFn = void(*)(ExceptionCallbackFn);
 
 	using CollectGarbageFn = void(*)(int32_t, GCCollectionMode, Bool32, Bool32);
@@ -63,6 +66,9 @@ namespace Coral {
 		SetPropertyValueFn SetPropertyValueFptr = nullptr;
 		GetPropertyValueFn GetPropertyValueFptr = nullptr;
 		DestroyObjectFn DestroyObjectFptr = nullptr;
+
+		IsAssignableToFn IsTypeAssignableTo = nullptr;
+		IsAssignableFromFn IsTypeAssignableFrom = nullptr;
 
 		SetExceptionCallbackFn SetExceptionCallbackFptr = nullptr;
 

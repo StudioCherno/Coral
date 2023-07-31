@@ -104,6 +104,38 @@ namespace Coral.Managed
 		}
 
 		[UnmanagedCallersOnly]
+		private static Bool32 IsTypeAssignableTo(UnmanagedString InTypeName, UnmanagedString InOtherTypeName)
+		{
+			try
+			{
+				var type = TypeHelper.FindType(InTypeName);
+				var otherType = TypeHelper.FindType(InOtherTypeName);
+				return type != null && type.IsAssignableTo(otherType);
+			}
+			catch (Exception e)
+			{
+				HandleException(e);
+				return false;
+			}
+		}
+
+		[UnmanagedCallersOnly]
+		private static Bool32 IsTypeAssignableFrom(UnmanagedString InTypeName, UnmanagedString InOtherTypeName)
+		{
+			try
+			{
+				var type = TypeHelper.FindType(InTypeName);
+				var otherType = TypeHelper.FindType(InOtherTypeName);
+				return type != null && type.IsAssignableFrom(otherType);
+			}
+			catch (Exception e)
+			{
+				HandleException(e);
+				return false;
+			}
+		}
+
+		[UnmanagedCallersOnly]
 		private static unsafe Bool32 GetReflectionTypeFromObject(IntPtr InObjectHandle, ReflectionType* OutReflectionType)
 		{
 			try
