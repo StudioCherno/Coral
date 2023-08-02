@@ -6,6 +6,7 @@ namespace Coral {
 
 	class HostInstance;
 	class ManagedField;
+	struct MethodInfo;
 	
 	class ReflectionType
 	{
@@ -19,6 +20,7 @@ namespace Coral {
 		ReflectionType& GetBaseType();
 
 		const std::vector<ManagedField>& GetFields();
+		const std::vector<MethodInfo>& GetMethods();
 
 		bool IsAssignableTo(const ReflectionType& InOther) const;
 		bool IsAssignableFrom(const ReflectionType& InOther) const;

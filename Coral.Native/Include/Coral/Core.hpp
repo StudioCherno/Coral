@@ -27,5 +27,15 @@
 namespace Coral {
 
 	using Bool32 = uint32_t;
-	
+
+	enum class TypeVisibility
+	{
+		Public,
+		Private,
+		Protected,
+		Internal,
+		ProtectedPublic,
+		PrivateProtected
+	};
+
 }

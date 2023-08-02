@@ -13,6 +13,11 @@ namespace Coral {
 	{
 		return m_Host->GetFields(AssemblyQualifiedName);
 	}
+
+	const std::vector<MethodInfo>& ReflectionType::GetMethods()
+	{
+		return m_Host->GetMethods(AssemblyQualifiedName);
+	}
 	
 	bool ReflectionType::IsAssignableTo(const ReflectionType& InOther) const
 	{

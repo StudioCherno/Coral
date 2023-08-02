@@ -446,6 +446,8 @@ int main()
 	const auto& fields = objectType.GetFields();
 	bool f = objectType.IsAssignableTo(objectType.GetBaseType());
 
+	const auto& methods = objectType.GetMethods();
+
 	auto object = hostInstance.CreateInstance("Testing.Managed.MemberMethodTest, Testing.Managed");
 
 	RegisterMemberMethodTests(hostInstance, object);

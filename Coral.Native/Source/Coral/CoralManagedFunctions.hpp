@@ -12,6 +12,7 @@ namespace Coral {
 	enum class ManagedType;
 	class ReflectionType;
 	class ManagedField;
+	struct MethodInfo;
 
 	using ExceptionCallbackFn = void(*)(const CharType*);
 
@@ -24,6 +25,7 @@ namespace Coral {
 	using GetReflectionTypeFn = Bool32(*)(const CharType*, ReflectionType*);
 	using GetReflectionTypeFromObjectFn = Bool32(*)(void*, ReflectionType*);
 	using GetFieldsFn = void(*)(const CharType*, ManagedField*, int32_t*);
+	using GetTypeMethodsFn = void(*)(const CharType*, MethodInfo*, int32_t*);
 	
 	using FreeManagedStringFn = void(*)(const CharType*);
 	
@@ -55,6 +57,7 @@ namespace Coral {
 		GetReflectionTypeFn GetReflectionTypeFptr = nullptr;
 		GetReflectionTypeFromObjectFn GetReflectionTypeFromObjectFptr = nullptr;
 		GetFieldsFn GetFieldsFptr = nullptr;
+		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
 		
 		FreeManagedStringFn FreeManagedStringFptr = nullptr;
 

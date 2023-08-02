@@ -179,7 +179,22 @@ namespace Coral {
 
 		return m_Fields.at(id);
 	}
-	
+
+	const std::vector<MethodInfo>& HostInstance::GetMethods(const CharType* InTypeName)
+	{
+		size_t id = std::hash<const CharType*>()(InTypeName);
+
+		if (!m_Methods.contains(id))
+		{
+			int32_t methodCount;
+			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName, nullptr, &methodCount);
+			m_Methods[id].resize(methodCount);
+			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName, m_Methods[id].data(), &methodCount);
+		}
+
+		return m_Methods.at(id);
+	}
+
 #ifdef _WIN32
 	template <typename TFunc>
 	TFunc LoadFunctionPtr(void* InLibraryHandle, const char* InFunctionName)
@@ -262,6 +277,7 @@ namespace Coral {
 		s_ManagedFunctions.GetReflectionTypeFptr = LoadCoralManagedFunctionPtr<GetReflectionTypeFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("GetReflectionType"));
 		s_ManagedFunctions.GetReflectionTypeFromObjectFptr = LoadCoralManagedFunctionPtr<GetReflectionTypeFromObjectFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("GetReflectionTypeFromObject"));
 		s_ManagedFunctions.GetFieldsFptr = LoadCoralManagedFunctionPtr<GetFieldsFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("QueryObjectFields"));
+		s_ManagedFunctions.GetTypeMethodsFptr = LoadCoralManagedFunctionPtr<GetTypeMethodsFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("GetTypeMethods"));
 		s_ManagedFunctions.SetInternalCallsFptr = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.Managed.Interop.InternalCallsManager, Coral.Managed"), CORAL_STR("SetInternalCalls"));
 		s_ManagedFunctions.FreeManagedStringFptr = LoadCoralManagedFunctionPtr<FreeManagedStringFn>(CORAL_STR("Coral.Managed.Interop.UnmanagedString, Coral.Managed"), CORAL_STR("FreeUnmanaged"));
 		s_ManagedFunctions.CreateObjectFptr = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("CreateObject"));
@@ -286,5 +302,4 @@ namespace Coral {
 		CORAL_VERIFY(status == StatusCode::Success && funcPtr != nullptr);
 		return funcPtr;
 	}
-
 }

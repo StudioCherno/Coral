@@ -53,6 +53,28 @@ namespace Coral.Managed
 			PrivateProtected
 		}
 		
+		private static TypeVisibility GetTypeVisibility(FieldInfo InFieldInfo)
+		{
+			if (InFieldInfo.IsPublic) return TypeVisibility.Public;
+			if (InFieldInfo.IsPrivate) return TypeVisibility.Private;
+			if (InFieldInfo.IsFamily) return TypeVisibility.Protected;
+			if (InFieldInfo.IsAssembly) return TypeVisibility.Internal;
+			if (InFieldInfo.IsFamilyOrAssembly) return TypeVisibility.ProtectedPublic;
+			if (InFieldInfo.IsFamilyAndAssembly) return TypeVisibility.PrivateProtected;
+			return TypeVisibility.Public;
+		}
+
+		private static TypeVisibility GetTypeVisibility(System.Reflection.MethodInfo InMethodInfo)
+		{
+			if (InMethodInfo.IsPublic) return TypeVisibility.Public;
+			if (InMethodInfo.IsPrivate) return TypeVisibility.Private;
+			if (InMethodInfo.IsFamily) return TypeVisibility.Protected;
+			if (InMethodInfo.IsAssembly) return TypeVisibility.Internal;
+			if (InMethodInfo.IsFamilyOrAssembly) return TypeVisibility.ProtectedPublic;
+			if (InMethodInfo.IsFamilyAndAssembly) return TypeVisibility.PrivateProtected;
+			return TypeVisibility.Public;
+		}
+
 		internal static ReflectionType? BuildReflectionType(Type? InType)
 		{
 			if (InType == null)
@@ -163,7 +185,7 @@ namespace Coral.Managed
 		}
 
 		[UnmanagedCallersOnly]
-		private static unsafe void GetTypeMethods(UnmanagedString InTypeName, int* InMethodCount, MethodInfo* InMethodArray)
+		private static unsafe void GetTypeMethods(UnmanagedString InTypeName, MethodInfo* InMethodArray, int* InMethodCount)
 		{
 			try
 			{
@@ -172,7 +194,7 @@ namespace Coral.Managed
 				if (type == null)
 					return;
 
-				var methods = type.GetMethods();
+				var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
 				if (methods == null || methods.Length == 0)
 				{
@@ -180,7 +202,19 @@ namespace Coral.Managed
 					return;
 				}
 
+				*InMethodCount = methods.Length;
 
+				if (InMethodArray == null)
+					return;
+
+				for (int i = 0; i < methods.Length; i++)
+				{
+					InMethodArray[i] = new()
+					{
+						Name = UnmanagedString.FromString(methods[i].Name),
+						Visibility = GetTypeVisibility(methods[i])
+					};
+				}
 			}
 			catch (Exception e)
 			{
@@ -218,13 +252,7 @@ namespace Coral.Managed
 				var managedField = new ManagedField();
 				
 				managedField.Name = UnmanagedString.FromString(field.Name);
-				
-				if (field.IsPublic) managedField.Visibility = TypeVisibility.Public;
-				else if (field.IsPrivate) managedField.Visibility = TypeVisibility.Private;
-				else if (field.IsFamily) managedField.Visibility = TypeVisibility.Protected;
-				else if (field.IsAssembly) managedField.Visibility = TypeVisibility.Internal;
-				else if (field.IsFamilyOrAssembly) managedField.Visibility = TypeVisibility.ProtectedPublic;
-				else if (field.IsFamilyAndAssembly) managedField.Visibility = TypeVisibility.PrivateProtected;
+				managedField.Visibility = GetTypeVisibility(field);
 
 				InFieldsArray[i] = managedField;
 			}

@@ -4,16 +4,6 @@
 
 namespace Coral {
 
-	enum class TypeVisibility
-	{
-		Public,
-		Private,
-		Protected,
-		Internal,
-		ProtectedPublic,
-		PrivateProtected
-	};
-
 	class ManagedField
 	{
 	public:
