@@ -29,6 +29,8 @@ public class FieldMarshalTest
 	public bool BoolPropertyTest { get; set; } = false;
 	public string StringPropertyTest { get; set; } = "Hello";
 
+	public int[] IntArrayTest = new int[]{ 5, 2, 1, 64 };
+
 	private uint Test() => 10;
 	
 }

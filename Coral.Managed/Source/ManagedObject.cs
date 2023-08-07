@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Coral.Managed.Interop;
@@ -225,7 +227,13 @@ internal static class ManagedObject
 		
 		fieldInfo.SetValue(target, value);
 	}
-	
+
+	struct ArrayContainer
+	{
+		public IntPtr Data;
+		public int Length;
+	};
+
 	[UnmanagedCallersOnly]
 	private static void GetFieldValue(IntPtr InTarget, UnmanagedString InFieldName, IntPtr OutValue)
 	{
@@ -247,8 +255,52 @@ internal static class ManagedObject
 		}
 
 		var value = fieldInfo.GetValue(target);
-			
-		if (value is string s)
+
+		if (fieldInfo.FieldType.IsSZArray)
+		{
+			var array = value as Array;
+			var elementType = fieldInfo.FieldType.GetElementType();
+			var elementSize = Marshal.SizeOf(elementType);
+
+			int byteLength = array.Length * elementSize;
+
+			var mem = Marshal.AllocHGlobal(byteLength);
+
+			int offset = 0;
+
+			foreach (var elem in array)
+			{
+				var handle = GCHandle.Alloc(elem, GCHandleType.Pinned);
+
+				unsafe
+				{
+					Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), ((byte*)mem.ToPointer()) + offset, elementSize, elementSize);
+				}
+
+				offset += elementSize;
+
+				handle.Free();
+			}
+
+			ArrayContainer container = new()
+			{
+				Data = mem,
+				Length = array.Length
+			};
+
+			unsafe
+			{
+				var handle = GCHandle.Alloc(container, GCHandleType.Pinned);
+
+				unsafe
+				{
+					Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), OutValue.ToPointer(), Marshal.SizeOf<ArrayContainer>(), Marshal.SizeOf<ArrayContainer>());
+				}
+
+				handle.Free();
+			}
+		}
+		else if (value is string s)
 		{
 			var nativeString = UnmanagedString.FromString(s);
 			Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);

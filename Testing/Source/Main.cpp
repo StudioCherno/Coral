@@ -8,6 +8,7 @@
 
 #include <Coral/HostInstance.hpp>
 #include <Coral/GC.hpp>
+#include <Coral/Array.hpp>
 
 void ExceptionCallback(const CharType* InMessage)
 {
@@ -440,6 +441,15 @@ int main()
 	hostInstance.DestroyInstance(objectHandle);
 
 	auto fieldTestObject = hostInstance.CreateInstance("Testing.Managed.FieldMarshalTest, Testing.Managed");
+
+	{
+		Coral::Array<int32_t> array = fieldTestObject.GetFieldValue<Coral::Array<int32_t>>("IntArrayTest");
+
+		for (auto value : array)
+		{
+			std::cout << value << std::endl;
+		}
+	}
 
 	auto& objectType = fieldTestObject.GetType();
 	auto& objectBaseType = objectType.GetBaseType();
