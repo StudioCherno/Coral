@@ -197,35 +197,66 @@ internal static class ManagedObject
 	[UnmanagedCallersOnly]
 	private static void SetFieldValue(IntPtr InTarget, UnmanagedString InFieldName, IntPtr InValue)
 	{
-		var target = GCHandle.FromIntPtr(InTarget).Target;
-
-		if (target == null)
+		try
 		{
-			Console.WriteLine("Target is null");
-			return;
+			var target = GCHandle.FromIntPtr(InTarget).Target;
+
+			if (target == null)
+			{
+				Console.WriteLine("Target is null");
+				return;
+			}
+
+			var targetType = target.GetType();
+			var fieldInfo = targetType.GetField(InFieldName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+			if (fieldInfo == null)
+			{
+				Console.WriteLine("FieldInfo is null");
+				return;
+			}
+
+			object? value;
+
+			if (fieldInfo.FieldType == typeof(string) || fieldInfo.FieldType.IsPointer || fieldInfo.FieldType == typeof(IntPtr))
+			{
+				value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), fieldInfo.FieldType);
+			}
+			else if (fieldInfo.FieldType.IsSZArray)
+			{
+				var arrayContainer = Marshalling.MarshalPointer<ArrayContainer>(InValue);
+
+				var elements = Array.CreateInstance(fieldInfo.FieldType.GetElementType(), arrayContainer.Length);
+
+				int elementSize = Marshal.SizeOf(fieldInfo.FieldType.GetElementType());
+
+				unsafe
+				{
+					for (int i = 0; i < arrayContainer.Length; i++)
+					{
+						IntPtr source = (IntPtr)(((byte*)arrayContainer.Data.ToPointer()) + (i * elementSize));
+						elements.SetValue(Marshal.PtrToStructure(source, fieldInfo.FieldType.GetElementType()), i);
+					}
+				}
+
+				for (int i = 0; i < elements.Length; i++)
+				{
+					Console.WriteLine($"{elements.GetValue(i)}");
+				}
+
+				value = elements;
+			}
+			else
+			{
+				value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
+			}
+
+			fieldInfo.SetValue(target, value);
 		}
-
-		var targetType = target.GetType();
-		var fieldInfo = targetType.GetField(InFieldName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-		if (fieldInfo == null)
+		catch (Exception ex)
 		{
-			Console.WriteLine("FieldInfo is null");
-			return;
+			ManagedHost.HandleException(ex);
 		}
-
-		object? value;
-
-		if (fieldInfo.FieldType == typeof(string) || fieldInfo.FieldType.IsPointer || fieldInfo.FieldType == typeof(IntPtr))
-		{
-			value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), fieldInfo.FieldType);
-		}
-		else
-		{
-			value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
-		}
-		
-		fieldInfo.SetValue(target, value);
 	}
 
 	struct ArrayContainer

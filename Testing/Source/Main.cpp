@@ -443,12 +443,19 @@ int main()
 	auto fieldTestObject = hostInstance.CreateInstance("Testing.Managed.FieldMarshalTest, Testing.Managed");
 
 	{
-		Coral::Array<int32_t> array = fieldTestObject.GetFieldValue<Coral::Array<int32_t>>("IntArrayTest");
+		auto array = fieldTestObject.GetFieldValue<Coral::Array<int32_t>>("IntArrayTest");
 
 		for (auto value : array)
-		{
 			std::cout << value << std::endl;
-		}
+
+		array[0] = 999;
+
+		fieldTestObject.SetFieldValue("IntArrayTest", array);
+
+		auto array2 = fieldTestObject.GetFieldValue<Coral::Array<int32_t>>("IntArrayTest");
+	
+		for (auto value : array2)
+			std::cout << value << std::endl;
 	}
 
 	auto& objectType = fieldTestObject.GetType();
