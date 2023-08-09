@@ -55,6 +55,68 @@ public static class Marshalling
 		};
 	}
 
+	struct ArrayContainer
+	{
+		public IntPtr Data;
+		public int Length;
+	};
+
+	public static object? MarshalArray(IntPtr InArray, Type InElementType)
+	{
+		var arrayContainer = MarshalPointer<ArrayContainer>(InArray);
+		var elements = Array.CreateInstance(InElementType, arrayContainer.Length);
+		int elementSize = Marshal.SizeOf(InElementType);
+
+		unsafe
+		{
+			for (int i = 0; i < arrayContainer.Length; i++)
+			{
+				IntPtr source = (IntPtr)(((byte*)arrayContainer.Data.ToPointer()) + (i * elementSize));
+				elements.SetValue(Marshal.PtrToStructure(source, InElementType), i);
+			}
+		}
+
+		return elements;
+	}
+
+	public static void CopyArrayToBuffer(IntPtr InBuffer, Array InArray, Type InElementType)
+	{
+		var elementSize = Marshal.SizeOf(InElementType);
+		int byteLength = InArray.Length * elementSize;
+		var mem = Marshal.AllocHGlobal(byteLength);
+
+		int offset = 0;
+
+		foreach (var elem in InArray)
+		{
+			var elementHandle = GCHandle.Alloc(elem, GCHandleType.Pinned);
+
+			unsafe
+			{
+				Buffer.MemoryCopy(elementHandle.AddrOfPinnedObject().ToPointer(), ((byte*)mem.ToPointer()) + offset, elementSize, elementSize);
+			}
+
+			offset += elementSize;
+
+			elementHandle.Free();
+		}
+
+		ArrayContainer container = new()
+		{
+			Data = mem,
+			Length = InArray.Length
+		};
+
+		var handle = GCHandle.Alloc(container, GCHandleType.Pinned);
+		
+		unsafe
+		{
+			Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), InBuffer.ToPointer(), Marshal.SizeOf<ArrayContainer>(), Marshal.SizeOf<ArrayContainer>());
+		}
+
+		handle.Free();
+	}
+
 	public static object? MarshalPointer(IntPtr InValue, Type InType)
 	{
 		if (InType.IsPointer || InType == typeof(IntPtr))
@@ -67,7 +129,7 @@ public static class Marshalling
 
 		if (InType == typeof(string))
 			return Marshal.PtrToStringAuto(InValue);
-		
+
 		return Marshal.PtrToStructure(InValue, InType);	
 	}
 	public static T? MarshalPointer<T>(IntPtr InValue) => Marshal.PtrToStructure<T>(InValue);

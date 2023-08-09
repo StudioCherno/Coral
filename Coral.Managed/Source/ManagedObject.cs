@@ -224,27 +224,7 @@ internal static class ManagedObject
 			}
 			else if (fieldInfo.FieldType.IsSZArray)
 			{
-				var arrayContainer = Marshalling.MarshalPointer<ArrayContainer>(InValue);
-
-				var elements = Array.CreateInstance(fieldInfo.FieldType.GetElementType(), arrayContainer.Length);
-
-				int elementSize = Marshal.SizeOf(fieldInfo.FieldType.GetElementType());
-
-				unsafe
-				{
-					for (int i = 0; i < arrayContainer.Length; i++)
-					{
-						IntPtr source = (IntPtr)(((byte*)arrayContainer.Data.ToPointer()) + (i * elementSize));
-						elements.SetValue(Marshal.PtrToStructure(source, fieldInfo.FieldType.GetElementType()), i);
-					}
-				}
-
-				for (int i = 0; i < elements.Length; i++)
-				{
-					Console.WriteLine($"{elements.GetValue(i)}");
-				}
-
-				value = elements;
+				value = Marshalling.MarshalArray(InValue, fieldInfo.FieldType.GetElementType());
 			}
 			else
 			{
@@ -258,12 +238,6 @@ internal static class ManagedObject
 			ManagedHost.HandleException(ex);
 		}
 	}
-
-	struct ArrayContainer
-	{
-		public IntPtr Data;
-		public int Length;
-	};
 
 	[UnmanagedCallersOnly]
 	private static void GetFieldValue(IntPtr InTarget, UnmanagedString InFieldName, IntPtr OutValue)
@@ -291,45 +265,7 @@ internal static class ManagedObject
 		{
 			var array = value as Array;
 			var elementType = fieldInfo.FieldType.GetElementType();
-			var elementSize = Marshal.SizeOf(elementType);
-
-			int byteLength = array.Length * elementSize;
-
-			var mem = Marshal.AllocHGlobal(byteLength);
-
-			int offset = 0;
-
-			foreach (var elem in array)
-			{
-				var handle = GCHandle.Alloc(elem, GCHandleType.Pinned);
-
-				unsafe
-				{
-					Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), ((byte*)mem.ToPointer()) + offset, elementSize, elementSize);
-				}
-
-				offset += elementSize;
-
-				handle.Free();
-			}
-
-			ArrayContainer container = new()
-			{
-				Data = mem,
-				Length = array.Length
-			};
-
-			unsafe
-			{
-				var handle = GCHandle.Alloc(container, GCHandleType.Pinned);
-
-				unsafe
-				{
-					Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), OutValue.ToPointer(), Marshal.SizeOf<ArrayContainer>(), Marshal.SizeOf<ArrayContainer>());
-				}
-
-				handle.Free();
-			}
+			Marshalling.CopyArrayToBuffer(OutValue, array, elementType);
 		}
 		else if (value is string s)
 		{
@@ -387,6 +323,10 @@ internal static class ManagedObject
 		{
 			value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), propertyInfo.PropertyType);
 		}
+		else if (propertyInfo.PropertyType.IsSZArray)
+		{
+			value = Marshalling.MarshalArray(InValue, propertyInfo.PropertyType.GetElementType());
+		}
 		else
 		{
 			value = Marshalling.MarshalPointer(InValue, propertyInfo.PropertyType);
@@ -416,8 +356,14 @@ internal static class ManagedObject
 		}
 
 		var value = propertyInfo.GetValue(target);
-		
-		if (value is string s)
+
+		if (propertyInfo.PropertyType.IsSZArray)
+		{
+			var array = value as Array;
+			var elementType = propertyInfo.PropertyType.GetElementType();
+			Marshalling.CopyArrayToBuffer(OutValue, array, elementType);
+		}
+		else if (value is string s)
 		{
 			var nativeString = UnmanagedString.FromString(s);
 			Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);

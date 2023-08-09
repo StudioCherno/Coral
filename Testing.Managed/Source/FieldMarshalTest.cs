@@ -1,4 +1,6 @@
-﻿namespace Testing.Managed;
+﻿using System;
+
+namespace Testing.Managed;
 
 public class FieldMarshalTest
 {
@@ -30,6 +32,8 @@ public class FieldMarshalTest
 	public string StringPropertyTest { get; set; } = "Hello";
 
 	public int[] IntArrayTest = new int[]{ 5, 2, 1, 64 };
+
+	public int[] IntArrayProp { get; set; } = new int[]{ 6, 10, 16, 24 };
 
 	private uint Test() => 10;
 	

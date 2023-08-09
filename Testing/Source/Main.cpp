@@ -458,6 +458,22 @@ int main()
 			std::cout << value << std::endl;
 	}
 
+	{
+		auto array = fieldTestObject.GetPropertyValue<Coral::Array<int32_t>>("IntArrayProp");
+
+		for (auto value : array)
+			std::cout << value << std::endl;
+
+		array[0] = 999;
+
+		fieldTestObject.SetPropertyValue("IntArrayProp", array);
+
+		auto array2 = fieldTestObject.GetPropertyValue<Coral::Array<int32_t>>("IntArrayProp");
+
+		for (auto value : array2)
+			std::cout << value << std::endl;
+	}
+
 	auto& objectType = fieldTestObject.GetType();
 	auto& objectBaseType = objectType.GetBaseType();
 	const auto& fields = objectType.GetFields();
