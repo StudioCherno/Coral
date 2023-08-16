@@ -130,6 +130,9 @@ public static class Marshalling
 		if (InType == typeof(string))
 			return Marshal.PtrToStringAuto(InValue);
 
+		if (InType.IsSZArray)
+			return MarshalArray(InValue, InType.GetElementType());
+
 		return Marshal.PtrToStructure(InValue, InType);	
 	}
 	public static T? MarshalPointer<T>(IntPtr InValue) => Marshal.PtrToStructure<T>(InValue);
@@ -147,9 +150,7 @@ public static class Marshalling
 		var result = new object?[parameterPointers.Length];
 
 		for (int i = 0; i < parameterPointers.Length; i++)
-		{
 			result[i] = MarshalPointer(parameterPointers[i], parameterInfos[i].ParameterType);
-		}
 
 		return result;
 	}

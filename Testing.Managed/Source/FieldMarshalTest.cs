@@ -35,6 +35,15 @@ public class FieldMarshalTest
 
 	public int[] IntArrayProp { get; set; } = new int[]{ 6, 10, 16, 24 };
 
-	private uint Test() => 10;
-	
+	public void ArrayParamTest(float[] InArray)
+	{
+		for (int i = 0; i < InArray.Length; i++)
+			Console.WriteLine(InArray[i]);
+	}
+
+	public float[] ArrayReturnTest()
+	{
+		return new float[]{ 10.0f, 20.0f, 30.0f, 40.0f, 50.0f };
+	}
+
 }

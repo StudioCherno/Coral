@@ -456,6 +456,21 @@ int main()
 	
 		for (auto value : array2)
 			std::cout << value << std::endl;
+
+		std::cout << "Printing in C#" << std::endl;
+
+		Coral::Array<float> floats(5);
+		floats[0] = 50.0f;
+		floats[1] = 40.0f;
+		floats[2] = 30.0f;
+		floats[3] = 20.0f;
+		floats[4] = 10.0f;
+		fieldTestObject.InvokeMethod("ArrayParamTest", floats);
+
+		auto returnedFloats = fieldTestObject.InvokeMethod<Coral::Array<float>>("ArrayReturnTest");
+
+		for (int i = 0; i < returnedFloats.Length(); i++)
+			std::cout << returnedFloats[i] << std::endl;
 	}
 
 	{

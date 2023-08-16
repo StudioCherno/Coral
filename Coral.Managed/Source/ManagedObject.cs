@@ -108,7 +108,9 @@ internal static class ManagedObject
 			if (methodInfo == null)
 				return; // TODO(Peter): Throw
 
-			var parameterPointers = InParameters.ToIntPtrArray();
+			var parameters = Marshalling.MarshalParameterArray(InParameters, methodInfo);
+
+			/*var parameterPointers = InParameters.ToIntPtrArray();
 			object?[]? parameters = null;
 
 			if (parameterPointers.Length > 0)
@@ -118,7 +120,7 @@ internal static class ManagedObject
 				
 				for (int i = 0; i < parameterPointers.Length; i++)
 					parameters[i] = Marshalling.MarshalPointer(parameterPointers[i], parameterTypes[i].ParameterType);
-			}
+			}*/
 			
 			methodInfo.Invoke(target, parameters);
 		}
@@ -174,6 +176,10 @@ internal static class ManagedObject
 					void* valuePointer = Pointer.Unbox(value);
 					Buffer.MemoryCopy(&valuePointer, InResultStorage.ToPointer(), IntPtr.Size, IntPtr.Size);
 				}
+			}
+			else if (returnType.IsSZArray)
+			{
+				Marshalling.CopyArrayToBuffer(InResultStorage, value as Array, returnType.GetElementType());
 			}
 			else
 			{
