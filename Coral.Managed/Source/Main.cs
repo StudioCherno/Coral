@@ -163,6 +163,12 @@ namespace Coral.Managed
 			try
 			{
 				var target = GCHandle.FromIntPtr(InObjectHandle).Target;
+
+				if (target == null)
+				{
+					throw new ArgumentNullException(nameof(InObjectHandle), "Trying to get reflection type from a null object.");
+				}
+
 				var reflectionType = BuildReflectionType(target.GetType());
 
 				if (reflectionType == null)

@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+
 using Coral.Managed.Interop;
 
 namespace Coral.Managed;
@@ -32,8 +31,7 @@ internal static class ManagedObject
 
 			if (type == null)
 			{
-				Console.WriteLine($"[Coral.Managed]: Unknown type name '{InCreateInfo->TypeName}'");
-				return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() };
+				throw new TypeNotFoundException($"Failed to find type with name {InCreateInfo->TypeName}");
 			}
 
 			ConstructorInfo? constructor = null;
@@ -48,13 +46,15 @@ internal static class ManagedObject
 			}
 
 			if (constructor == null)
-				return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() };
+			{
+				throw new MissingMethodException($"No suitable constructor found for type {type}");
+			}
 
 			var parameters = Marshalling.MarshalParameterArray(InCreateInfo->Parameters, constructor);
 			object? result = parameters != null ? TypeHelper.CreateInstance(type, parameters) : TypeHelper.CreateInstance(type);
 
 			if (result == null)
-				return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() };
+				return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() }; // TODO(Peter): Exception
 
 			var handle = GCHandle.Alloc(result, InCreateInfo->IsWeakRef ? GCHandleType.Weak : GCHandleType.Normal);
 			return new()
@@ -91,37 +91,30 @@ internal static class ManagedObject
 			var target = GCHandle.FromIntPtr(InObjectHandle).Target;
 
 			if (target == null)
-				return; // TODO(Peter): Throw
-			
+			{
+				throw new ArgumentNullException(nameof(InObjectHandle), $"Trying to invoke method {InMethodName} on a null object.");
+			}
+
 			var targetType = target.GetType();
 
 			MethodInfo? methodInfo = null;
 			foreach (var mi in targetType.GetMethods())
 			{
+				// TODO(Peter): Check types
 				if (mi.Name != InMethodName || mi.GetParameters().Length != InParameters.Length)
 					continue;
-				
+
 				methodInfo = mi;
 				break;
 			}
 
 			if (methodInfo == null)
-				return; // TODO(Peter): Throw
+			{
+				throw new MissingMethodException($"Method {InMethodName} wasn't found.");
+			}
 
 			var parameters = Marshalling.MarshalParameterArray(InParameters, methodInfo);
 
-			/*var parameterPointers = InParameters.ToIntPtrArray();
-			object?[]? parameters = null;
-
-			if (parameterPointers.Length > 0)
-			{
-				var parameterTypes = methodInfo.GetParameters();
-				parameters = new object[parameterPointers.Length];
-				
-				for (int i = 0; i < parameterPointers.Length; i++)
-					parameters[i] = Marshalling.MarshalPointer(parameterPointers[i], parameterTypes[i].ParameterType);
-			}*/
-			
 			methodInfo.Invoke(target, parameters);
 		}
 		catch (Exception ex)
@@ -136,10 +129,12 @@ internal static class ManagedObject
 		try
 		{
 			var target = GCHandle.FromIntPtr(InObjectHandle).Target;
-			
+
 			if (target == null)
-				return;
-			
+			{
+				throw new ArgumentNullException(nameof(InObjectHandle), $"Trying to invoke method {InMethodName} on a null object.");
+			}
+
 			var targetType = target.GetType();
 
 			MethodInfo? methodInfo = null;
@@ -153,7 +148,9 @@ internal static class ManagedObject
 			}
 
 			if (methodInfo == null)
-				throw new MissingMethodException($"Couldn't find method called {InMethodName}");
+			{
+				throw new MissingMethodException($"Method {InMethodName} wasn't found.");
+			}
 
 			var methodParameters = Marshalling.MarshalParameterArray(InParameters, methodInfo);
 			
@@ -209,8 +206,7 @@ internal static class ManagedObject
 
 			if (target == null)
 			{
-				Console.WriteLine("Target is null");
-				return;
+				throw new ArgumentNullException(nameof(InTarget), $"Tried setting value of field {InFieldName} on a null object.");
 			}
 
 			var targetType = target.GetType();
@@ -218,8 +214,7 @@ internal static class ManagedObject
 
 			if (fieldInfo == null)
 			{
-				Console.WriteLine("FieldInfo is null");
-				return;
+				throw new MissingFieldException($"Failed to find field named {InFieldName} in {targetType}");
 			}
 
 			object? value;
@@ -248,151 +243,188 @@ internal static class ManagedObject
 	[UnmanagedCallersOnly]
 	private static void GetFieldValue(IntPtr InTarget, UnmanagedString InFieldName, IntPtr OutValue)
 	{
-		var target = GCHandle.FromIntPtr(InTarget).Target;
-
-		if (target == null)
+		try
 		{
-			Console.WriteLine("Target is null");
-			return;
-		}
+			var target = GCHandle.FromIntPtr(InTarget).Target;
 
-		var targetType = target.GetType();
-		var fieldInfo = targetType.GetField(InFieldName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-		if (fieldInfo == null)
-		{
-			Console.WriteLine("FieldInfo is null");
-			return;
-		}
-
-		var value = fieldInfo.GetValue(target);
-
-		if (fieldInfo.FieldType.IsSZArray)
-		{
-			var array = value as Array;
-			var elementType = fieldInfo.FieldType.GetElementType();
-			Marshalling.CopyArrayToBuffer(OutValue, array, elementType);
-		}
-		else if (value is string s)
-		{
-			var nativeString = UnmanagedString.FromString(s);
-			Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);
-		}
-		else if (fieldInfo.FieldType.IsPointer)
-		{
-			unsafe
+			if (target == null)
 			{
-				void* valuePointer = Pointer.Unbox(value);
-				Buffer.MemoryCopy(&valuePointer, OutValue.ToPointer(), IntPtr.Size, IntPtr.Size);
+				throw new ArgumentNullException(nameof(InTarget), $"Tried getting value of field {InFieldName} on a null object.");
+			}
+
+			var targetType = target.GetType();
+			var fieldInfo = targetType.GetField(InFieldName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+			if (fieldInfo == null)
+			{
+				throw new MissingFieldException($"Failed to find field named {InFieldName} in {targetType}");
+			}
+
+			var value = fieldInfo.GetValue(target);
+
+			if (fieldInfo.FieldType.IsSZArray)
+			{
+				var array = value as Array;
+				var elementType = fieldInfo.FieldType.GetElementType();
+				Marshalling.CopyArrayToBuffer(OutValue, array, elementType);
+			}
+			else if (value is string s)
+			{
+				var nativeString = UnmanagedString.FromString(s);
+				Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);
+			}
+			else if (fieldInfo.FieldType.IsPointer)
+			{
+				unsafe
+				{
+					if (value == null)
+					{
+						Marshal.WriteIntPtr(OutValue, IntPtr.Zero);
+					}
+					else
+					{
+						void* valuePointer = Pointer.Unbox(value);
+						Buffer.MemoryCopy(&valuePointer, OutValue.ToPointer(), IntPtr.Size, IntPtr.Size);
+					}
+
+				}
+			}
+			else
+			{
+				var valueSize = Marshal.SizeOf(fieldInfo.FieldType);
+				var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
+
+				unsafe
+				{
+					Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), OutValue.ToPointer(), valueSize, valueSize);
+				}
+
+				handle.Free();
 			}
 		}
-		else
+		catch (Exception ex)
 		{
-			var valueSize = Marshal.SizeOf(fieldInfo.FieldType);
-			var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
-
-			unsafe
-			{
-				Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), OutValue.ToPointer(), valueSize, valueSize);
-			}
-				
-			handle.Free();
+			ManagedHost.HandleException(ex);
 		}
 	}
-	
+
 	[UnmanagedCallersOnly]
 	private static void SetPropertyValue(IntPtr InTarget, UnmanagedString InPropertyName, IntPtr InValue)
 	{
-		var target = GCHandle.FromIntPtr(InTarget).Target;
-
-		if (target == null)
+		try
 		{
-			Console.WriteLine("Target is null");
-			return;
-		}
+			var target = GCHandle.FromIntPtr(InTarget).Target;
 
-		var targetType = target.GetType();
-		var propertyInfo = targetType.GetProperty(InPropertyName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+			if (target == null)
+			{
+				throw new ArgumentNullException(nameof(InTarget), $"Tried setting value of property {InPropertyName} on a null object.");
+			}
+
+			var targetType = target.GetType();
+			var propertyInfo = targetType.GetProperty(InPropertyName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 		
-		if (propertyInfo == null)
-		{
-			Console.WriteLine("FieldInfo is null");
-			return;
-		}
+			if (propertyInfo == null)
+			{
+				throw new MissingMemberException($"Failed to find property named {InPropertyName} in type {targetType}");
+			}
 
-		if (propertyInfo.SetMethod == null)
-			return; // TODO(Peter): Throw
+			if (propertyInfo.SetMethod == null)
+			{
+				throw new InvalidOperationException($"Attempting to set value of property {InPropertyName} with no setter.");
+			}
 
-		object? value;
+			object? value;
 		
-		if (propertyInfo.PropertyType == typeof(string) || propertyInfo.PropertyType.IsPointer || propertyInfo.PropertyType == typeof(IntPtr))
-		{
-			value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), propertyInfo.PropertyType);
-		}
-		else if (propertyInfo.PropertyType.IsSZArray)
-		{
-			value = Marshalling.MarshalArray(InValue, propertyInfo.PropertyType.GetElementType());
-		}
-		else
-		{
-			value = Marshalling.MarshalPointer(InValue, propertyInfo.PropertyType);
-		}
+			if (propertyInfo.PropertyType == typeof(string) || propertyInfo.PropertyType.IsPointer || propertyInfo.PropertyType == typeof(IntPtr))
+			{
+				value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), propertyInfo.PropertyType);
+			}
+			else if (propertyInfo.PropertyType.IsSZArray)
+			{
+				value = Marshalling.MarshalArray(InValue, propertyInfo.PropertyType.GetElementType());
+			}
+			else
+			{
+				value = Marshalling.MarshalPointer(InValue, propertyInfo.PropertyType);
+			}
 		
-		propertyInfo.SetValue(target, value);
+			propertyInfo.SetValue(target, value);
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+		}
 	}
-	
+
 	[UnmanagedCallersOnly]
 	private static void GetPropertyValue(IntPtr InTarget, UnmanagedString InPropertyName, IntPtr OutValue)
 	{
-		var target = GCHandle.FromIntPtr(InTarget).Target;
-
-		if (target == null)
+		try
 		{
-			Console.WriteLine("Target is null");
-			return;
-		}
+			var target = GCHandle.FromIntPtr(InTarget).Target;
 
-		var targetType = target.GetType();
-		var propertyInfo = targetType.GetProperty(InPropertyName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-		if (propertyInfo == null)
-		{
-			Console.WriteLine("FieldInfo is null");
-			return;
-		}
-
-		var value = propertyInfo.GetValue(target);
-
-		if (propertyInfo.PropertyType.IsSZArray)
-		{
-			var array = value as Array;
-			var elementType = propertyInfo.PropertyType.GetElementType();
-			Marshalling.CopyArrayToBuffer(OutValue, array, elementType);
-		}
-		else if (value is string s)
-		{
-			var nativeString = UnmanagedString.FromString(s);
-			Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);
-		}
-		else if (propertyInfo.PropertyType.IsPointer)
-		{
-			unsafe
+			if (target == null)
 			{
-				void* valuePointer = Pointer.Unbox(value);
-				Buffer.MemoryCopy(&valuePointer, OutValue.ToPointer(), IntPtr.Size, IntPtr.Size);
+				throw new ArgumentNullException(nameof(InTarget), $"Tried getting value of property {InPropertyName} on a null object.");
+			}
+
+			var targetType = target.GetType();
+			var propertyInfo = targetType.GetProperty(InPropertyName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+			if (propertyInfo == null)
+			{
+				throw new MissingMemberException($"Failed to find property named {InPropertyName} in type {targetType}");
+			}
+
+			if (propertyInfo.GetMethod == null)
+			{
+				throw new InvalidOperationException($"Attempting to get value of property {InPropertyName} with no getter.");
+			}
+
+			var value = propertyInfo.GetValue(target);
+
+			if (propertyInfo.PropertyType.IsSZArray)
+			{
+				var array = value as Array;
+				var elementType = propertyInfo.PropertyType.GetElementType();
+				Marshalling.CopyArrayToBuffer(OutValue, array, elementType);
+			}
+			else if (value is string s)
+			{
+				var nativeString = UnmanagedString.FromString(s);
+				Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);
+			}
+			else if (propertyInfo.PropertyType.IsPointer)
+			{
+				unsafe
+				{
+					if (value == null)
+					{
+						Marshal.WriteIntPtr(OutValue, IntPtr.Zero);
+					}
+					else
+					{
+						void* valuePointer = Pointer.Unbox(value);
+						Buffer.MemoryCopy(&valuePointer, OutValue.ToPointer(), IntPtr.Size, IntPtr.Size);
+					}
+				}
+			}
+			else
+			{
+				var valueSize = Marshal.SizeOf(propertyInfo.PropertyType);
+				var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
+
+				unsafe
+				{
+					Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), OutValue.ToPointer(), valueSize, valueSize);
+				}
+
+				handle.Free();
 			}
 		}
-		else
+		catch (Exception ex)
 		{
-			var valueSize = Marshal.SizeOf(propertyInfo.PropertyType);
-			var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
-
-			unsafe
-			{
-				Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), OutValue.ToPointer(), valueSize, valueSize);
-			}
-				
-			handle.Free();
+			ManagedHost.HandleException(ex);
 		}
 	}
 }

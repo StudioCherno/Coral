@@ -61,8 +61,11 @@ public static class Marshalling
 		public int Length;
 	};
 
-	public static object? MarshalArray(IntPtr InArray, Type InElementType)
+	public static object? MarshalArray(IntPtr InArray, Type? InElementType)
 	{
+		if (InElementType == null)
+			return null;
+
 		var arrayContainer = MarshalPointer<ArrayContainer>(InArray);
 		var elements = Array.CreateInstance(InElementType, arrayContainer.Length);
 		int elementSize = Marshal.SizeOf(InElementType);
@@ -79,8 +82,11 @@ public static class Marshalling
 		return elements;
 	}
 
-	public static void CopyArrayToBuffer(IntPtr InBuffer, Array InArray, Type InElementType)
+	public static void CopyArrayToBuffer(IntPtr InBuffer, Array? InArray, Type? InElementType)
 	{
+		if (InArray == null || InElementType == null)
+			return;
+
 		var elementSize = Marshal.SizeOf(InElementType);
 		int byteLength = InArray.Length * elementSize;
 		var mem = Marshal.AllocHGlobal(byteLength);
