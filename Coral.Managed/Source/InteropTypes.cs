@@ -1,109 +1,115 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Coral.Managed.Interop
+namespace Coral.Managed.Interop;
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct UnmanagedArray
 {
-	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct UnmanagedArray
+	private readonly IntPtr m_NativeArray;
+	private readonly int m_NativeLength;
+
+	public int Length => m_NativeLength;
+
+	public T[] ToArray<T>() where T : struct
 	{
-		private readonly IntPtr m_NativeArray;
-		private readonly int m_NativeLength;
-
-		public int Length => m_NativeLength;
-
-		public T[] ToArray<T>() where T : struct
+		try
 		{
-			try
-			{
-				if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
-					return Array.Empty<T>();
-
-				var result = new T[m_NativeLength];
-
-				for (int i = 0; i < m_NativeLength; i++)
-				{
-					IntPtr elementPtr = Marshal.ReadIntPtr(m_NativeArray, i * Marshal.SizeOf<nint>());
-					result[i] = Marshal.PtrToStructure<T>(elementPtr);
-				}
-
-				return result;
-			}
-			catch (Exception ex)
-			{
-				ManagedHost.HandleException(ex);
+			if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
 				return Array.Empty<T>();
+
+			var result = new T[m_NativeLength];
+
+			for (int i = 0; i < m_NativeLength; i++)
+			{
+				IntPtr elementPtr = Marshal.ReadIntPtr(m_NativeArray, i * Marshal.SizeOf<nint>());
+				result[i] = Marshal.PtrToStructure<T>(elementPtr);
 			}
+
+			return result;
 		}
-
-		public bool IsEmpty() => m_NativeArray == IntPtr.Zero || Length == 0;
-		
-		public IntPtr[] ToIntPtrArray()
+		catch (Exception ex)
 		{
-			try
-			{
-				if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
-					return Array.Empty<IntPtr>();
+			ManagedHost.HandleException(ex);
+			return Array.Empty<T>();
+		}
+	}
 
-				IntPtr[] result = new IntPtr[m_NativeLength];
+	public Span<T> ToSpan<T>() where T : struct
+	{
+		Span<T> result;
+		unsafe { result = new Span<T>(m_NativeArray.ToPointer(), m_NativeLength); }
+		return result;
+	}
 
-				for (int i = 0; i < m_NativeLength; i++)
-					result[i] = Marshal.ReadIntPtr(m_NativeArray, i * Marshal.SizeOf<nint>());
-
-				return result;
-			}
-			catch (Exception ex)
-			{
-				ManagedHost.HandleException(ex);
+	public bool IsEmpty() => m_NativeArray == IntPtr.Zero || Length == 0;
+		
+	public IntPtr[] ToIntPtrArray()
+	{
+		try
+		{
+			if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
 				return Array.Empty<IntPtr>();
-			}
+
+			IntPtr[] result = new IntPtr[m_NativeLength];
+
+			for (int i = 0; i < m_NativeLength; i++)
+				result[i] = Marshal.ReadIntPtr(m_NativeArray, i * Marshal.SizeOf<nint>());
+
+			return result;
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+			return Array.Empty<IntPtr>();
 		}
 	}
+}
 
-	[StructLayout(LayoutKind.Sequential)]
-	public struct UnmanagedString : IEquatable<UnmanagedString>
+[StructLayout(LayoutKind.Sequential)]
+public struct UnmanagedString : IEquatable<UnmanagedString>
+{
+	internal IntPtr m_NativeString;
+
+	public bool IsNull() => m_NativeString == IntPtr.Zero;
+
+	public override string? ToString() => m_NativeString != IntPtr.Zero ? Marshal.PtrToStringAuto(m_NativeString) : string.Empty;
+
+	public static UnmanagedString FromString(string? InValue)
 	{
-		internal IntPtr m_NativeString;
-
-		public bool IsNull() => m_NativeString == IntPtr.Zero;
-
-		public override string? ToString() => m_NativeString != IntPtr.Zero ? Marshal.PtrToStringAuto(m_NativeString) : string.Empty;
-
-		public static UnmanagedString FromString(string? InValue)
+		return new UnmanagedString()
 		{
-			return new UnmanagedString()
-			{
-				m_NativeString = Marshal.StringToCoTaskMemAuto(InValue)
-			};
-		}
+			m_NativeString = Marshal.StringToCoTaskMemAuto(InValue)
+		};
+	}
 		
-		public static UnmanagedString Null()
-		{
-			return new UnmanagedString(){ m_NativeString = IntPtr.Zero };
-		}
-
-		[UnmanagedCallersOnly]
-		internal static void FreeUnmanaged(UnmanagedString InString)
-		{
-			InString.Free();
-		}
-
-		public void Free() => Marshal.FreeCoTaskMem(m_NativeString);
-
-		public override bool Equals(object? obj) => obj is UnmanagedString other && Equals(other);
-		public bool Equals(UnmanagedString other) => m_NativeString == other.m_NativeString;
-		public override int GetHashCode() => m_NativeString.GetHashCode();
-
-		public static bool operator ==(UnmanagedString left, UnmanagedString right) => left.Equals(right);
-		public static bool operator !=(UnmanagedString left, UnmanagedString right) => !(left == right);
-
-		public static implicit operator string?(UnmanagedString InUnmanagedString) => InUnmanagedString.ToString();
-	}
-
-	public struct Bool32
+	public static UnmanagedString Null()
 	{
-		public uint Value;
-
-		public static implicit operator Bool32(bool InValue) => new() { Value = InValue ? 1u : 0u };
-		public static implicit operator bool(Bool32 InBool32) => InBool32.Value > 0;
+		return new UnmanagedString(){ m_NativeString = IntPtr.Zero };
 	}
+
+	[UnmanagedCallersOnly]
+	internal static void FreeUnmanaged(UnmanagedString InString)
+	{
+		InString.Free();
+	}
+
+	public void Free() => Marshal.FreeCoTaskMem(m_NativeString);
+
+	public override bool Equals(object? obj) => obj is UnmanagedString other && Equals(other);
+	public bool Equals(UnmanagedString other) => m_NativeString == other.m_NativeString;
+	public override int GetHashCode() => m_NativeString.GetHashCode();
+
+	public static bool operator ==(UnmanagedString left, UnmanagedString right) => left.Equals(right);
+	public static bool operator !=(UnmanagedString left, UnmanagedString right) => !(left == right);
+
+	public static implicit operator string?(UnmanagedString InUnmanagedString) => InUnmanagedString.ToString();
+}
+
+public struct Bool32
+{
+	public uint Value { get; set; }
+
+	public static implicit operator Bool32(bool InValue) => new() { Value = InValue ? 1u : 0u };
+	public static implicit operator bool(Bool32 InBool32) => InBool32.Value > 0;
 }

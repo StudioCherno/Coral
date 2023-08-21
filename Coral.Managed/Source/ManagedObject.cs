@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Coral.Managed.Interop;
+
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-
-using Coral.Managed.Interop;
 
 namespace Coral.Managed;
 
@@ -36,7 +36,8 @@ internal static class ManagedObject
 
 			ConstructorInfo? constructor = null;
 			
-			foreach (var constructorInfo in type.GetConstructors())
+			ReadOnlySpan<ConstructorInfo> constructors = type.GetConstructors();
+			foreach (var constructorInfo in constructors)
 			{
 				if (constructorInfo.GetParameters().Length != InCreateInfo->Parameters.Length)
 					continue;
@@ -97,8 +98,10 @@ internal static class ManagedObject
 
 			var targetType = target.GetType();
 
+			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods();
+
 			MethodInfo? methodInfo = null;
-			foreach (var mi in targetType.GetMethods())
+			foreach (var mi in methods)
 			{
 				// TODO(Peter): Check types
 				if (mi.Name != InMethodName || mi.GetParameters().Length != InParameters.Length)
@@ -137,8 +140,10 @@ internal static class ManagedObject
 
 			var targetType = target.GetType();
 
+			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods();
+
 			MethodInfo? methodInfo = null;
-			foreach (var mi in targetType.GetMethods())
+			foreach (var mi in methods)
 			{
 				if (mi.Name != InMethodName || mi.GetParameters().Length != InParameters.Length)
 					continue;

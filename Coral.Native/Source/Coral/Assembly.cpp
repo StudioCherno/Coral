@@ -19,9 +19,9 @@ namespace Coral {
 		
 		const auto& name = m_InternalCallNameStorage.emplace_back(StringHelper::ConvertUtf8ToWide(assemblyQualifiedName));
 
-		auto* internalCall = new InternalCall();
-		internalCall->Name = name.c_str();
-		internalCall->NativeFunctionPtr = InFunctionPtr;
+		InternalCall internalCall;
+		internalCall.Name = name.c_str();
+		internalCall.NativeFunctionPtr = InFunctionPtr;
 		m_InternalCalls.emplace_back(internalCall);
 	}
 

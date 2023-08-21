@@ -44,7 +44,7 @@ namespace Coral {
 		std::vector<std::string> m_InternalCallNameStorage;
 	#endif
 		
-		std::vector<InternalCall*> m_InternalCalls;
+		std::vector<InternalCall> m_InternalCalls;
 
 		std::vector<ReflectionType> m_ReflectionTypes;
 		

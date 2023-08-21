@@ -10,7 +10,7 @@ project "Coral.Managed"
 
     propertytags {
         { "AppendTargetFrameworkToOutputPath", "false" },
-        { "Nullable", "enable" }
+        { "Nullable", "enable" },
     }
 
     files {

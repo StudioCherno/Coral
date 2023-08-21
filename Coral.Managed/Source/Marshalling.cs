@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Coral.Managed.Interop;
+
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Coral.Managed.Interop;
 
 namespace Coral.Managed;
 
