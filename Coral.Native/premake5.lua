@@ -8,6 +8,9 @@ project "Coral.Native"
     -- Can't specify 64-bit architecture in the workspace level since VS 2022 (see https://github.com/premake/premake-core/issues/1758)
     architecture "x86_64"
 
+	targetdir("Build/%{cfg.buildcfg}-%{cfg.system}")
+	objdir("Intermediates/%{cfg.buildcfg}-%{cfg.system}")
+
     pchheader "CoralPCH.hpp"
     pchsource "Source/CoralPCH.cpp"
 
@@ -21,4 +24,4 @@ project "Coral.Native"
     }
 
     includedirs { "Source/", "Include/Coral/" }
-    externalincludedirs { "%{wks.location}/NetCore/7.0.7/" }
+    externalincludedirs { "../NetCore/7.0.7/" }
