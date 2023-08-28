@@ -110,7 +110,7 @@ namespace Coral {
 		
 	private:
 		void* m_Handle = nullptr;
-		const CharType* m_FullName = nullptr;
+		CSString m_FullName;
 		HostInstance* m_Host = nullptr;
 
 	private:

@@ -16,6 +16,13 @@ namespace Coral {
 			m_Length = InLength;
 		}
 
+		Array(const std::vector<TValue>& InValues)
+		{
+			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
+			m_Length = InValues.size();
+			memcpy(m_Ptr, InValues.data(), InValues.size() * sizeof(TValue));
+		}
+
 		Array(const Array& InOther)
 		{
 			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InOther.m_Length * sizeof(TValue)));
@@ -54,6 +61,8 @@ namespace Coral {
 			InOther.m_Ptr = nullptr;
 			InOther.m_Length = 0;
 		}
+
+		bool IsEmpty() const { return m_Length == 0 || m_Ptr == nullptr; }
 
 		TValue& operator[](size_t InIndex) { return m_Ptr[InIndex]; }
 		const TValue& operator[](size_t InIndex) const { return m_Ptr[InIndex]; }

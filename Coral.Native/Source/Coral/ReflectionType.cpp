@@ -21,12 +21,12 @@ namespace Coral {
 	
 	bool ReflectionType::IsAssignableTo(const ReflectionType& InOther) const
 	{
-		return s_ManagedFunctions.IsTypeAssignableTo(AssemblyQualifiedName, InOther.AssemblyQualifiedName);
+		return s_ManagedFunctions.IsTypeAssignableTo(AssemblyQualifiedName.Data(), InOther.AssemblyQualifiedName.Data());
 	}
 
 	bool ReflectionType::IsAssignableFrom(const ReflectionType& InOther) const
 	{
-		return s_ManagedFunctions.IsTypeAssignableFrom(AssemblyQualifiedName, InOther.AssemblyQualifiedName);
+		return s_ManagedFunctions.IsTypeAssignableFrom(AssemblyQualifiedName.Data(), InOther.AssemblyQualifiedName.Data());
 	}
 
 }

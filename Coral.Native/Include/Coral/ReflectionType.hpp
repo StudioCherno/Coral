@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Core.hpp"
+#include "CSString.hpp"
 
 namespace Coral {
 
@@ -11,11 +12,11 @@ namespace Coral {
 	class ReflectionType
 	{
 	public:
-		const CharType* FullName = nullptr;
-		const CharType* Name = nullptr;
-		const CharType* Namespace = nullptr;
-		const CharType* BaseTypeName = nullptr;
-		const CharType* AssemblyQualifiedName = nullptr;
+		CSString FullName;
+		CSString Name;
+		CSString Namespace;
+		CSString BaseTypeName;
+		CSString AssemblyQualifiedName;
 
 		ReflectionType& GetBaseType();
 

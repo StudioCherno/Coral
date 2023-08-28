@@ -35,7 +35,7 @@ namespace Coral {
 #endif
 	}
 
-	void HostInstance::Initialize(HostSettings InSettings)
+	bool HostInstance::Initialize(HostSettings InSettings)
 	{
 		CORAL_VERIFY(!m_Initialized);
 
@@ -55,9 +55,15 @@ namespace Coral {
 
 		m_CoralManagedAssemblyPath = std::filesystem::path(m_Settings.CoralDirectory) / "Coral.Managed.dll";
 
-		InitializeCoralManaged();
+		if (!std::filesystem::exists(m_CoralManagedAssemblyPath))
+		{
+			ErrorCallback(CORAL_STR("Failed to find Coral.Managed.dll"));
+			return false;
+		}
 
-		m_Initialized = true;
+		m_Initialized = InitializeCoralManaged();
+
+		return m_Initialized;
 	}
 
 	static bool IsInvalidType(const ReflectionType& InType)
@@ -89,6 +95,14 @@ namespace Coral {
 			{
 				return IsInvalidType(InType);
 			});
+
+			for (auto& type : result.m_ReflectionTypes)
+			{
+				type.m_Host = this;
+
+				size_t id = std::hash<std::string>()(type.FullName.ToString());
+				m_ReflectionTypes[id] = type;
+			}
 		}
 		
 		return result;
@@ -135,14 +149,14 @@ namespace Coral {
 		s_ManagedFunctions.SetExceptionCallbackFptr(InCallback);
 	}
 
-	ReflectionType& HostInstance::GetReflectionType(const CharType* InTypeName)
+	ReflectionType& HostInstance::GetReflectionType(CSString InTypeName)
 	{
-		size_t id = std::hash<const CharType*>()(InTypeName);
+		size_t id = std::hash<std::string>()(InTypeName.ToString());
 
 		if (!m_ReflectionTypes.contains(id))
 		{
 			ReflectionType reflectionType;
-			s_ManagedFunctions.GetReflectionTypeFptr(InTypeName, &reflectionType);
+			s_ManagedFunctions.GetReflectionTypeFptr(InTypeName.Data(), &reflectionType);
 			reflectionType.m_Host = this;
 			m_ReflectionTypes[id] = std::move(reflectionType);
 		}
@@ -152,7 +166,7 @@ namespace Coral {
 	
 	ReflectionType& HostInstance::GetReflectionType(ManagedObject InObject)
 	{
-		size_t id = std::hash<const CharType*>()(InObject.m_FullName);
+		size_t id = std::hash<std::string>()(InObject.m_FullName.ToString());
 
 		if (!m_ReflectionTypes.contains(id))
 		{
@@ -165,31 +179,31 @@ namespace Coral {
 		return m_ReflectionTypes.at(id);
 	}
 
-	const std::vector<ManagedField>& HostInstance::GetFields(const CharType* InTypeName)
+	const std::vector<ManagedField>& HostInstance::GetFields(CSString InTypeName)
 	{
-		size_t id = std::hash<const CharType*>()(InTypeName);
+		size_t id = std::hash<std::string>()(InTypeName.ToString());
 
 		if (!m_Fields.contains(id))
 		{
 			int32_t fieldCount;
-			s_ManagedFunctions.GetFieldsFptr(InTypeName, nullptr, &fieldCount);
+			s_ManagedFunctions.GetFieldsFptr(InTypeName.Data(), nullptr, &fieldCount);
 			m_Fields[id].resize(fieldCount);
-			s_ManagedFunctions.GetFieldsFptr(InTypeName, m_Fields[id].data(), &fieldCount);
+			s_ManagedFunctions.GetFieldsFptr(InTypeName.Data(), m_Fields[id].data(), &fieldCount);
 		}
 
 		return m_Fields.at(id);
 	}
 
-	const std::vector<MethodInfo>& HostInstance::GetMethods(const CharType* InTypeName)
+	const std::vector<MethodInfo>& HostInstance::GetMethods(CSString InTypeName)
 	{
-		size_t id = std::hash<const CharType*>()(InTypeName);
+		size_t id = std::hash<const CharType*>()(InTypeName.Data());
 
 		if (!m_Methods.contains(id))
 		{
 			int32_t methodCount;
-			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName, nullptr, &methodCount);
+			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName.Data(), nullptr, &methodCount);
 			m_Methods[id].resize(methodCount);
-			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName, m_Methods[id].data(), &methodCount);
+			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName.Data(), m_Methods[id].data(), &methodCount);
 		}
 
 		return m_Methods.at(id);
@@ -246,11 +260,18 @@ namespace Coral {
 		s_CoreCLRFunctions.CloseHostFXR = LoadFunctionPtr<hostfxr_close_fn>(libraryHandle, "hostfxr_close");
 	}
 	
-	void HostInstance::InitializeCoralManaged()
+	bool HostInstance::InitializeCoralManaged()
 	{
 		// Fetch load_assembly_and_get_function_pointer_fn from CoreCLR
 		{
 			auto runtimeConfigPath = std::filesystem::path(m_Settings.CoralDirectory) / "Coral.Managed.runtimeconfig.json";
+
+			if (!std::filesystem::exists(runtimeConfigPath))
+			{
+				ErrorCallback(CORAL_STR("Failed to find Coral.Managed.runtimeconfig.json"));
+				return false;
+			}
+
 			int status = s_CoreCLRFunctions.InitHostFXRForRuntimeConfig(runtimeConfigPath.c_str(), nullptr, &m_HostFXRContext);
 			CORAL_VERIFY(status == StatusCode::Success && m_HostFXRContext != nullptr);
 
@@ -265,6 +286,7 @@ namespace Coral {
 		LoadCoralFunctions();
 
 		coralManagedEntryPoint();
+		return true;
 	}
 
 	void HostInstance::LoadCoralFunctions()

@@ -28,6 +28,10 @@ internal static class ManagedHost
 		public UnmanagedString Namespace;
 		public UnmanagedString BaseTypeName;
 		public UnmanagedString AssemblyQualifiedName;
+
+#pragma warning disable S1144
+		private readonly IntPtr m_Padding;
+#pragma warning restore S1144
 	}
 
 	internal enum TypeVisibility
@@ -75,6 +79,13 @@ internal static class ManagedHost
 			AssemblyQualifiedName = UnmanagedString.FromString(InType.AssemblyQualifiedName),
 			BaseTypeName = InType.BaseType != null ? UnmanagedString.FromString(InType.BaseType.FullName) : UnmanagedString.Null()
 		};
+
+		Console.WriteLine($"FullName: {reflectionType.FullName}");
+		Console.WriteLine($"Name: {reflectionType.Name}");
+		Console.WriteLine($"Namespace: {reflectionType.Namespace}");
+		Console.WriteLine($"BaseTypeName: {reflectionType.BaseTypeName}");
+		Console.WriteLine($"AssemblyQualifiedName: {reflectionType.AssemblyQualifiedName}");
+		Console.WriteLine("--------------------------------------------");
 
 		return reflectionType;
 	}

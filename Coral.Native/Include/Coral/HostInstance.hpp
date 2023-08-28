@@ -25,7 +25,7 @@ namespace Coral {
 	class HostInstance
 	{
 	public:
-		void Initialize(HostSettings InSettings);
+		bool Initialize(HostSettings InSettings);
 
 		ManagedAssembly LoadAssembly(std::string_view InFilePath);
 		void UnloadAssemblyLoadContext(ManagedAssembly& InAssembly);
@@ -58,15 +58,15 @@ namespace Coral {
 		using ExceptionCallbackFn = void(*)(const CharType*);
 		void SetExceptionCallback(ExceptionCallbackFn InCallback);
 
-		ReflectionType& GetReflectionType(const CharType* InTypeName);
+		ReflectionType& GetReflectionType(CSString InTypeName);
 		ReflectionType& GetReflectionType(ManagedObject InObject);
 
-		const std::vector<ManagedField>& GetFields(const CharType* InTypeName);
-		const std::vector<MethodInfo>& GetMethods(const CharType* InTypeName);
+		const std::vector<ManagedField>& GetFields(CSString InTypeName);
+		const std::vector<MethodInfo>& GetMethods(CSString InTypeName);
 		
 	private:
 		void LoadHostFXR() const;
-		void InitializeCoralManaged();
+		bool InitializeCoralManaged();
 		void LoadCoralFunctions();
 
 		void* LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName, const CharType* InDelegateType = CORAL_UNMANAGED_CALLERS_ONLY) const;

@@ -20,4 +20,32 @@ namespace Coral {
 #endif
 	}
 
+	CharType* Memory::StringToCoTaskMemAuto(StringView InString)
+	{
+		size_t length = (InString.length() + 1) * 2;
+
+#if defined(_WIN32)
+		auto* buffer = static_cast<CharType*>(CoTaskMemAlloc(length));
+#else
+		auto* buffer = static_cast<CharType*>(AllocHGlobal(length));
+#endif
+
+		if (buffer != nullptr)
+		{
+			memcpy(buffer, InString.data(), length);
+			buffer[InString.length()] = '\0';
+		}
+
+		return buffer;
+	}
+
+	void Memory::FreeCoTaskMem(void* InMemory)
+	{
+#if defined(_WIN32)
+		CoTaskMemFree(InMemory);
+#else
+		FreeHGlobal(InMemory);
+#endif
+	}
+
 }
