@@ -100,7 +100,8 @@ namespace Coral {
 			{
 				type.m_Host = this;
 
-				size_t id = std::hash<std::string>()(type.FullName.ToString());
+				std::string str = type.FullName.ToString();
+				size_t id = std::hash<std::string>()(str);
 				m_ReflectionTypes[id] = type;
 			}
 		}
@@ -149,7 +150,7 @@ namespace Coral {
 		s_ManagedFunctions.SetExceptionCallbackFptr(InCallback);
 	}
 
-	ReflectionType& HostInstance::GetReflectionType(CSString InTypeName)
+	ReflectionType& HostInstance::GetReflectionType(const CSString& InTypeName)
 	{
 		size_t id = std::hash<std::string>()(InTypeName.ToString());
 
@@ -179,7 +180,7 @@ namespace Coral {
 		return m_ReflectionTypes.at(id);
 	}
 
-	const std::vector<ManagedField>& HostInstance::GetFields(CSString InTypeName)
+	const std::vector<ManagedField>& HostInstance::GetFields(const CSString& InTypeName)
 	{
 		size_t id = std::hash<std::string>()(InTypeName.ToString());
 
@@ -194,7 +195,7 @@ namespace Coral {
 		return m_Fields.at(id);
 	}
 
-	const std::vector<MethodInfo>& HostInstance::GetMethods(CSString InTypeName)
+	const std::vector<MethodInfo>& HostInstance::GetMethods(const CSString& InTypeName)
 	{
 		size_t id = std::hash<const CharType*>()(InTypeName.Data());
 

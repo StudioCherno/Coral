@@ -1,8 +1,16 @@
 #include "CSString.hpp"
 #include "StringHelper.hpp"
 #include "Memory.hpp"
+#include "Verify.hpp"
 
 namespace Coral {
+
+	CSString::~CSString()
+	{
+		CORAL_VERIFY(m_String != nullptr);
+		Memory::FreeCoTaskMem(m_String);
+		m_String = nullptr;
+	}
 
 	CSString CSString::FromUTF8(std::string_view InString)
 	{

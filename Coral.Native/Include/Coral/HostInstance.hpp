@@ -58,11 +58,11 @@ namespace Coral {
 		using ExceptionCallbackFn = void(*)(const CharType*);
 		void SetExceptionCallback(ExceptionCallbackFn InCallback);
 
-		ReflectionType& GetReflectionType(CSString InTypeName);
+		ReflectionType& GetReflectionType(const CSString& InTypeName);
 		ReflectionType& GetReflectionType(ManagedObject InObject);
 
-		const std::vector<ManagedField>& GetFields(CSString InTypeName);
-		const std::vector<MethodInfo>& GetMethods(CSString InTypeName);
+		const std::vector<ManagedField>& GetFields(const CSString& InTypeName);
+		const std::vector<MethodInfo>& GetMethods(const CSString& InTypeName);
 		
 	private:
 		void LoadHostFXR() const;

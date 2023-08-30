@@ -22,19 +22,26 @@ namespace Coral {
 
 	CharType* Memory::StringToCoTaskMemAuto(StringView InString)
 	{
-		size_t length = (InString.length() + 1) * 2;
+		size_t length = InString.length() + 1;
+		size_t size = length * sizeof(CharType);
 
 #if defined(_WIN32)
-		auto* buffer = static_cast<CharType*>(CoTaskMemAlloc(length));
-#else
-		auto* buffer = static_cast<CharType*>(AllocHGlobal(length));
-#endif
+		auto* buffer = static_cast<CharType*>(CoTaskMemAlloc(size));
 
 		if (buffer != nullptr)
 		{
-			memcpy(buffer, InString.data(), length);
-			buffer[InString.length()] = '\0';
+			memset(buffer, 0xCE, size);
+			wcscpy(buffer, InString.data());
 		}
+#else
+		auto* buffer = static_cast<CharType*>(AllocHGlobal(size));
+
+		if (buffer != nullptr)
+		{
+			memset(buffer, 0, size);
+			strcpy(buffer, InString.data());
+		}
+#endif
 
 		return buffer;
 	}

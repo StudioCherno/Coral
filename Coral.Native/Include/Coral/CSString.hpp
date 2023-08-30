@@ -7,6 +7,8 @@ namespace Coral {
 	class CSString
 	{
 	public:
+		~CSString();
+
 		static CSString FromUTF8(std::string_view InString);
 		static std::string ToUTF8(CSString InString);
 
