@@ -80,12 +80,12 @@ internal static class ManagedHost
 			BaseTypeName = InType.BaseType != null ? UnmanagedString.FromString(InType.BaseType.FullName) : UnmanagedString.Null()
 		};
 
-		Console.WriteLine($"FullName: {reflectionType.FullName}");
+		/*Console.WriteLine($"FullName: {reflectionType.FullName}");
 		Console.WriteLine($"Name: {reflectionType.Name}");
 		Console.WriteLine($"Namespace: {reflectionType.Namespace}");
 		Console.WriteLine($"BaseTypeName: {reflectionType.BaseTypeName}");
 		Console.WriteLine($"AssemblyQualifiedName: {reflectionType.AssemblyQualifiedName}");
-		Console.WriteLine("--------------------------------------------");
+		Console.WriteLine("--------------------------------------------");*/
 
 		return reflectionType;
 	}
