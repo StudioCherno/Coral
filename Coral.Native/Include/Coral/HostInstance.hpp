@@ -27,7 +27,7 @@ namespace Coral {
 	public:
 		bool Initialize(HostSettings InSettings);
 
-		ManagedAssembly LoadAssembly(std::string_view InFilePath);
+		ManagedAssembly& LoadAssembly(std::string_view InFilePath);
 		void UnloadAssemblyLoadContext(ManagedAssembly& InAssembly);
 
 		template<typename... TArgs>
@@ -58,6 +58,8 @@ namespace Coral {
 		using ExceptionCallbackFn = void(*)(const CharType*);
 		void SetExceptionCallback(ExceptionCallbackFn InCallback);
 
+		const std::vector<ManagedAssembly>& GetLoadedAssemblies() const { return m_LoadedAssemblies; }
+
 		ReflectionType& GetReflectionType(const CSString& InTypeName);
 		ReflectionType& GetReflectionType(ManagedObject InObject);
 
@@ -84,6 +86,8 @@ namespace Coral {
 		std::filesystem::path m_CoralManagedAssemblyPath;
 		void* m_HostFXRContext = nullptr;
 		bool m_Initialized = false;
+
+		std::vector<ManagedAssembly> m_LoadedAssemblies;
 
 		std::unordered_map<size_t, ReflectionType> m_ReflectionTypes;
 		std::unordered_map<size_t, std::vector<ManagedField>> m_Fields;

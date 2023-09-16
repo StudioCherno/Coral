@@ -72,9 +72,9 @@ namespace Coral {
 		return memcmp(&InType, &s_NullType, sizeof(ReflectionType)) == 0;
 	}
 	
-	ManagedAssembly HostInstance::LoadAssembly(std::string_view InFilePath)
+	ManagedAssembly& HostInstance::LoadAssembly(std::string_view InFilePath)
 	{
-		ManagedAssembly result = {};
+		ManagedAssembly& result = m_LoadedAssemblies.emplace_back();
 		auto filepath = StringHelper::ConvertUtf8ToWide(InFilePath);
 		result.m_Host = this;
 		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(filepath.c_str());

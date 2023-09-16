@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
@@ -102,7 +103,16 @@ public static class AssemblyLoader
 				s_AppAssemblyLoadContext.Unloading += _ => { s_AppAssemblyLoadContext = null; };
 			}
 
-			var assembly = s_AppAssemblyLoadContext.LoadFromAssemblyPath(InAssemblyFilePath!);
+			Assembly? assembly = null;
+
+			using (var file = MemoryMappedFile.CreateFromFile(InAssemblyFilePath))
+			{
+				using (var stream = file.CreateViewStream())
+				{
+					assembly = s_AppAssemblyLoadContext.LoadFromStream(stream);
+				}
+			}
+
 			var assemblyName = assembly.GetName();
 			int assemblyId = assemblyName.FullName.GetHashCode();
 			s_AssemblyCache.Add(assemblyId, assembly);

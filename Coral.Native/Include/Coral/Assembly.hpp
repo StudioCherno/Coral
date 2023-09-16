@@ -20,6 +20,7 @@ namespace Coral {
 	public:
 		int32_t GetAssemblyID() const { return m_AssemblyID; }
 		AssemblyLoadStatus GetLoadStatus() const { return m_LoadStatus; }
+		std::string_view GetName() const { return m_Name; }
 
 		void AddInternalCall(std::string_view InClassName, std::string_view InVariableName, void* InFunctionPtr);
 		void UploadInternalCalls();
