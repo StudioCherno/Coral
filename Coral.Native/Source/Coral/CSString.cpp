@@ -12,8 +12,8 @@ namespace Coral {
 
 	CSString::~CSString()
 	{
-		CORAL_VERIFY(m_String != nullptr);
-		Memory::FreeCoTaskMem(m_String);
+		if (m_String != nullptr)
+			Memory::FreeCoTaskMem(m_String);
 	}
 
 	CSString CSString::FromUTF8(std::string_view InString)
