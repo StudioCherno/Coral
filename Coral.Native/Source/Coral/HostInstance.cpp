@@ -18,6 +18,7 @@ namespace Coral {
 	static CoreCLRFunctions s_CoreCLRFunctions;
 
 	ErrorCallbackFn ErrorCallback = nullptr;
+	ExceptionCallbackFn ExceptionCallback = nullptr;
 
 	struct ObjectCreateInfo
 	{
@@ -26,13 +27,9 @@ namespace Coral {
 		UnmanagedArray Parameters;
 	};
 
-	void DefaultErrorCallback(const CharType* InMessage)
+	void DefaultErrorCallback(std::string_view InMessage)
 	{
-#if CORAL_WIDE_CHARS
-		std::wcout << L"[Coral.Native]: " << InMessage << std::endl;
-#else
-		std::cout << L"[Coral.Native]: " << InMessage << std::endl;
-#endif
+		std::cout << "[Coral.Native]: " << InMessage << std::endl;
 	}
 
 	bool HostInstance::Initialize(HostSettings InSettings)
@@ -50,14 +47,15 @@ namespace Coral {
 
 		s_CoreCLRFunctions.SetHostFXRErrorWriter([](const CharType* InMessage)
 		{
-			ErrorCallback(InMessage);
+			auto message = StringHelper::ConvertWideToUtf8(InMessage);
+			ErrorCallback(message);
 		});
 
 		m_CoralManagedAssemblyPath = std::filesystem::path(m_Settings.CoralDirectory) / "Coral.Managed.dll";
 
 		if (!std::filesystem::exists(m_CoralManagedAssemblyPath))
 		{
-			ErrorCallback(CORAL_STR("Failed to find Coral.Managed.dll"));
+			ErrorCallback("Failed to find Coral.Managed.dll");
 			return false;
 		}
 
@@ -143,11 +141,6 @@ namespace Coral {
 	void HostInstance::FreeString(const CharType* InString)
 	{
 		s_ManagedFunctions.FreeManagedStringFptr(InString);
-	}
-
-	void HostInstance::SetExceptionCallback(ExceptionCallbackFn InCallback)
-	{
-		s_ManagedFunctions.SetExceptionCallbackFptr(InCallback);
 	}
 
 	ReflectionType& HostInstance::GetReflectionType(const CSString& InTypeName)
@@ -269,7 +262,7 @@ namespace Coral {
 
 			if (!std::filesystem::exists(runtimeConfigPath))
 			{
-				ErrorCallback(CORAL_STR("Failed to find Coral.Managed.runtimeconfig.json"));
+				ErrorCallback("Failed to find Coral.Managed.runtimeconfig.json");
 				return false;
 			}
 
@@ -287,6 +280,13 @@ namespace Coral {
 		LoadCoralFunctions();
 
 		coralManagedEntryPoint();
+
+		s_ManagedFunctions.SetExceptionCallbackFptr([](const CharType* InMessage)
+		{
+			auto message = StringHelper::ConvertWideToUtf8(InMessage);
+			ExceptionCallback(message);
+		});
+
 		return true;
 	}
 

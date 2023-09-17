@@ -14,8 +14,6 @@ namespace Coral {
 	class ManagedField;
 	struct MethodInfo;
 
-	using ExceptionCallbackFn = void(*)(const CharType*);
-
 	using SetInternalCallsFn = void(*)(UnmanagedArray*);
 	using LoadManagedAssemblyFn = int32_t(*)(const CharType*);
 	using UnloadAssemblyLoadContextFn = void(*)(int32_t);
@@ -41,7 +39,7 @@ namespace Coral {
 	using IsAssignableToFn = Bool32(*)(const CharType*, const CharType*);
 	using IsAssignableFromFn = Bool32(*)(const CharType*, const CharType*);
 
-	using SetExceptionCallbackFn = void(*)(ExceptionCallbackFn);
+	using SetExceptionCallbackFn = void(*)(void(*)(const CharType*));
 
 	using CollectGarbageFn = void(*)(int32_t, GCCollectionMode, Bool32, Bool32);
 	using WaitForPendingFinalizersFn = void(*)();

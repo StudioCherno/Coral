@@ -12,7 +12,8 @@
 
 namespace Coral {
 
-	using ErrorCallbackFn = std::function<void(const CharType*)>;
+	using ErrorCallbackFn = std::function<void(std::string_view)>;
+	using ExceptionCallbackFn = std::function<void(std::string_view)>;
 
 	struct HostSettings
 	{
@@ -22,6 +23,7 @@ namespace Coral {
 		std::string_view CoralDirectory;
 		
 		ErrorCallbackFn ErrorCallback;
+		ExceptionCallbackFn ExceptionCallback;
 	};
 
 	class HostInstance
@@ -56,9 +58,6 @@ namespace Coral {
 		void DestroyInstance(ManagedObject& InObjectHandle);
 
 		void FreeString(const CharType* InString);
-
-		using ExceptionCallbackFn = void(*)(const CharType*);
-		void SetExceptionCallback(ExceptionCallbackFn InCallback);
 
 		const std::vector<ManagedAssembly>& GetLoadedAssemblies() const { return m_LoadedAssemblies; }
 
