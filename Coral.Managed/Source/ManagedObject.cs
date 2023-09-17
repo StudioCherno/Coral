@@ -36,14 +36,23 @@ internal static class ManagedObject
 
 			ConstructorInfo? constructor = null;
 			
-			ReadOnlySpan<ConstructorInfo> constructors = type.GetConstructors();
-			foreach (var constructorInfo in constructors)
+			var currentType = type;
+			while (currentType != null)
 			{
-				if (constructorInfo.GetParameters().Length != InCreateInfo->Parameters.Length)
-					continue;
+				ReadOnlySpan<ConstructorInfo> constructors = type.GetConstructors();
+				foreach (var constructorInfo in constructors)
+				{
+					if (constructorInfo.GetParameters().Length != InCreateInfo->Parameters.Length)
+						continue;
 
-				constructor = constructorInfo;
-				break;
+					constructor = constructorInfo;
+					break;
+				}
+
+				if (constructor != null)
+					break;
+
+				currentType = currentType.BaseType;
 			}
 
 			if (constructor == null)
