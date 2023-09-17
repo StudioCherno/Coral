@@ -182,6 +182,12 @@ public static class AssemblyLoader
 				return;
 			}
 
+			foreach (var loadedAssembly in loadContext.Assemblies)
+			{
+				int assemblyId = loadedAssembly.GetName().FullName.GetHashCode();
+				s_AssemblyCache.Remove(assemblyId);
+			}
+
 			s_AssemblyCache.Remove(InAssemblyId);
 			loadContext.Unload();
 		}
