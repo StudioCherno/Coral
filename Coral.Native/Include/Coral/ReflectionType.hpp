@@ -32,8 +32,6 @@ namespace Coral {
 		friend class HostInstance;
 		friend class AssemblyLoadContext;
 	};
-
-	using TypeId = void*;
 	
 }
 

@@ -37,6 +37,7 @@ const CharType* StringMarshalIcall(const CharType* InStr)
 }
 Coral::TypeId TypeMarshalIcall(Coral::TypeId InTypeId)
 {
+	std::cout << InTypeId << std::endl;
 	return InTypeId;
 }
 
@@ -438,6 +439,8 @@ int main()
 
 	RegisterTestInternalCalls(assembly);
 	assembly.UploadInternalCalls();
+	auto typeId = assembly.GetTypeId("Testing.Managed.Tests, Testing.Managed");
+	std::cout << typeId << std::endl;
 
 	Coral::ManagedObject objectHandle = hostInstance.CreateInstance("Testing.Managed.Tests, Testing.Managed");
 	objectHandle.InvokeMethod("RunManagedTests");

@@ -25,6 +25,8 @@ namespace Coral {
 		void AddInternalCall(std::string_view InClassName, std::string_view InVariableName, void* InFunctionPtr);
 		void UploadInternalCalls();
 
+		TypeId GetTypeId(std::string_view InClassName) const;
+
 		const std::vector<ReflectionType>& GetTypes() const { return m_ReflectionTypes; }
 		
 	private:

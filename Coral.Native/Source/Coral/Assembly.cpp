@@ -31,6 +31,14 @@ namespace Coral {
 		s_ManagedFunctions.SetInternalCallsFptr(&arr);
 	}
 
+	TypeId ManagedAssembly::GetTypeId(std::string_view InClassName) const
+	{
+		auto name = StringHelper::ConvertUtf8ToWide(InClassName);
+		TypeId typeId = nullptr;
+		s_ManagedFunctions.GetTypeIdFptr(name.c_str(), &typeId);
+		return typeId;
+	}
+
 	static bool IsInvalidType(const ReflectionType& InType)
 	{
 		static ReflectionType s_NullType;

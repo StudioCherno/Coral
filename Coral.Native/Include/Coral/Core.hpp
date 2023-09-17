@@ -44,4 +44,6 @@ namespace Coral {
 		PrivateProtected
 	};
 
+	using TypeId = void*;
+
 }

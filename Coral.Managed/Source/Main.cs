@@ -214,6 +214,19 @@ internal static class ManagedHost
 		}
 	}
 
+	[UnmanagedCallersOnly]
+	private static unsafe void GetTypeId(UnmanagedString InName, Type* OutType)
+	{
+		try
+		{
+			*OutType = TypeHelper.FindType(InName);
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
+		}
+	}
+
 	internal struct ManagedField
 	{
 		public UnmanagedString Name;
