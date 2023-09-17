@@ -9,7 +9,11 @@ namespace Coral {
 	public:
 		CSString() = default;
 		CSString(const CSString& InOther);
+		CSString(CSString&& InOther) noexcept;
 		~CSString();
+
+		CSString& operator=(const CSString& InOther);
+		CSString& operator=(CSString&& InOther) noexcept;
 
 		static CSString FromUTF8(std::string_view InString);
 		static std::string ToUTF8(CSString InString);

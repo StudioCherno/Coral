@@ -7,13 +7,33 @@ namespace Coral {
 
 	CSString::CSString(const CSString& InOther)
 	{
-		m_String = Memory::StringToCoTaskMemAuto(InOther.m_String);
+		if (InOther.m_String != nullptr)
+			m_String = Memory::StringToCoTaskMemAuto(InOther.m_String);
+	}
+
+	CSString::CSString(CSString&& InOther) noexcept
+	{
+		m_String = std::exchange(InOther.m_String, nullptr);
 	}
 
 	CSString::~CSString()
 	{
 		if (m_String != nullptr)
 			Memory::FreeCoTaskMem(m_String);
+	}
+
+	CSString& CSString::operator=(const CSString& InOther)
+	{
+		if (InOther.m_String != nullptr)
+			m_String = Memory::StringToCoTaskMemAuto(InOther.m_String);
+
+		return *this;
+	}
+
+	CSString& CSString::operator=(CSString&& InOther) noexcept
+	{
+		m_String = std::exchange(InOther.m_String, nullptr);
+		return *this;
 	}
 
 	CSString CSString::FromUTF8(std::string_view InString)

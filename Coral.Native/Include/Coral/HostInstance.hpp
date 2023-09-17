@@ -8,9 +8,11 @@
 #include "ManagedField.hpp"
 #include "MethodInfo.hpp"
 
+#include <functional>
+
 namespace Coral {
 
-	using ErrorCallbackFn = void(*)(const CharType* InMessage);
+	using ErrorCallbackFn = std::function<void(const CharType*)>;
 
 	struct HostSettings
 	{
@@ -19,7 +21,7 @@ namespace Coral {
 		/// </summary>
 		std::string_view CoralDirectory;
 		
-		ErrorCallbackFn ErrorCallback = nullptr;
+		ErrorCallbackFn ErrorCallback;
 	};
 
 	class HostInstance
