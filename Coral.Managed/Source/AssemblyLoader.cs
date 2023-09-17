@@ -18,11 +18,11 @@ public enum AssemblyLoadStatus
 public static class AssemblyLoader
 {
 	private static readonly Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup = new();
+	private static readonly Dictionary<int, AssemblyLoadContext?> s_AssemblyContexts = new();
 	private static readonly Dictionary<int, Assembly> s_AssemblyCache = new();
 	private static AssemblyLoadStatus s_LastLoadStatus = AssemblyLoadStatus.Success;
 
 	private static readonly AssemblyLoadContext? s_CoralAssemblyLoadContext;
-	private static AssemblyLoadContext? s_AppAssemblyLoadContext;
 
 	static AssemblyLoader()
 	{
@@ -34,7 +34,7 @@ public static class AssemblyLoader
 
 		s_CoralAssemblyLoadContext = AssemblyLoadContext.GetLoadContext(typeof(AssemblyLoader).Assembly);
 		s_CoralAssemblyLoadContext!.Resolving += ResolveAssembly;
-			
+
 		CacheCoralAssemblies();
 	}
 
@@ -79,7 +79,46 @@ public static class AssemblyLoader
 	}
 
 	[UnmanagedCallersOnly]
-	private static int LoadAssembly(UnmanagedString InAssemblyFilePath)
+	private static int CreateAssemblyLoadContext(UnmanagedString InName)
+	{
+		var alc = new AssemblyLoadContext(InName, true);
+		alc.Resolving += ResolveAssembly;
+		alc.Unloading += ctx =>
+		{
+			foreach (var assembly in ctx.Assemblies)
+			{
+				var assemblyName = assembly.GetName();
+				int assemblyId = assemblyName.FullName.GetHashCode();
+				s_AssemblyCache.Remove(assemblyId);
+			}
+		};
+
+		int contextId = alc.Name.GetHashCode();
+		s_AssemblyContexts.Add(contextId, alc);
+		return contextId;
+	}
+
+	[UnmanagedCallersOnly]
+	private static void UnloadAssemblyLoadContext(int InContextId)
+	{
+		if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
+		{
+			// TODO(Peter): Pass error message to error callback or throw exception
+			return;
+		}
+
+		if (alc == null)
+		{
+			// TODO(Peter): Pass error message to error callback or throw exception
+			return;
+		}
+
+		alc.Unload();
+		s_AssemblyContexts.Remove(InContextId);
+	}
+
+	[UnmanagedCallersOnly]
+	private static int LoadAssembly(int InContextId, UnmanagedString InAssemblyFilePath)
 	{
 		try
 		{
@@ -96,21 +135,26 @@ public static class AssemblyLoader
 				return -1;
 			}
 
-			if (s_AppAssemblyLoadContext == null)
+			if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
 			{
-				s_AppAssemblyLoadContext = new AssemblyLoadContext("AppAssemblyContext", true);
-				s_AppAssemblyLoadContext.Resolving += ResolveAssembly;
-				s_AppAssemblyLoadContext.Unloading += _ => { s_AppAssemblyLoadContext = null; };
+				Console.WriteLine($"Failed to find ALC with id {InContextId}");
+				s_LastLoadStatus = AssemblyLoadStatus.UnknownError;
+				return -1;
+			}
+
+			if (alc == null)
+			{
+				Console.WriteLine($"Assembly Load Context was null!");
+				s_LastLoadStatus = AssemblyLoadStatus.UnknownError;
+				return -1;
 			}
 
 			Assembly? assembly = null;
 
 			using (var file = MemoryMappedFile.CreateFromFile(InAssemblyFilePath))
 			{
-				using (var stream = file.CreateViewStream())
-				{
-					assembly = s_AppAssemblyLoadContext.LoadFromStream(stream);
-				}
+				using var stream = file.CreateViewStream();
+				assembly = alc.LoadFromStream(stream);
 			}
 
 			var assemblyName = assembly.GetName();
@@ -157,39 +201,6 @@ public static class AssemblyLoader
 
 				OutTypes[i] = reflectionType.Value;
 			}
-		}
-		catch (Exception ex)
-		{
-			ManagedHost.HandleException(ex);
-		}
-	}
-		
-	[UnmanagedCallersOnly]
-	private static void UnloadAssemblyLoadContext(int InAssemblyId)
-	{
-		try
-		{
-			if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
-			{
-				Console.WriteLine("Tried unloading an assembly that wasn't previously loaded.");
-				return;
-			}
-
-			var loadContext = AssemblyLoadContext.GetLoadContext(assembly);
-			if (!loadContext!.IsCollectible)
-			{
-				Console.WriteLine("Tried unloading an assembly load context that isn't collectible!");
-				return;
-			}
-
-			foreach (var loadedAssembly in loadContext.Assemblies)
-			{
-				int assemblyId = loadedAssembly.GetName().FullName.GetHashCode();
-				s_AssemblyCache.Remove(assemblyId);
-			}
-
-			s_AssemblyCache.Remove(InAssemblyId);
-			loadContext.Unload();
 		}
 		catch (Exception ex)
 		{

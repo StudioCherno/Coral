@@ -30,6 +30,7 @@ namespace Coral {
 		HostInstance* m_Host = nullptr;
 
 		friend class HostInstance;
+		friend class AssemblyLoadContext;
 	};
 	
 }

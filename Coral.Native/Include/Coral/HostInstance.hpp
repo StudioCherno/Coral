@@ -31,8 +31,8 @@ namespace Coral {
 	public:
 		bool Initialize(HostSettings InSettings);
 
-		ManagedAssembly& LoadAssembly(std::string_view InFilePath);
-		void UnloadAssemblyLoadContext(ManagedAssembly& InAssembly);
+		AssemblyLoadContext CreateAssemblyLoadContext(std::string_view InName);
+		void UnloadAssemblyLoadContext(AssemblyLoadContext& InLoadContext);
 
 		template<typename... TArgs>
 		ManagedObject CreateInstance(std::string_view InTypeName, TArgs&&... InArguments)
@@ -57,8 +57,6 @@ namespace Coral {
 		void DestroyInstance(ManagedObject& InObjectHandle);
 
 		void FreeString(const CharType* InString);
-
-		const std::vector<ManagedAssembly>& GetLoadedAssemblies() const { return m_LoadedAssemblies; }
 
 		ReflectionType& GetReflectionType(const CSString& InTypeName);
 		ReflectionType& GetReflectionType(ManagedObject InObject);
@@ -87,11 +85,11 @@ namespace Coral {
 		void* m_HostFXRContext = nullptr;
 		bool m_Initialized = false;
 
-		std::vector<ManagedAssembly> m_LoadedAssemblies;
-
 		std::unordered_map<size_t, ReflectionType> m_ReflectionTypes;
 		std::unordered_map<size_t, std::vector<ManagedField>> m_Fields;
 		std::unordered_map<size_t, std::vector<MethodInfo>> m_Methods;
+
+		friend class AssemblyLoadContext;
 	};
 
 }

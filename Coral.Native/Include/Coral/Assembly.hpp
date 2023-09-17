@@ -50,6 +50,22 @@ namespace Coral {
 		std::vector<ReflectionType> m_ReflectionTypes;
 		
 		friend class HostInstance;
+		friend class AssemblyLoadContext;
+	};
+
+	class AssemblyLoadContext
+	{
+	public:
+		ManagedAssembly& LoadAssembly(std::string_view InFilePath);
+		const std::vector<ManagedAssembly>& GetLoadedAssemblies() const { return m_LoadedAssemblies; }
+
+	private:
+		int32_t m_ContextId;
+		std::vector<ManagedAssembly> m_LoadedAssemblies;
+
+		HostInstance* m_Host = nullptr;
+
+		friend class HostInstance;
 	};
 
 }

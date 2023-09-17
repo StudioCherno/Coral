@@ -15,8 +15,9 @@ namespace Coral {
 	struct MethodInfo;
 
 	using SetInternalCallsFn = void(*)(UnmanagedArray*);
-	using LoadManagedAssemblyFn = int32_t(*)(const CharType*);
+	using CreateAssemblyLoadContextFn = int32_t(*)(const CharType*);
 	using UnloadAssemblyLoadContextFn = void(*)(int32_t);
+	using LoadManagedAssemblyFn = int32_t(*)(int32_t, const CharType*);
 	using GetLastLoadStatusFn = AssemblyLoadStatus(*)();
 	using GetAssemblyNameFn = const CharType*(*)(int32_t);
 	using QueryAssemblyTypesFn = void(*)(int32_t, ReflectionType*, int32_t*);
@@ -60,6 +61,7 @@ namespace Coral {
 		FreeManagedStringFn FreeManagedStringFptr = nullptr;
 
 		CreateObjectFn CreateObjectFptr = nullptr;
+		CreateAssemblyLoadContextFn CreateAssemblyLoadContextFptr = nullptr;
 		InvokeMethodFn InvokeMethodFptr = nullptr;
 		InvokeMethodRetFn InvokeMethodRetFptr = nullptr;
 		SetFieldValueFn SetFieldValueFptr = nullptr;

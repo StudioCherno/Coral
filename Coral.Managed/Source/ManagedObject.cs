@@ -39,7 +39,7 @@ internal static class ManagedObject
 			var currentType = type;
 			while (currentType != null)
 			{
-				ReadOnlySpan<ConstructorInfo> constructors = type.GetConstructors();
+				ReadOnlySpan<ConstructorInfo> constructors = currentType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 				foreach (var constructorInfo in constructors)
 				{
 					if (constructorInfo.GetParameters().Length != InCreateInfo->Parameters.Length)
@@ -61,7 +61,20 @@ internal static class ManagedObject
 			}
 
 			var parameters = Marshalling.MarshalParameterArray(InCreateInfo->Parameters, constructor);
-			object? result = parameters != null ? TypeHelper.CreateInstance(type, parameters) : TypeHelper.CreateInstance(type);
+
+			object? result = null;
+
+			if (currentType != type || parameters == null)
+			{
+				result = TypeHelper.CreateInstance(type);
+
+				if (currentType != type)
+					constructor.Invoke(result, parameters);
+			}
+			else
+			{
+				result = TypeHelper.CreateInstance(type, parameters);
+			}
 
 			if (result == null)
 				return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() }; // TODO(Peter): Exception

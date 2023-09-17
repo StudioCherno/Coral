@@ -32,7 +32,7 @@ namespace Coral {
 
 			return result;
 		}
-		
+
 		template<typename... TArgs>
 		void InvokeMethod(std::string_view InMethodName, TArgs&&... InParameters)
 		{
