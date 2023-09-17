@@ -63,6 +63,11 @@ namespace Coral {
 
 		return m_Initialized;
 	}
+
+	void HostInstance::Shutdown()
+	{
+		s_CoreCLRFunctions.CloseHostFXR(m_HostFXRContext);
+	}
 	
 	AssemblyLoadContext HostInstance::CreateAssemblyLoadContext(std::string_view InName)
 	{
@@ -234,7 +239,8 @@ namespace Coral {
 			}
 
 			int status = s_CoreCLRFunctions.InitHostFXRForRuntimeConfig(runtimeConfigPath.c_str(), nullptr, &m_HostFXRContext);
-			CORAL_VERIFY(status == StatusCode::Success && m_HostFXRContext != nullptr);
+			CORAL_VERIFY(status == StatusCode::Success || status == StatusCode::Success_HostAlreadyInitialized || status == StatusCode::Success_DifferentRuntimeProperties);
+			CORAL_VERIFY(m_HostFXRContext != nullptr);
 
 			status = s_CoreCLRFunctions.GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**)&s_CoreCLRFunctions.GetManagedFunctionPtr);
 			CORAL_VERIFY(status == StatusCode::Success);
