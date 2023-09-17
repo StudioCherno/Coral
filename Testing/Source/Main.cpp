@@ -10,13 +10,9 @@
 #include <Coral/GC.hpp>
 #include <Coral/Array.hpp>
 
-void ExceptionCallback(const CharType* InMessage)
+void ExceptionCallback(std::string_view InMessage)
 {
-#if CORAL_WIDE_CHARS
-	std::wcout << L"Unhandled native exception: " << InMessage << std::endl;
-#else
 	std::cout << "Unhandled native exception: " << InMessage << std::endl;
-#endif
 }
 
 char8_t SByteMarshalIcall(char8_t InValue) { return InValue * 2; }
@@ -38,6 +34,10 @@ int32_t* IntPtrMarshalIcall(int32_t* InValue)
 const CharType* StringMarshalIcall(const CharType* InStr)
 {
 	return InStr;
+}
+Coral::TypeId TypeMarshalIcall(Coral::TypeId InTypeId)
+{
+	return InTypeId;
 }
 
 struct DummyStruct
@@ -79,6 +79,7 @@ void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "StringMarshalIcall", &StringMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructMarshalIcall", &DummyStructMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructPtrMarshalIcall", &DummyStructPtrMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", &TypeMarshalIcall);
 }
 
 struct Test
@@ -105,7 +106,7 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	RegisterTest("ULongTest", [InObject]() mutable{ return InObject.InvokeMethod<uint64_t, uint64_t>("ULongTest", 10) == 20; });
 	RegisterTest("FloatTest", [InObject]() mutable{ return InObject.InvokeMethod<float, float>("FloatTest", 10.0f) - 20.0f < 0.001f; });
 	RegisterTest("DoubleTest", [InObject]() mutable{ return InObject.InvokeMethod<double, double>("DoubleTest", 10.0) - 20.0 < 0.001; });
-	RegisterTest("BoolTest", [InObject]() mutable{ return InObject.InvokeMethod<bool, bool>("BoolTest", false); });
+	RegisterTest("BoolTest", [InObject]() mutable{ return InObject.InvokeMethod<Coral::Bool32, Coral::Bool32>("BoolTest", false); });
 	RegisterTest("IntPtrTest", [InObject]() mutable{ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
 #if CORAL_WIDE_CHARS
 	RegisterTest("StringTest", [InObject, &InHost]() mutable
@@ -248,12 +249,12 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	
 	RegisterTest("BoolFieldTest", [InObject]() mutable
 	{
-		auto value = InObject.GetFieldValue<bool>("BoolFieldTest");
+		auto value = InObject.GetFieldValue<Coral::Bool32>("BoolFieldTest");
 		if (value != false)
 			return false;
-		InObject.SetFieldValue<bool>("BoolFieldTest", true);
-		value = InObject.GetFieldValue<bool>("BoolFieldTest");
-		return value;
+		InObject.SetFieldValue<Coral::Bool32>("BoolFieldTest", true);
+		value = InObject.GetFieldValue<Coral::Bool32>("BoolFieldTest");
+		return static_cast<bool>(value);
 	});
 #if CORAL_WIDE_CHARS
 	RegisterTest("StringFieldTest", [InObject]() mutable
@@ -371,12 +372,12 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	
 	RegisterTest("BoolPropertyTest", [InObject]() mutable
 	{
-		auto value = InObject.GetPropertyValue<bool>("BoolPropertyTest");
+		auto value = InObject.GetPropertyValue<Coral::Bool32>("BoolPropertyTest");
 		if (value != false)
 			return false;
-		InObject.SetPropertyValue<bool>("BoolPropertyTest", true);
-		value = InObject.GetPropertyValue<bool>("BoolPropertyTest");
-		return value;
+		InObject.SetPropertyValue<Coral::Bool32>("BoolPropertyTest", true);
+		value = InObject.GetPropertyValue<Coral::Bool32>("BoolPropertyTest");
+		return static_cast<bool>(value);
 	});
 #if CORAL_WIDE_CHARS
 	RegisterTest("StringPropertyTest", [InObject]() mutable
@@ -422,14 +423,16 @@ int main()
 	auto coralDir = (std::filesystem::current_path().parent_path() / "Build" / ConfigName).string();
 	Coral::HostSettings settings =
 	{
-		.CoralDirectory = coralDir.c_str()
+		.CoralDirectory = coralDir.c_str(),
+		.ExceptionCallback = ExceptionCallback
 	};
 	Coral::HostInstance hostInstance;
 	hostInstance.Initialize(settings);
-	hostInstance.SetExceptionCallback(ExceptionCallback);
+
+	auto loadContext = hostInstance.CreateAssemblyLoadContext("TestContext");
 
 	auto assemblyPath = std::filesystem::path("F:/Coral/Build") / ConfigName / "Testing.Managed.dll";
-	auto assembly = hostInstance.LoadAssembly(assemblyPath.string().c_str());
+	auto assembly = loadContext.LoadAssembly(assemblyPath.string().c_str());
 
 	const auto& assemblyTypes = assembly.GetTypes();
 
@@ -504,7 +507,7 @@ int main()
 
 	hostInstance.DestroyInstance(object);
 	hostInstance.DestroyInstance(fieldTestObject);
-	hostInstance.UnloadAssemblyLoadContext(assembly);
+	hostInstance.UnloadAssemblyLoadContext(loadContext);
 	Coral::GC::Collect();
 
 	return 0;

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
+using Coral.Managed.Interop;
+
 namespace Testing.Managed {
 
 	public class Tests
@@ -19,7 +21,8 @@ namespace Testing.Managed {
 		internal static unsafe delegate*<double, double> DoubleMarshalIcall;
 		internal static unsafe delegate*<bool, bool> BoolMarshalIcall;
 		internal static unsafe delegate*<IntPtr, IntPtr> IntPtrMarshalIcall;
-		internal static unsafe delegate*<string, string> StringMarshalIcall;
+		internal static unsafe delegate*<UnmanagedString, UnmanagedString> StringMarshalIcall;
+		internal static unsafe delegate*<Type, Type> TypeMarshalIcall;
 
 		internal struct DummyStruct
 		{
@@ -110,7 +113,7 @@ namespace Testing.Managed {
 		[Test]
 		public bool StringMarshalTest()
 		{
-			unsafe { return StringMarshalIcall("Hello") == "Hello"; }
+			unsafe { return StringMarshalIcall(UnmanagedString.FromString("Hello")) == "Hello"; }
 		}
 
 		[Test]
@@ -146,7 +149,14 @@ namespace Testing.Managed {
 				return newS->X == 20 && Math.Abs(newS->Y) - 30.0f < 0.001f && newS->Z == 200;
 			}
 		}
-		
+
+		[Test]
+		public bool TypeMarshalTest()
+		{
+			var t = typeof(Tests);
+			unsafe { return TypeMarshalIcall(t) == t; }
+		}
+
 		public void RunManagedTests()
 		{
 			CollectTests();
