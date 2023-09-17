@@ -281,8 +281,13 @@ namespace Coral {
 
 		coralManagedEntryPoint();
 
+		ExceptionCallback = m_Settings.ExceptionCallback;
+
 		s_ManagedFunctions.SetExceptionCallbackFptr([](const CharType* InMessage)
 		{
+			if (!ExceptionCallback)
+				return;
+
 			auto message = StringHelper::ConvertWideToUtf8(InMessage);
 			ExceptionCallback(message);
 		});
