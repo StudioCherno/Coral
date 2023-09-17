@@ -3,6 +3,7 @@
 #include "Core.hpp"
 #include "ManagedType.hpp"
 #include "ReflectionType.hpp"
+#include "Utility.hpp"
 
 namespace Coral {
 
@@ -17,7 +18,6 @@ namespace Coral {
 			constexpr size_t parameterCount = sizeof...(InParameters);
 
 			TReturn result;
-			ManagedType resultType = GetManagedType<TReturn>();
 			
 			if constexpr (parameterCount > 0)
 			{
@@ -88,26 +88,6 @@ namespace Coral {
 		void SetPropertyValueInternal(std::string_view InPropertyName, void* InValue) const;
 		void GetPropertyValueInternal(std::string_view InPropertyName, void* OutValue) const;
 
-	private:
-		template<typename TArg, size_t TIndex>
-		void AddToArrayI(const void** InArgumentsArr, TArg&& InArg) const
-		{
-			if constexpr (std::is_pointer_v<std::remove_reference_t<TArg>>)
-			{
-				InArgumentsArr[TIndex] = reinterpret_cast<const void*>(InArg);
-			}
-			else
-			{
-				InArgumentsArr[TIndex] = reinterpret_cast<const void*>(&InArg);
-			}
-		}
-
-		template<typename... TArgs, size_t... TIndices>
-		void AddToArray(const void** InArgumentsArr, TArgs&&... InArgs, const std::index_sequence<TIndices...>&)
-		{
-			(AddToArrayI<TArgs, TIndices>(InArgumentsArr, std::forward<TArgs>(InArgs)), ...);
-		}
-		
 	private:
 		void* m_Handle = nullptr;
 		CSString m_FullName;

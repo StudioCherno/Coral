@@ -44,8 +44,7 @@ namespace Coral {
 			if constexpr (argumentCount > 0)
 			{
 				const void* argumentsArr[argumentCount];
-				ManagedType argumentTypes[argumentCount];
-				AddToArray<TArgs...>(argumentsArr, argumentTypes, std::forward<TArgs>(InArguments)..., std::make_index_sequence<argumentCount> {});
+				AddToArray<TArgs...>(argumentsArr, std::forward<TArgs>(InArguments)..., std::make_index_sequence<argumentCount> {});
 				result = CreateInstanceInternal(InTypeName, argumentsArr, argumentCount);
 			}
 			else
