@@ -48,7 +48,7 @@ public sealed class NativeArrayEnumerator<T> : IEnumerator<T>
 
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct NativeArray<T> : IDisposable, IEnumerable<T>
 {
 	private readonly IntPtr m_NativeArray;

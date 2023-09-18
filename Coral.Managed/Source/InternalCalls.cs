@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Coral.Managed.Interop;
 
-[StructLayout(LayoutKind.Sequential)]
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public readonly struct InternalCall
 {
 	private readonly IntPtr m_NamePtr;
