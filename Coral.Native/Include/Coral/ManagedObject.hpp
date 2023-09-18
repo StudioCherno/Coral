@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "Core.hpp"
-#include "ManagedType.hpp"
 #include "ReflectionType.hpp"
 #include "Utility.hpp"
 

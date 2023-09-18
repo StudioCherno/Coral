@@ -2,7 +2,6 @@
 
 #include "Core.hpp"
 #include "Assembly.hpp"
-#include "ManagedType.hpp"
 #include "ManagedObject.hpp"
 #include "ReflectionType.hpp"
 #include "ManagedField.hpp"

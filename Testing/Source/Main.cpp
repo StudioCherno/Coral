@@ -4,7 +4,6 @@
 #include <filesystem>
 #include <chrono>
 #include <functional>
-#include <source_location>
 
 #include <Coral/HostInstance.hpp>
 #include <Coral/GC.hpp>
