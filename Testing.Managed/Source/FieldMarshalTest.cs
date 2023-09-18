@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Coral.Managed.Interop;
+
+using System;
 
 namespace Testing.Managed;
 
@@ -31,14 +33,14 @@ public class FieldMarshalTest
 	public bool BoolPropertyTest { get; set; } = false;
 	public string StringPropertyTest { get; set; } = "Hello";
 
-	public int[] IntArrayTest = new int[]{ 5, 2, 1, 64 };
+	public int[] IntArrayTest = new[]{ 5, 2, 1, 64 };
 
 	public int[] IntArrayProp { get; set; } = new int[]{ 6, 10, 16, 24 };
 
-	public void ArrayParamTest(float[] InArray)
+	public void ArrayParamTest(NativeArray<float> InArray)
 	{
-		for (int i = 0; i < InArray.Length; i++)
-			Console.WriteLine(InArray[i]);
+		foreach (var f in InArray)
+			Console.WriteLine(f);
 	}
 
 	public float[] ArrayReturnTest()

@@ -44,4 +44,10 @@ namespace Coral {
 
 	using TypeId = void*;
 
+	struct InternalCall
+	{
+		const CharType* Name;
+		void* NativeFunctionPtr;
+	};
+
 }

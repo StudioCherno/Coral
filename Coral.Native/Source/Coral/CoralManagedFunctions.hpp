@@ -6,7 +6,6 @@ namespace Coral {
 
 	struct UnmanagedArray;
 	enum class AssemblyLoadStatus;
-	struct ObjectCreateInfo;
 	class ManagedObject;
 	enum class GCCollectionMode;
 	enum class ManagedType;
@@ -14,7 +13,7 @@ namespace Coral {
 	class ManagedField;
 	struct MethodInfo;
 
-	using SetInternalCallsFn = void(*)(UnmanagedArray*);
+	using SetInternalCallsFn = void(*)(void*, int32_t);
 	using CreateAssemblyLoadContextFn = int32_t(*)(const CharType*);
 	using UnloadAssemblyLoadContextFn = void(*)(int32_t);
 	using LoadManagedAssemblyFn = int32_t(*)(int32_t, const CharType*);
@@ -28,10 +27,9 @@ namespace Coral {
 	using GetTypeIdFn = void(*)(const CharType*, TypeId*);
 	
 	using FreeManagedStringFn = void(*)(const CharType*);
-	
-	using CreateObjectFn = ManagedObject(*)(const ObjectCreateInfo*);
-	using InvokeMethodFn = void(*)(void*, const CharType*, UnmanagedArray*);
-	using InvokeMethodRetFn = void(*)(void*, const CharType*, UnmanagedArray*, void*);
+	using CreateObjectFn = ManagedObject(*)(const CharType*, Bool32, const void**, int32_t);
+	using InvokeMethodFn = void(*)(void*, const CharType*, const void**, int32_t);
+	using InvokeMethodRetFn = void(*)(void*, const CharType*, const void**, int32_t, void*);
 	using SetFieldValueFn = void(*)(void*, const CharType*, void*);
 	using GetFieldValueFn = void(*)(void*, const CharType*, void*);
 	using SetPropertyValueFn = void(*)(void*, const CharType*, void*);

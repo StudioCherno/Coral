@@ -17,14 +17,15 @@ public readonly struct InternalCall
 internal static class InternalCallsManager
 {
 	[UnmanagedCallersOnly]
-	private static void SetInternalCalls(UnmanagedArray InArr)
+	private static void SetInternalCalls(IntPtr InInternalCalls, int InLength)
 	{
-		var internalCalls = InArr.ToSpan<InternalCall>();
+		var internalCalls = new NativeArray<InternalCall>(InInternalCalls, InLength);
 
 		try
 		{
-			foreach (var internalCall in internalCalls)
+			for (int i = 0; i < internalCalls.Length; i++)
 			{
+				var internalCall = internalCalls[i];
 				var name = internalCall.Name;
 
 				if (name == null)

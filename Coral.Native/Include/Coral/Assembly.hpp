@@ -34,12 +34,6 @@ namespace Coral {
 		int32_t m_AssemblyID = -1;
 		AssemblyLoadStatus m_LoadStatus = AssemblyLoadStatus::UnknownError;
 		std::string m_Name;
-		
-		struct InternalCall
-		{
-			const CharType* Name;
-			void* NativeFunctionPtr;
-		};
 
 	#if defined(CORAL_WIDE_CHARS)
 		std::vector<std::wstring> m_InternalCallNameStorage;

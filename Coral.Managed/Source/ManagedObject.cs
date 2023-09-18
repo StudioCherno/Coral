@@ -8,14 +8,6 @@ namespace Coral.Managed;
 
 internal static class ManagedObject
 {
-	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct ObjectCreateInfo
-	{
-		public readonly UnmanagedString TypeName;
-		public readonly bool IsWeakRef;
-		public readonly UnmanagedArray Parameters;
-	}
-
 	private struct ObjectData
 	{
 		public IntPtr Handle;
@@ -23,15 +15,15 @@ internal static class ManagedObject
 	}
 	
 	[UnmanagedCallersOnly]
-	private static unsafe ObjectData CreateObject(ObjectCreateInfo* InCreateInfo)
+	private static unsafe ObjectData CreateObject(UnmanagedString InTypeName, Bool32 InWeakRef, IntPtr InParameters, int InParameterCount)
 	{
 		try
 		{
-			var type = TypeHelper.FindType(InCreateInfo->TypeName);
+			var type = TypeHelper.FindType(InTypeName);
 
 			if (type == null)
 			{
-				throw new TypeNotFoundException($"Failed to find type with name {InCreateInfo->TypeName}");
+				throw new TypeNotFoundException($"Failed to find type with name {InTypeName}");
 			}
 
 			ConstructorInfo? constructor = null;
@@ -42,7 +34,7 @@ internal static class ManagedObject
 				ReadOnlySpan<ConstructorInfo> constructors = currentType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 				foreach (var constructorInfo in constructors)
 				{
-					if (constructorInfo.GetParameters().Length != InCreateInfo->Parameters.Length)
+					if (constructorInfo.GetParameters().Length != InParameterCount)
 						continue;
 
 					constructor = constructorInfo;
@@ -60,7 +52,7 @@ internal static class ManagedObject
 				throw new MissingMethodException($"No suitable constructor found for type {type}");
 			}
 
-			var parameters = Marshalling.MarshalParameterArray(InCreateInfo->Parameters, constructor);
+			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, constructor);
 
 			object? result = null;
 
@@ -79,7 +71,7 @@ internal static class ManagedObject
 			if (result == null)
 				return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() }; // TODO(Peter): Exception
 
-			var handle = GCHandle.Alloc(result, InCreateInfo->IsWeakRef ? GCHandleType.Weak : GCHandleType.Normal);
+			var handle = GCHandle.Alloc(result, InWeakRef ? GCHandleType.Weak : GCHandleType.Normal);
 			return new()
 			{
 				Handle = GCHandle.ToIntPtr(handle),
@@ -107,7 +99,7 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static void InvokeMethod(IntPtr InObjectHandle, UnmanagedString InMethodName, UnmanagedArray InParameters)
+	private static void InvokeMethod(IntPtr InObjectHandle, UnmanagedString InMethodName, IntPtr InParameters, int InParameterCount)
 	{
 		try
 		{
@@ -126,7 +118,7 @@ internal static class ManagedObject
 			foreach (var mi in methods)
 			{
 				// TODO(Peter): Check types
-				if (mi.Name != InMethodName || mi.GetParameters().Length != InParameters.Length)
+				if (mi.Name != InMethodName || mi.GetParameters().Length != InParameterCount)
 					continue;
 
 				methodInfo = mi;
@@ -138,7 +130,7 @@ internal static class ManagedObject
 				throw new MissingMethodException($"Method {InMethodName} wasn't found.");
 			}
 
-			var parameters = Marshalling.MarshalParameterArray(InParameters, methodInfo);
+			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
 
 			methodInfo.Invoke(target, parameters);
 		}
@@ -149,7 +141,7 @@ internal static class ManagedObject
 	}
 	
 	[UnmanagedCallersOnly]
-	private static void InvokeMethodRet(IntPtr InObjectHandle, UnmanagedString InMethodName, UnmanagedArray InParameters, IntPtr InResultStorage)
+	private static void InvokeMethodRet(IntPtr InObjectHandle, UnmanagedString InMethodName, IntPtr InParameters, int InParameterCount, IntPtr InResultStorage)
 	{
 		try
 		{
@@ -167,7 +159,7 @@ internal static class ManagedObject
 			MethodInfo? methodInfo = null;
 			foreach (var mi in methods)
 			{
-				if (mi.Name != InMethodName || mi.GetParameters().Length != InParameters.Length)
+				if (mi.Name != InMethodName || mi.GetParameters().Length != InParameterCount)
 					continue;
 				
 				methodInfo = mi;
@@ -179,7 +171,7 @@ internal static class ManagedObject
 				throw new MissingMethodException($"Method {InMethodName} wasn't found.");
 			}
 
-			var methodParameters = Marshalling.MarshalParameterArray(InParameters, methodInfo);
+			var methodParameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
 			
 			object? value = methodInfo.Invoke(target, methodParameters);
 

@@ -1,6 +1,7 @@
 ﻿using Coral.Managed.Interop;
 
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -140,20 +141,53 @@ public static class Marshalling
 		if (InType.IsSZArray)
 			return MarshalArray(InValue, InType.GetElementType());
 
+
+		if (InType.IsGenericType)
+		{
+			if (InType == typeof(NativeArray<>).MakeGenericType(InType.GetGenericArguments().First()))
+			{
+				var elements = Marshal.ReadIntPtr(InValue, 0);
+				var elementCount = Marshal.ReadInt32(InValue, Marshal.SizeOf<IntPtr>());
+				var genericType = typeof(NativeArray<>).MakeGenericType(InType.GetGenericArguments().First());
+				return TypeHelper.CreateInstance(genericType, elements, elementCount);
+			}
+		}
+
 		return Marshal.PtrToStructure(InValue, InType);	
 	}
 	public static T? MarshalPointer<T>(IntPtr InValue) => Marshal.PtrToStructure<T>(InValue);
 
-	public static object?[]? MarshalParameterArray(UnmanagedArray InParameterArray, MethodBase? InMethodInfo)
+	public static IntPtr[] NativeArrayToIntPtrArray(IntPtr InNativeArray, int InLength)
+	{
+		try
+		{
+			if (InNativeArray == IntPtr.Zero || InLength == 0)
+				return Array.Empty<IntPtr>();
+
+			IntPtr[] result = new IntPtr[InLength];
+
+			for (int i = 0; i < InLength; i++)
+				result[i] = Marshal.ReadIntPtr(InNativeArray, i * Marshal.SizeOf<nint>());
+
+			return result;
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+			return Array.Empty<IntPtr>();
+		}
+	}
+
+	public static object?[]? MarshalParameterArray(IntPtr InNativeArray, int InLength, MethodBase? InMethodInfo)
 	{
 		if (InMethodInfo == null)
 			return null;
 
-		if (InParameterArray.IsEmpty())
+		if (InNativeArray == IntPtr.Zero || InLength == 0)
 			return null;
 
 		var parameterInfos = InMethodInfo.GetParameters();
-		var parameterPointers = InParameterArray.ToIntPtrArray();
+		var parameterPointers = NativeArrayToIntPtrArray(InNativeArray, InLength);
 		var result = new object?[parameterPointers.Length];
 
 		for (int i = 0; i < parameterPointers.Length; i++)

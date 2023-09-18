@@ -37,7 +37,6 @@ const CharType* StringMarshalIcall(const CharType* InStr)
 }
 Coral::TypeId TypeMarshalIcall(Coral::TypeId InTypeId)
 {
-	std::cout << InTypeId << std::endl;
 	return InTypeId;
 }
 

@@ -1,9 +1,9 @@
 #include "Assembly.hpp"
 #include "HostInstance.hpp"
 #include "CoralManagedFunctions.hpp"
-#include "Interop.hpp"
 #include "Verify.hpp"
 #include "StringHelper.hpp"
+#include "Array.hpp"
 
 namespace Coral {
 
@@ -27,8 +27,7 @@ namespace Coral {
 
 	void ManagedAssembly::UploadInternalCalls()
 	{
-		UnmanagedArray arr = { m_InternalCalls.data(), static_cast<int32_t>(m_InternalCalls.size()) };
-		s_ManagedFunctions.SetInternalCallsFptr(&arr);
+		s_ManagedFunctions.SetInternalCallsFptr(m_InternalCalls.data(), static_cast<int32_t>(m_InternalCalls.size()));
 	}
 
 	TypeId ManagedAssembly::GetTypeId(std::string_view InClassName) const

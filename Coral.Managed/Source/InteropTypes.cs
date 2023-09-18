@@ -1,69 +1,127 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace Coral.Managed.Interop;
 
+public class NativeArrayEnumerator<T> : IEnumerator<T>
+{
+	private readonly T[] m_Elements;
+	private int m_Index = -1;
+
+	public NativeArrayEnumerator(T[] elements)
+	{
+		m_Elements = elements;
+	}
+
+	public bool MoveNext()
+	{
+		m_Index++;
+		return m_Index < m_Elements.Length;
+	}
+
+	void IEnumerator.Reset() => m_Index = -1;
+	void IDisposable.Dispose()
+	{
+		m_Index = -1;
+		GC.SuppressFinalize(this);
+	}
+
+	object IEnumerator.Current => Current!;
+
+	public T Current
+	{
+		get
+		{
+			try
+			{
+				return m_Elements[m_Index];
+			}
+			catch (IndexOutOfRangeException)
+			{
+				throw new InvalidOperationException();
+			}
+		}
+	}
+
+}
+
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct UnmanagedArray
+public struct NativeArray<T> : IDisposable, IEnumerable<T>
 {
 	private readonly IntPtr m_NativeArray;
 	private readonly int m_NativeLength;
 
+	private bool m_IsDisposed;
+
 	public int Length => m_NativeLength;
 
-	public T[] ToArray<T>() where T : struct
+	public NativeArray(int InLength)
 	{
-		try
+		m_NativeArray = Marshal.AllocHGlobal(InLength * Marshal.SizeOf<T>());
+		m_NativeLength = InLength;
+	}
+
+	public NativeArray([DisallowNull] T?[] InValues)
+	{
+		m_NativeArray = Marshal.AllocHGlobal(InValues.Length * Marshal.SizeOf<T>());
+		m_NativeLength = InValues.Length;
+
+		for (int i = 0; i < m_NativeLength; i++)
 		{
-			if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
-				return Array.Empty<T>();
+			var elem = InValues[i];
 
-			var result = new T[m_NativeLength];
+			if (elem == null)
+				continue;
 
-			for (int i = 0; i < m_NativeLength; i++)
-			{
-				IntPtr elementPtr = Marshal.ReadIntPtr(m_NativeArray, i * Marshal.SizeOf<nint>());
-				result[i] = Marshal.PtrToStructure<T>(elementPtr);
-			}
-
-			return result;
-		}
-		catch (Exception ex)
-		{
-			ManagedHost.HandleException(ex);
-			return Array.Empty<T>();
+			Marshal.StructureToPtr(elem, IntPtr.Add(m_NativeArray, i * Marshal.SizeOf<T>()), false);
 		}
 	}
 
-	public Span<T> ToSpan<T>() where T : struct
+	internal NativeArray(IntPtr InArray, int InLength)
 	{
-		Span<T> result;
-		unsafe { result = new Span<T>(m_NativeArray.ToPointer(), m_NativeLength); }
-		return result;
+		m_NativeArray = InArray;
+		m_NativeLength = InLength;
 	}
 
-	public bool IsEmpty() => m_NativeArray == IntPtr.Zero || Length == 0;
-		
-	public IntPtr[] ToIntPtrArray()
+	public T[] ToArray()
 	{
-		try
-		{
-			if (m_NativeArray == IntPtr.Zero || m_NativeLength == 0)
-				return Array.Empty<IntPtr>();
-
-			IntPtr[] result = new IntPtr[m_NativeLength];
-
-			for (int i = 0; i < m_NativeLength; i++)
-				result[i] = Marshal.ReadIntPtr(m_NativeArray, i * Marshal.SizeOf<nint>());
-
-			return result;
-		}
-		catch (Exception ex)
-		{
-			ManagedHost.HandleException(ex);
-			return Array.Empty<IntPtr>();
-		}
+		Span<T> data;
+		unsafe { data = new Span<T>(m_NativeArray.ToPointer(), m_NativeLength); }
+		return data.ToArray();
 	}
+
+	public Span<T> ToSpan()
+	{
+		unsafe { return new Span<T>(m_NativeArray.ToPointer(), m_NativeLength); }
+	}
+
+	public ReadOnlySpan<T> ToReadOnlySpan() => ToSpan();
+
+	public void Dispose()
+	{
+		if (!m_IsDisposed)
+		{
+			Marshal.FreeHGlobal(m_NativeArray);
+			m_IsDisposed = true;
+		}
+
+		GC.SuppressFinalize(this);
+	}
+
+	public IEnumerator<T> GetEnumerator() => new NativeArrayEnumerator<T>(this);
+	IEnumerator IEnumerable.GetEnumerator() => new NativeArrayEnumerator<T>(this);
+
+	public T? this[int InIndex]
+	{
+		get => Marshal.PtrToStructure<T>(IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()));
+		set => Marshal.StructureToPtr<T>(value, IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()), false);
+	}
+
+	public static implicit operator T[](NativeArray<T> InArray) => InArray.ToArray();
+
 }
 
 [StructLayout(LayoutKind.Sequential)]

@@ -20,13 +20,6 @@ namespace Coral {
 	ErrorCallbackFn ErrorCallback = nullptr;
 	ExceptionCallbackFn ExceptionCallback = nullptr;
 
-	struct ObjectCreateInfo
-	{
-		const CharType* TypeName;
-		bool IsWeakRef;
-		UnmanagedArray Parameters;
-	};
-
 	void DefaultErrorCallback(std::string_view InMessage)
 	{
 		std::cout << "[Coral.Native]: " << InMessage << std::endl;
@@ -88,15 +81,7 @@ namespace Coral {
 	ManagedObject HostInstance::CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, size_t InLength)
 	{
 		auto typeName = StringHelper::ConvertUtf8ToWide(InTypeName);
-
-		ObjectCreateInfo createInfo =
-		{
-			.TypeName = typeName.c_str(),
-			.IsWeakRef = false,
-			.Parameters = { InParameters, int32_t(InLength) },
-		};
-
-		auto result = s_ManagedFunctions.CreateObjectFptr(&createInfo);
+		auto result = s_ManagedFunctions.CreateObjectFptr(typeName.c_str(), false, InParameters, static_cast<int32_t>(InLength));
 		result.m_Host = this;
 		return result;
 	}

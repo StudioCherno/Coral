@@ -35,7 +35,7 @@ public static class TypeHelper
 
 	public static object? CreateInstance(Type InType, params object?[]? InArguments)
 	{
-		return InType.Assembly.CreateInstance(InType.FullName ?? string.Empty, false, BindingFlags.Default, null, InArguments!, null, null);
+		return InType.Assembly.CreateInstance(InType.FullName ?? string.Empty, false, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, InArguments!, null, null);
 	}
 
 }
