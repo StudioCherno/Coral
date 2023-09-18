@@ -17,6 +17,10 @@ project "Coral.Native"
 
     forceincludes { "CoralPCH.hpp" }
 
+    filter { "action:xcode4" }
+        pchheader "Source/CoralPCH.hpp"
+    filter { }
+
     files {
         "Source/**.cpp",
         "Source/**.hpp",

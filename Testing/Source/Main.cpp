@@ -63,6 +63,12 @@ DummyStruct* DummyStructPtrMarshalIcall(DummyStruct* InStruct)
 	return InStruct;
 }
 
+Coral::Array<float> FloatArrayIcall()
+{
+	std::vector<float> floats = { 5.0f, 10.0f, 15.0f, 50.0f };
+	return Coral::Array(floats);
+}
+
 void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 {
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "SByteMarshalIcall", &SByteMarshalIcall);
@@ -81,6 +87,8 @@ void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructMarshalIcall", &DummyStructMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructPtrMarshalIcall", &DummyStructPtrMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", &TypeMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", &TypeMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "FloatArrayIcall", &FloatArrayIcall);
 }
 
 struct Test
@@ -109,7 +117,7 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	RegisterTest("DoubleTest", [InObject]() mutable{ return InObject.InvokeMethod<double, double>("DoubleTest", 10.0) - 20.0 < 0.001; });
 	RegisterTest("BoolTest", [InObject]() mutable{ return InObject.InvokeMethod<Coral::Bool32, Coral::Bool32>("BoolTest", false); });
 	RegisterTest("IntPtrTest", [InObject]() mutable{ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
-#if CORAL_WIDE_CHARS
+#if defined(CORAL_WIDE_CHARS)
 	RegisterTest("StringTest", [InObject, &InHost]() mutable
 	{
 		const auto* str = InObject.InvokeMethod<const CharType*, const CharType*>("StringTest", CORAL_STR("Hello"));
@@ -257,7 +265,7 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 		value = InObject.GetFieldValue<Coral::Bool32>("BoolFieldTest");
 		return static_cast<bool>(value);
 	});
-#if CORAL_WIDE_CHARS
+#if defined(CORAL_WIDE_CHARS)
 	RegisterTest("StringFieldTest", [InObject]() mutable
 	{
 		auto value = InObject.GetFieldValue<const CharType*>("StringFieldTest");
@@ -380,7 +388,7 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 		value = InObject.GetPropertyValue<Coral::Bool32>("BoolPropertyTest");
 		return static_cast<bool>(value);
 	});
-#if CORAL_WIDE_CHARS
+#if defined(CORAL_WIDE_CHARS)
 	RegisterTest("StringPropertyTest", [InObject]() mutable
 	{
 		auto value = InObject.GetPropertyValue<const CharType*>("StringPropertyTest");
@@ -511,7 +519,7 @@ int main()
 	hostInstance.DestroyInstance(object);
 	hostInstance.DestroyInstance(fieldTestObject);
 	hostInstance.UnloadAssemblyLoadContext(loadContext);
-	Coral::GC::Collect();
+	//Coral::GC::Collect();
 
 	return 0;
 }

@@ -24,6 +24,10 @@ namespace Testing.Managed {
 		internal static unsafe delegate*<UnmanagedString, UnmanagedString> StringMarshalIcall;
 		internal static unsafe delegate*<Type, Type> TypeMarshalIcall;
 
+		// TODO(Peter): Introduce interop class for arrays that automatically frees the native memory
+		//				and is implicitly convertible to the desired array type (e.g float[])
+		internal static unsafe delegate*<UnmanagedArray> FloatArrayIcall;
+
 		internal struct DummyStruct
 		{
 			public int X;
@@ -98,7 +102,20 @@ namespace Testing.Managed {
 		{
 			unsafe { return BoolMarshalIcall(false); }
 		}
-		
+
+		[Test]
+		public bool FloatArrayTest()
+		{
+			unsafe
+			{
+				var arr = FloatArrayIcall();
+				foreach (var f in arr.ToSpan<float>())
+					Console.WriteLine(f);
+			}
+
+			return true;
+		}
+
 		[Test]
 		public bool IntPtrMarshalTest()
 		{

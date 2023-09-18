@@ -7,14 +7,13 @@
 
 	#ifdef _WCHAR_T_DEFINED
 		#define CORAL_STR(s) L##s
-		#define CORAL_WIDE_CHARS 1
+		#define CORAL_WIDE_CHARS
 
 		using CharType = wchar_t;
 		using StringView = std::wstring_view;
 
 	#else
 		#define CORAL_STR(s) s
-		#define CORAL_WIDE_CHARS 0
 
 		using CharType = unsigned short;
 		using StringView = std::string_view;
@@ -22,7 +21,6 @@
 #else
 	#define CORAL_CALLTYPE
 	#define CORAL_STR(s) s
-	#define CORAL_WIDE_CHARS 0
 
 	using CharType = char;
 	using StringView = std::string_view;

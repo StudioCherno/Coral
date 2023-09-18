@@ -19,7 +19,7 @@ namespace Coral {
 		Array(const std::vector<TValue>& InValues)
 		{
 			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
-			m_Length = InValues.size();
+			m_Length = static_cast<int32_t>(InValues.size());
 			memcpy(m_Ptr, InValues.data(), InValues.size() * sizeof(TValue));
 		}
 

@@ -40,7 +40,7 @@ namespace Coral {
 	{
 		CSString result;
 
-#if CORAL_WIDE_CHARS
+#if defined(CORAL_WIDE_CHARS)
 		auto str = StringHelper::ConvertUtf8ToWide(InString);
 		result.m_String = Memory::StringToCoTaskMemAuto(str);
 #else
@@ -54,7 +54,7 @@ namespace Coral {
 	{
 		StringView string(InString.m_String);
 
-#if CORAL_WIDE_CHARS
+#if defined(CORAL_WIDE_CHARS)
 		return StringHelper::ConvertWideToUtf8(string);
 #else
 		return string;
@@ -65,7 +65,7 @@ namespace Coral {
 
 	bool CSString::operator==(const CSString& InOther) const
 	{
-#if CORAL_WIDE_CHARS
+#if defined(CORAL_WIDE_CHARS)
 		return wcscmp(m_String, InOther.m_String) == 0;
 #else
 		return strcmp(m_String, InOther.m_String) == 0;
