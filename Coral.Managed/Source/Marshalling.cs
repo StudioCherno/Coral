@@ -51,7 +51,7 @@ public static class Marshalling
 			ManagedDataType.Float => Marshal.PtrToStructure<float>(InValue),
 			ManagedDataType.Double => Marshal.PtrToStructure<double>(InValue),
 			ManagedDataType.Bool => Marshal.PtrToStructure<sbyte>(InValue) > 0,
-			ManagedDataType.String => Marshal.PtrToStructure<UnmanagedString>(InValue),
+			ManagedDataType.String => Marshal.PtrToStructure<NativeString>(InValue),
 			ManagedDataType.Struct => InValue,
 			_ => null
 		};

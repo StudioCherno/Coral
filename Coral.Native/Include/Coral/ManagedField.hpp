@@ -1,13 +1,14 @@
 ﻿#pragma once
 
 #include "Core.hpp"
+#include "NativeString.hpp"
 
 namespace Coral {
 
 	class ManagedField
 	{
 	public:
-		const CharType* Name;
+		NativeString Name;
 		TypeVisibility visibility;
 	};
 	

@@ -5,32 +5,32 @@
 namespace Coral {
 
 	template<typename TValue>
-	class Array
+	class NativeArray
 	{
 	public:
-		Array() = default;
+		NativeArray() = default;
 
-		Array(int32_t InLength)
+		NativeArray(int32_t InLength)
 		{
 			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InLength * sizeof(TValue)));
 			m_Length = InLength;
 		}
 
-		Array(const std::vector<TValue>& InValues)
+		NativeArray(const std::vector<TValue>& InValues)
 		{
 			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
 			m_Length = static_cast<int32_t>(InValues.size());
 			memcpy(m_Ptr, InValues.data(), InValues.size() * sizeof(TValue));
 		}
 
-		Array(const Array& InOther)
+		NativeArray(const NativeArray& InOther)
 		{
 			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InOther.m_Length * sizeof(TValue)));
 			m_Length = InOther.m_Length;
 			memcpy(m_Ptr, InOther.m_Ptr, InOther.m_Length * sizeof(TValue));
 		}
 
-		Array(Array&& InOther) noexcept
+		NativeArray(NativeArray&& InOther) noexcept
 		{
 			m_Ptr = InOther.m_Ptr;
 			m_Length = InOther.m_Length;
@@ -38,12 +38,12 @@ namespace Coral {
 			InOther.m_Length = 0;
 		}
 
-		~Array()
+		~NativeArray()
 		{
 			Memory::FreeHGlobal(m_Ptr);
 		}
 
-		Array& operator=(const Array& InOther)
+		NativeArray& operator=(const NativeArray& InOther)
 		{
 			Memory::FreeHGlobal(m_Ptr);
 
@@ -52,7 +52,7 @@ namespace Coral {
 			memcpy(m_Ptr, InOther.m_Ptr, InOther.m_Length * sizeof(TValue));
 		}
 		
-		Array& operator=(Array&& InOther) noexcept
+		NativeArray& operator=(NativeArray&& InOther) noexcept
 		{
 			Memory::FreeHGlobal(m_Ptr);
 
@@ -81,6 +81,7 @@ namespace Coral {
 	private:
 		TValue* m_Ptr = nullptr;
 		int32_t m_Length = 0;
+		Bool32 m_IsDisposed = false;
 	};
 
 }

@@ -21,7 +21,7 @@ namespace Testing.Managed {
 		internal static unsafe delegate*<double, double> DoubleMarshalIcall;
 		internal static unsafe delegate*<bool, bool> BoolMarshalIcall;
 		internal static unsafe delegate*<IntPtr, IntPtr> IntPtrMarshalIcall;
-		internal static unsafe delegate*<UnmanagedString, UnmanagedString> StringMarshalIcall;
+		internal static unsafe delegate*<NativeString, NativeString> StringMarshalIcall;
 		internal static unsafe delegate*<Type, Type> TypeMarshalIcall;
 		internal static unsafe delegate*<NativeArray<float>> FloatArrayIcall;
 
@@ -132,7 +132,7 @@ namespace Testing.Managed {
 		[Test]
 		public bool StringMarshalTest()
 		{
-			unsafe { return StringMarshalIcall(UnmanagedString.FromString("Hello")) == "Hello"; }
+			unsafe { return StringMarshalIcall("Hello") == "Hello"; }
 		}
 
 		[Test]
@@ -151,7 +151,7 @@ namespace Testing.Managed {
 				return newS.X == 20 && Math.Abs(newS.Y) - 30.0f < 0.001f && newS.Z == 200;
 			}
 		}
-		
+
 		[Test]
 		public bool DummyStructPtrMarshalTest()
 		{
@@ -161,7 +161,7 @@ namespace Testing.Managed {
 				Y = 15.0f,
 				Z = 100
 			};
-			
+
 			unsafe
 			{
 				var newS = DummyStructPtrMarshalIcall(&s);

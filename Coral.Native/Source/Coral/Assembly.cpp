@@ -3,7 +3,7 @@
 #include "CoralManagedFunctions.hpp"
 #include "Verify.hpp"
 #include "StringHelper.hpp"
-#include "Array.hpp"
+#include "NativeArray.hpp"
 
 namespace Coral {
 
@@ -32,9 +32,9 @@ namespace Coral {
 
 	TypeId ManagedAssembly::GetTypeId(std::string_view InClassName) const
 	{
-		auto name = StringHelper::ConvertUtf8ToWide(InClassName);
+		auto name = NativeString::FromUTF8(InClassName);
 		TypeId typeId = nullptr;
-		s_ManagedFunctions.GetTypeIdFptr(name.c_str(), &typeId);
+		s_ManagedFunctions.GetTypeIdFptr(name, &typeId);
 		return typeId;
 	}
 
@@ -47,16 +47,15 @@ namespace Coral {
 	ManagedAssembly& AssemblyLoadContext::LoadAssembly(std::string_view InFilePath)
 	{
 		ManagedAssembly& result = m_LoadedAssemblies.emplace_back();
-		auto filepath = StringHelper::ConvertUtf8ToWide(InFilePath);
+		auto filepath = NativeString::FromUTF8(InFilePath);
 		result.m_Host = m_Host;
-		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(m_ContextId, filepath.c_str());
+		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(m_ContextId, filepath);
 		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
 
 		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
 		{
-			const auto* name = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
-			result.m_Name = StringHelper::ConvertWideToUtf8(name);
-			s_ManagedFunctions.FreeManagedStringFptr(name);
+			auto name = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
+			result.m_Name = NativeString::ToUTF8(name);
 
 			int32_t typeCount;
 			s_ManagedFunctions.QueryAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);

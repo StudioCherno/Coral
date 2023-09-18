@@ -90,7 +90,7 @@ namespace Coral {
 
 	private:
 		void* m_Handle = nullptr;
-		CSString m_FullName;
+		NativeString m_FullName;
 		HostInstance* m_Host = nullptr;
 
 	private:

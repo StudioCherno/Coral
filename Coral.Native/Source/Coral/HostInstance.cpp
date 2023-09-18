@@ -1,7 +1,6 @@
 #include "HostInstance.hpp"
 #include "Verify.hpp"
 #include "HostFXRErrorCodes.hpp"
-#include "Interop.hpp"
 #include "CoralManagedFunctions.hpp"
 #include "StringHelper.hpp"
 
@@ -64,9 +63,9 @@ namespace Coral {
 	
 	AssemblyLoadContext HostInstance::CreateAssemblyLoadContext(std::string_view InName)
 	{
-		auto name = StringHelper::ConvertUtf8ToWide(InName);
+		auto name = Coral::NativeString::FromUTF8(InName);
 		AssemblyLoadContext alc;
-		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(name.c_str());
+		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(name);
 		alc.m_Host = this;
 		return alc;
 	}
@@ -80,8 +79,8 @@ namespace Coral {
 
 	ManagedObject HostInstance::CreateInstanceInternal(std::string_view InTypeName, const void** InParameters, size_t InLength)
 	{
-		auto typeName = StringHelper::ConvertUtf8ToWide(InTypeName);
-		auto result = s_ManagedFunctions.CreateObjectFptr(typeName.c_str(), false, InParameters, static_cast<int32_t>(InLength));
+		auto typeName = NativeString::FromUTF8(InTypeName);
+		auto result = s_ManagedFunctions.CreateObjectFptr(typeName, false, InParameters, static_cast<int32_t>(InLength));
 		result.m_Host = this;
 		return result;
 	}
@@ -95,19 +94,14 @@ namespace Coral {
 		InObjectHandle.m_Handle = nullptr;
 	}
 
-	void HostInstance::FreeString(const CharType* InString)
-	{
-		s_ManagedFunctions.FreeManagedStringFptr(InString);
-	}
-
-	ReflectionType& HostInstance::GetReflectionType(const CSString& InTypeName)
+	ReflectionType& HostInstance::GetReflectionType(const NativeString& InTypeName)
 	{
 		size_t id = std::hash<std::string>()(InTypeName.ToString());
 
 		if (!m_ReflectionTypes.contains(id))
 		{
 			ReflectionType reflectionType;
-			s_ManagedFunctions.GetReflectionTypeFptr(InTypeName.Data(), &reflectionType);
+			s_ManagedFunctions.GetReflectionTypeFptr(InTypeName, &reflectionType);
 			reflectionType.m_Host = this;
 			m_ReflectionTypes[id] = std::move(reflectionType);
 		}
@@ -130,31 +124,31 @@ namespace Coral {
 		return m_ReflectionTypes.at(id);
 	}
 
-	const std::vector<ManagedField>& HostInstance::GetFields(const CSString& InTypeName)
+	const std::vector<ManagedField>& HostInstance::GetFields(const NativeString& InTypeName)
 	{
 		size_t id = std::hash<std::string>()(InTypeName.ToString());
 
 		if (!m_Fields.contains(id))
 		{
 			int32_t fieldCount;
-			s_ManagedFunctions.GetFieldsFptr(InTypeName.Data(), nullptr, &fieldCount);
+			s_ManagedFunctions.GetFieldsFptr(InTypeName, nullptr, &fieldCount);
 			m_Fields[id].resize(fieldCount);
-			s_ManagedFunctions.GetFieldsFptr(InTypeName.Data(), m_Fields[id].data(), &fieldCount);
+			s_ManagedFunctions.GetFieldsFptr(InTypeName, m_Fields[id].data(), &fieldCount);
 		}
 
 		return m_Fields.at(id);
 	}
 
-	const std::vector<MethodInfo>& HostInstance::GetMethods(const CSString& InTypeName)
+	const std::vector<MethodInfo>& HostInstance::GetMethods(const NativeString& InTypeName)
 	{
 		size_t id = std::hash<const CharType*>()(InTypeName.Data());
 
 		if (!m_Methods.contains(id))
 		{
 			int32_t methodCount;
-			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName.Data(), nullptr, &methodCount);
+			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName, nullptr, &methodCount);
 			m_Methods[id].resize(methodCount);
-			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName.Data(), m_Methods[id].data(), &methodCount);
+			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName, m_Methods[id].data(), &methodCount);
 		}
 
 		return m_Methods.at(id);
@@ -241,13 +235,12 @@ namespace Coral {
 
 		ExceptionCallback = m_Settings.ExceptionCallback;
 
-		s_ManagedFunctions.SetExceptionCallbackFptr([](const CharType* InMessage)
+		s_ManagedFunctions.SetExceptionCallbackFptr([](NativeString InMessage)
 		{
 			if (!ExceptionCallback)
 				return;
 
-			auto message = StringHelper::ConvertWideToUtf8(InMessage);
-			ExceptionCallback(message);
+			ExceptionCallback(InMessage.ToString());
 		});
 
 		return true;
@@ -268,7 +261,6 @@ namespace Coral {
 		s_ManagedFunctions.GetTypeMethodsFptr = LoadCoralManagedFunctionPtr<GetTypeMethodsFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("GetTypeMethods"));
 		s_ManagedFunctions.GetTypeIdFptr = LoadCoralManagedFunctionPtr<GetTypeIdFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("GetTypeId"));
 		s_ManagedFunctions.SetInternalCallsFptr = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.Managed.Interop.InternalCallsManager, Coral.Managed"), CORAL_STR("SetInternalCalls"));
-		s_ManagedFunctions.FreeManagedStringFptr = LoadCoralManagedFunctionPtr<FreeManagedStringFn>(CORAL_STR("Coral.Managed.Interop.UnmanagedString, Coral.Managed"), CORAL_STR("FreeUnmanaged"));
 		s_ManagedFunctions.CreateObjectFptr = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("CreateObject"));
 		s_ManagedFunctions.InvokeMethodFptr = LoadCoralManagedFunctionPtr<InvokeMethodFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("InvokeMethod"));
 		s_ManagedFunctions.InvokeMethodRetFptr = LoadCoralManagedFunctionPtr<InvokeMethodRetFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("InvokeMethodRet"));

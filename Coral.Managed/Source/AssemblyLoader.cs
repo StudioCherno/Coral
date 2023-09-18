@@ -79,9 +79,14 @@ public static class AssemblyLoader
 	}
 
 	[UnmanagedCallersOnly]
-	private static int CreateAssemblyLoadContext(UnmanagedString InName)
+	private static int CreateAssemblyLoadContext(NativeString InName)
 	{
-		var alc = new AssemblyLoadContext(InName, true);
+		string? name = InName;
+
+		if (name == null)
+			return -1;
+
+		var alc = new AssemblyLoadContext(name, true);
 		alc.Resolving += ResolveAssembly;
 		alc.Unloading += ctx =>
 		{
@@ -93,7 +98,7 @@ public static class AssemblyLoader
 			}
 		};
 
-		int contextId = alc.Name.GetHashCode();
+		int contextId = name.GetHashCode();
 		s_AssemblyContexts.Add(contextId, alc);
 		return contextId;
 	}
@@ -118,11 +123,11 @@ public static class AssemblyLoader
 	}
 
 	[UnmanagedCallersOnly]
-	private static int LoadAssembly(int InContextId, UnmanagedString InAssemblyFilePath)
+	private static int LoadAssembly(int InContextId, NativeString InAssemblyFilePath)
 	{
 		try
 		{
-			if (InAssemblyFilePath.IsNull())
+			if (string.IsNullOrEmpty(InAssemblyFilePath))
 			{
 				s_LastLoadStatus = AssemblyLoadStatus.InvalidFilePath;
 				return -1;
@@ -151,7 +156,7 @@ public static class AssemblyLoader
 
 			Assembly? assembly = null;
 
-			using (var file = MemoryMappedFile.CreateFromFile(InAssemblyFilePath))
+			using (var file = MemoryMappedFile.CreateFromFile(InAssemblyFilePath!))
 			{
 				using var stream = file.CreateViewStream();
 				assembly = alc.LoadFromStream(stream);
@@ -161,7 +166,6 @@ public static class AssemblyLoader
 			int assemblyId = assemblyName.FullName.GetHashCode();
 			s_AssemblyCache.Add(assemblyId, assembly);
 			s_LastLoadStatus = AssemblyLoadStatus.Success;
-			Console.WriteLine($"Loaded assembly {InAssemblyFilePath}");
 			return assemblyId;
 		}
 		catch (Exception ex)
@@ -212,13 +216,13 @@ public static class AssemblyLoader
 	private static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
 
 	[UnmanagedCallersOnly]
-	private static UnmanagedString GetAssemblyName(int InAssemblyId)
+	private static NativeString GetAssemblyName(int InAssemblyId)
 	{
 		if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
-			return UnmanagedString.Null();
+			return "";
 
 		var assemblyName = assembly.GetName();
-		return UnmanagedString.FromString(assemblyName.Name);
+		return assemblyName.Name;
 	}
 
 }

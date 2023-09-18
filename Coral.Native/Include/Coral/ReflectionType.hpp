@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "Core.hpp"
-#include "CSString.hpp"
+#include "NativeString.hpp"
 
 namespace Coral {
 
@@ -12,11 +12,11 @@ namespace Coral {
 	class ReflectionType
 	{
 	public:
-		CSString FullName;
-		CSString Name;
-		CSString Namespace;
-		CSString BaseTypeName;
-		CSString AssemblyQualifiedName;
+		NativeString FullName;
+		NativeString Name;
+		NativeString Namespace;
+		NativeString BaseTypeName;
+		NativeString AssemblyQualifiedName;
 
 		ReflectionType& GetBaseType();
 

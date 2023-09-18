@@ -11,11 +11,11 @@ internal static class ManagedObject
 	private struct ObjectData
 	{
 		public IntPtr Handle;
-		public UnmanagedString FullName;
+		public NativeString FullName;
 	}
 	
 	[UnmanagedCallersOnly]
-	private static unsafe ObjectData CreateObject(UnmanagedString InTypeName, Bool32 InWeakRef, IntPtr InParameters, int InParameterCount)
+	private static unsafe ObjectData CreateObject(NativeString InTypeName, Bool32 InWeakRef, IntPtr InParameters, int InParameterCount)
 	{
 		try
 		{
@@ -69,19 +69,19 @@ internal static class ManagedObject
 			}
 
 			if (result == null)
-				return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() }; // TODO(Peter): Exception
+				return new() { Handle = IntPtr.Zero, FullName = "" }; // TODO(Peter): Exception
 
 			var handle = GCHandle.Alloc(result, InWeakRef ? GCHandleType.Weak : GCHandleType.Normal);
 			return new()
 			{
 				Handle = GCHandle.ToIntPtr(handle),
-				FullName = UnmanagedString.FromString(type.FullName)
+				FullName = type.FullName
 			};
 		}
 		catch (Exception ex)
 		{
 			ManagedHost.HandleException(ex);
-			return new() { Handle = IntPtr.Zero, FullName = UnmanagedString.Null() };
+			return new() { Handle = IntPtr.Zero, FullName = "" };
 		}
 	}
 
@@ -99,7 +99,7 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static void InvokeMethod(IntPtr InObjectHandle, UnmanagedString InMethodName, IntPtr InParameters, int InParameterCount)
+	private static void InvokeMethod(IntPtr InObjectHandle, NativeString InMethodName, IntPtr InParameters, int InParameterCount)
 	{
 		try
 		{
@@ -141,7 +141,7 @@ internal static class ManagedObject
 	}
 	
 	[UnmanagedCallersOnly]
-	private static void InvokeMethodRet(IntPtr InObjectHandle, UnmanagedString InMethodName, IntPtr InParameters, int InParameterCount, IntPtr InResultStorage)
+	private static void InvokeMethodRet(IntPtr InObjectHandle, NativeString InMethodName, IntPtr InParameters, int InParameterCount, IntPtr InResultStorage)
 	{
 		try
 		{
@@ -182,7 +182,7 @@ internal static class ManagedObject
 			
 			if (value is string s)
 			{
-				var nativeString = UnmanagedString.FromString(s);
+				NativeString nativeString = s;
 				Marshal.WriteIntPtr(InResultStorage, nativeString.m_NativeString);
 			}
 			else if (returnType.IsPointer)
@@ -217,7 +217,7 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static void SetFieldValue(IntPtr InTarget, UnmanagedString InFieldName, IntPtr InValue)
+	private static void SetFieldValue(IntPtr InTarget, NativeString InFieldName, IntPtr InValue)
 	{
 		try
 		{
@@ -260,7 +260,7 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static void GetFieldValue(IntPtr InTarget, UnmanagedString InFieldName, IntPtr OutValue)
+	private static void GetFieldValue(IntPtr InTarget, NativeString InFieldName, IntPtr OutValue)
 	{
 		try
 		{
@@ -289,7 +289,7 @@ internal static class ManagedObject
 			}
 			else if (value is string s)
 			{
-				var nativeString = UnmanagedString.FromString(s);
+				NativeString nativeString = s;
 				Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);
 			}
 			else if (fieldInfo.FieldType.IsPointer)
@@ -328,7 +328,7 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static void SetPropertyValue(IntPtr InTarget, UnmanagedString InPropertyName, IntPtr InValue)
+	private static void SetPropertyValue(IntPtr InTarget, NativeString InPropertyName, IntPtr InValue)
 	{
 		try
 		{
@@ -376,7 +376,7 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static void GetPropertyValue(IntPtr InTarget, UnmanagedString InPropertyName, IntPtr OutValue)
+	private static void GetPropertyValue(IntPtr InTarget, NativeString InPropertyName, IntPtr OutValue)
 	{
 		try
 		{
@@ -410,7 +410,7 @@ internal static class ManagedObject
 			}
 			else if (value is string s)
 			{
-				var nativeString = UnmanagedString.FromString(s);
+				NativeString nativeString = s;
 				Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);
 			}
 			else if (propertyInfo.PropertyType.IsPointer)

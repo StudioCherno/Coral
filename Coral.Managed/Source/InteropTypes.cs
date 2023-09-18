@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Coral.Managed.Interop;
 
-public class NativeArrayEnumerator<T> : IEnumerator<T>
+public sealed class NativeArrayEnumerator<T> : IEnumerator<T>
 {
 	private readonly T[] m_Elements;
 	private int m_Index = -1;
@@ -54,7 +54,7 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 	private readonly IntPtr m_NativeArray;
 	private readonly int m_NativeLength;
 
-	private bool m_IsDisposed;
+	private Bool32 m_IsDisposed;
 
 	public int Length => m_NativeLength;
 
@@ -117,7 +117,7 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 	public T? this[int InIndex]
 	{
 		get => Marshal.PtrToStructure<T>(IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()));
-		set => Marshal.StructureToPtr<T>(value, IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()), false);
+		set => Marshal.StructureToPtr<T>(value!, IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()), false);
 	}
 
 	public static implicit operator T[](NativeArray<T> InArray) => InArray.ToArray();
@@ -125,43 +125,33 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct UnmanagedString : IEquatable<UnmanagedString>
+public struct NativeString : IDisposable
 {
 	internal IntPtr m_NativeString;
+	private Bool32 m_IsDisposed;
 
-	public bool IsNull() => m_NativeString == IntPtr.Zero;
-
-	public override string? ToString() => m_NativeString != IntPtr.Zero ? Marshal.PtrToStringAuto(m_NativeString) : string.Empty;
-
-	public static UnmanagedString FromString(string? InValue)
+	public void Dispose()
 	{
-		return new UnmanagedString()
+		if (!m_IsDisposed)
 		{
-			m_NativeString = Marshal.StringToCoTaskMemAuto(InValue)
-		};
-	}
-		
-	public static UnmanagedString Null()
-	{
-		return new UnmanagedString(){ m_NativeString = IntPtr.Zero };
-	}
+			if (m_NativeString != IntPtr.Zero)
+			{
+				Marshal.FreeCoTaskMem(m_NativeString);
+				m_NativeString = IntPtr.Zero;
+			}
 
-	[UnmanagedCallersOnly]
-	internal static void FreeUnmanaged(UnmanagedString InString)
-	{
-		InString.Free();
+			m_IsDisposed = true;
+		}
+
+		GC.SuppressFinalize(this);
 	}
 
-	public void Free() => Marshal.FreeCoTaskMem(m_NativeString);
+	public override string? ToString() => this;
 
-	public override bool Equals(object? obj) => obj is UnmanagedString other && Equals(other);
-	public bool Equals(UnmanagedString other) => m_NativeString == other.m_NativeString;
-	public override int GetHashCode() => m_NativeString.GetHashCode();
+	public static NativeString Null() => new NativeString(){ m_NativeString = IntPtr.Zero };
 
-	public static bool operator ==(UnmanagedString left, UnmanagedString right) => left.Equals(right);
-	public static bool operator !=(UnmanagedString left, UnmanagedString right) => !(left == right);
-
-	public static implicit operator string?(UnmanagedString InUnmanagedString) => InUnmanagedString.ToString();
+	public static implicit operator NativeString(string? InString) => new(){ m_NativeString = Marshal.StringToCoTaskMemAuto(InString) };
+	public static implicit operator string?(NativeString InString) => Marshal.PtrToStringAuto(InString.m_NativeString);
 }
 
 public struct Bool32

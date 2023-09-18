@@ -1,28 +1,28 @@
-#include "CSString.hpp"
+#include "NativeString.hpp"
 #include "StringHelper.hpp"
 #include "Memory.hpp"
 #include "Verify.hpp"
 
 namespace Coral {
 
-	CSString::CSString(const CSString& InOther)
+	NativeString::NativeString(const NativeString& InOther)
 	{
 		if (InOther.m_String != nullptr)
 			m_String = Memory::StringToCoTaskMemAuto(InOther.m_String);
 	}
 
-	CSString::CSString(CSString&& InOther) noexcept
+	NativeString::NativeString(NativeString&& InOther) noexcept
 	{
 		m_String = std::exchange(InOther.m_String, nullptr);
 	}
 
-	CSString::~CSString()
+	NativeString::~NativeString()
 	{
 		if (m_String != nullptr)
 			Memory::FreeCoTaskMem(m_String);
 	}
 
-	CSString& CSString::operator=(const CSString& InOther)
+	NativeString& NativeString::operator=(const NativeString& InOther)
 	{
 		if (InOther.m_String != nullptr)
 			m_String = Memory::StringToCoTaskMemAuto(InOther.m_String);
@@ -30,15 +30,15 @@ namespace Coral {
 		return *this;
 	}
 
-	CSString& CSString::operator=(CSString&& InOther) noexcept
+	NativeString& NativeString::operator=(NativeString&& InOther) noexcept
 	{
 		m_String = std::exchange(InOther.m_String, nullptr);
 		return *this;
 	}
 
-	CSString CSString::FromUTF8(std::string_view InString)
+	NativeString NativeString::FromUTF8(std::string_view InString)
 	{
-		CSString result;
+		NativeString result;
 
 #if defined(CORAL_WIDE_CHARS)
 		auto str = StringHelper::ConvertUtf8ToWide(InString);
@@ -50,20 +50,20 @@ namespace Coral {
 		return result;
 	}
 
-	std::string CSString::ToUTF8(CSString InString)
+	std::string NativeString::ToUTF8(NativeString InString)
 	{
 		StringView string(InString.m_String);
 
 #if defined(CORAL_WIDE_CHARS)
 		return StringHelper::ConvertWideToUtf8(string);
 #else
-		return string;
+		return std::string(string);
 #endif
 	}
 
-	std::string CSString::ToString() const { return ToUTF8(*this); }
+	std::string NativeString::ToString() const { return ToUTF8(*this); }
 
-	bool CSString::operator==(const CSString& InOther) const
+	bool NativeString::operator==(const NativeString& InOther) const
 	{
 #if defined(CORAL_WIDE_CHARS)
 		return wcscmp(m_String, InOther.m_String) == 0;

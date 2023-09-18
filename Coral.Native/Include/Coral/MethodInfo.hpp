@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Core.hpp"
+#include "NativeString.hpp"
 
 namespace Coral {
 
 	struct MethodInfo
 	{
-		const CharType* Name;
+		NativeString Name;
 		TypeVisibility Visibility;
 	};
 

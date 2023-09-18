@@ -24,7 +24,6 @@ namespace Coral {
 #else
 	std::string StringHelper::ConvertUtf8ToWide(std::string_view InString)
 	{
-		return InString;
 		return std::string(InString);
 	}
 

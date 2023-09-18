@@ -8,7 +8,7 @@ namespace Coral.Managed;
 
 internal static class ManagedHost
 {
-	private static unsafe delegate*<UnmanagedString, void> s_ExceptionCallback;
+	private static unsafe delegate*<NativeString, void> s_ExceptionCallback;
 
 	[UnmanagedCallersOnly]
 	private static void Initialize()
@@ -16,21 +16,23 @@ internal static class ManagedHost
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void SetExceptionCallback(delegate*<UnmanagedString, void> InCallback)
+	private static unsafe void SetExceptionCallback(delegate*<NativeString, void> InCallback)
 	{
 		s_ExceptionCallback = InCallback;
 	}
 
 	internal struct ReflectionType
 	{
-		public UnmanagedString FullName;
-		public UnmanagedString Name;
-		public UnmanagedString Namespace;
-		public UnmanagedString BaseTypeName;
-		public UnmanagedString AssemblyQualifiedName;
+		public NativeString FullName;
+		public NativeString Name;
+		public NativeString Namespace;
+		public NativeString BaseTypeName;
+		public NativeString AssemblyQualifiedName;
 
 #pragma warning disable S1144
+#pragma warning disable CS0169
 		private readonly IntPtr m_Padding;
+#pragma warning restore CS0169
 #pragma warning restore S1144
 	}
 
@@ -73,25 +75,18 @@ internal static class ManagedHost
 
 		var reflectionType = new ReflectionType
 		{
-			FullName = UnmanagedString.FromString(InType.FullName),
-			Name = UnmanagedString.FromString(InType.Name),
-			Namespace = UnmanagedString.FromString(InType.Namespace),
-			AssemblyQualifiedName = UnmanagedString.FromString(InType.AssemblyQualifiedName),
-			BaseTypeName = InType.BaseType != null ? UnmanagedString.FromString(InType.BaseType.FullName) : UnmanagedString.Null()
+			FullName = InType.FullName,
+			Name = InType.Name,
+			Namespace = InType.Namespace,
+			AssemblyQualifiedName = InType.AssemblyQualifiedName,
+			BaseTypeName = InType.BaseType != null ? InType.BaseType.FullName : NativeString.Null()
 		};
-
-		/*Console.WriteLine($"FullName: {reflectionType.FullName}");
-		Console.WriteLine($"Name: {reflectionType.Name}");
-		Console.WriteLine($"Namespace: {reflectionType.Namespace}");
-		Console.WriteLine($"BaseTypeName: {reflectionType.BaseTypeName}");
-		Console.WriteLine($"AssemblyQualifiedName: {reflectionType.AssemblyQualifiedName}");
-		Console.WriteLine("--------------------------------------------");*/
 
 		return reflectionType;
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe Bool32 GetReflectionType(UnmanagedString InTypeName, ReflectionType* OutReflectionType)
+	private static unsafe Bool32 GetReflectionType(NativeString InTypeName, ReflectionType* OutReflectionType)
 	{
 		try
 		{
@@ -112,7 +107,7 @@ internal static class ManagedHost
 	}
 
 	[UnmanagedCallersOnly]
-	private static Bool32 IsTypeAssignableTo(UnmanagedString InTypeName, UnmanagedString InOtherTypeName)
+	private static Bool32 IsTypeAssignableTo(NativeString InTypeName, NativeString InOtherTypeName)
 	{
 		try
 		{
@@ -128,7 +123,7 @@ internal static class ManagedHost
 	}
 
 	[UnmanagedCallersOnly]
-	private static Bool32 IsTypeAssignableFrom(UnmanagedString InTypeName, UnmanagedString InOtherTypeName)
+	private static Bool32 IsTypeAssignableFrom(NativeString InTypeName, NativeString InOtherTypeName)
 	{
 		try
 		{
@@ -172,12 +167,12 @@ internal static class ManagedHost
 
 	private struct MethodInfo
 	{
-		public UnmanagedString Name;
+		public NativeString Name;
 		public TypeVisibility Visibility;
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetTypeMethods(UnmanagedString InTypeName, MethodInfo* InMethodArray, int* InMethodCount)
+	private static unsafe void GetTypeMethods(NativeString InTypeName, MethodInfo* InMethodArray, int* InMethodCount)
 	{
 		try
 		{
@@ -203,7 +198,7 @@ internal static class ManagedHost
 			{
 				InMethodArray[i] = new()
 				{
-					Name = UnmanagedString.FromString(methods[i].Name),
+					Name = methods[i].Name,
 					Visibility = GetTypeVisibility(methods[i])
 				};
 			}
@@ -214,8 +209,9 @@ internal static class ManagedHost
 		}
 	}
 
+#pragma warning disable CS8500
 	[UnmanagedCallersOnly]
-	private static unsafe void GetTypeId(UnmanagedString InName, Type* OutType)
+	private static unsafe void GetTypeId(NativeString InName, Type* OutType)
 	{
 		try
 		{
@@ -226,15 +222,16 @@ internal static class ManagedHost
 			HandleException(e);
 		}
 	}
+#pragma warning restore CS8500
 
 	internal struct ManagedField
 	{
-		public UnmanagedString Name;
+		public NativeString Name;
 		public TypeVisibility Visibility;
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void QueryObjectFields(UnmanagedString InTypeName, ManagedField* InFieldsArray, int* OutFieldCount)
+	private static unsafe void QueryObjectFields(NativeString InTypeName, ManagedField* InFieldsArray, int* OutFieldCount)
 	{
 		var type = TypeHelper.FindType(InTypeName);
 
@@ -256,7 +253,7 @@ internal static class ManagedHost
 			var field = fields[i];
 			var managedField = new ManagedField();
 
-			managedField.Name = UnmanagedString.FromString(field.Name);
+			managedField.Name = field.Name;
 			managedField.Visibility = GetTypeVisibility(field);
 
 			InFieldsArray[i] = managedField;
@@ -270,9 +267,8 @@ internal static class ManagedHost
 			if (s_ExceptionCallback == null)
 				return;
 
-			var message = UnmanagedString.FromString(InException.ToString());
+			using NativeString message = InException.ToString();
 			s_ExceptionCallback(message);
-			message.Free();
 		}
 	}
 
