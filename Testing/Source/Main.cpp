@@ -115,15 +115,11 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	RegisterTest("DoubleTest", [InObject]() mutable{ return InObject.InvokeMethod<double, double>("DoubleTest", 10.0) - 20.0 < 0.001; });
 	RegisterTest("BoolTest", [InObject]() mutable{ return InObject.InvokeMethod<Coral::Bool32, Coral::Bool32>("BoolTest", false); });
 	RegisterTest("IntPtrTest", [InObject]() mutable{ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
-#if defined(CORAL_WIDE_CHARS)
 	RegisterTest("StringTest", [InObject, &InHost]() mutable
 	{
 		auto str = InObject.InvokeMethod<Coral::NativeString, Coral::NativeString>("StringTest", Coral::NativeString::FromUTF8("Hello"));
 		return Coral::NativeString::ToUTF8(str) == "Hello, World!";
 	});
-#else
-	RegisterTest("SByteTest", [&](){ return strcmp(InObject.InvokeMethod<const CharType*, const CharType*>("SByteTest", CORAL_STR("Hello")), CORAL_STR("Hello, World!")) == 0; });
-#endif
 	
 	// TODO(Peter): Struct Marshalling
 	RegisterTest("DummyStructTest", [InObject]() mutable
@@ -261,17 +257,15 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 		value = InObject.GetFieldValue<Coral::Bool32>("BoolFieldTest");
 		return static_cast<bool>(value);
 	});
-#if defined(CORAL_WIDE_CHARS)
 	RegisterTest("StringFieldTest", [InObject]() mutable
 	{
-		auto value = InObject.GetFieldValue<const CharType*>("StringFieldTest");
-		if (wcscmp(value, CORAL_STR("Hello")) != 0)
+		auto value = InObject.GetFieldValue<Coral::NativeString>("StringFieldTest");
+		if (value.ToString() != "Hello")
 			return false;
-		InObject.SetFieldValue("StringFieldTest", CORAL_STR("Hello, World!"));
-		value = InObject.GetFieldValue<const CharType*>("StringFieldTest");
-		return wcscmp(value, CORAL_STR("Hello, World!")) == 0;
+		InObject.SetFieldValue("StringFieldTest", Coral::NativeString::FromUTF8("Hello, World!"));
+		value = InObject.GetFieldValue<Coral::NativeString>("StringFieldTest");
+		return value.ToString() == "Hello, World!";
 	});
-#endif
 
 	///// PROPERTIES ////
 
@@ -384,17 +378,15 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 		value = InObject.GetPropertyValue<Coral::Bool32>("BoolPropertyTest");
 		return static_cast<bool>(value);
 	});
-#if defined(CORAL_WIDE_CHARS)
 	RegisterTest("StringPropertyTest", [InObject]() mutable
 	{
-		auto value = InObject.GetPropertyValue<const CharType*>("StringPropertyTest");
-		if (wcscmp(value, CORAL_STR("Hello")) != 0)
+		auto value = InObject.GetPropertyValue<Coral::NativeString>("StringPropertyTest");
+		if (value.ToString() != "Hello")
 			return false;
-		InObject.SetPropertyValue("StringPropertyTest", CORAL_STR("Hello, World!"));
-		value = InObject.GetPropertyValue<const CharType*>("StringPropertyTest");
-		return wcscmp(value, CORAL_STR("Hello, World!")) == 0;
+		InObject.SetPropertyValue("StringPropertyTest", Coral::NativeString::FromUTF8("Hello, World!"));
+		value = InObject.GetPropertyValue<Coral::NativeString>("StringPropertyTest");
+		return value.ToString() == "Hello, World!";
 	});
-#endif
 }
 
 void RunTests()

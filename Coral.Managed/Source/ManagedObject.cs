@@ -178,37 +178,7 @@ internal static class ManagedObject
 			if (value == null)
 				return;
 
-			var returnType = methodInfo.ReturnType;
-			
-			if (value is string s)
-			{
-				NativeString nativeString = s;
-				Marshal.WriteIntPtr(InResultStorage, nativeString.m_NativeString);
-			}
-			else if (returnType.IsPointer)
-			{
-				unsafe
-				{
-					void* valuePointer = Pointer.Unbox(value);
-					Buffer.MemoryCopy(&valuePointer, InResultStorage.ToPointer(), IntPtr.Size, IntPtr.Size);
-				}
-			}
-			else if (returnType.IsSZArray)
-			{
-				Marshalling.CopyArrayToBuffer(InResultStorage, value as Array, returnType.GetElementType());
-			}
-			else
-			{
-				var valueSize = Marshal.SizeOf(returnType);
-				var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
-
-				unsafe
-				{
-					Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), InResultStorage.ToPointer(), valueSize, valueSize);
-				}
-				
-				handle.Free();
-			}
+			Marshalling.MarshalReturnValue(value, methodInfo.ReturnType, InResultStorage);
 		}
 		catch (Exception ex)
 		{
@@ -238,7 +208,7 @@ internal static class ManagedObject
 
 			object? value;
 
-			if (fieldInfo.FieldType == typeof(string) || fieldInfo.FieldType.IsPointer || fieldInfo.FieldType == typeof(IntPtr))
+			if (fieldInfo.FieldType.IsPointer || fieldInfo.FieldType == typeof(IntPtr))
 			{
 				value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), fieldInfo.FieldType);
 			}
@@ -279,47 +249,7 @@ internal static class ManagedObject
 				throw new MissingFieldException($"Failed to find field named {InFieldName} in {targetType}");
 			}
 
-			var value = fieldInfo.GetValue(target);
-
-			if (fieldInfo.FieldType.IsSZArray)
-			{
-				var array = value as Array;
-				var elementType = fieldInfo.FieldType.GetElementType();
-				Marshalling.CopyArrayToBuffer(OutValue, array, elementType);
-			}
-			else if (value is string s)
-			{
-				NativeString nativeString = s;
-				Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);
-			}
-			else if (fieldInfo.FieldType.IsPointer)
-			{
-				unsafe
-				{
-					if (value == null)
-					{
-						Marshal.WriteIntPtr(OutValue, IntPtr.Zero);
-					}
-					else
-					{
-						void* valuePointer = Pointer.Unbox(value);
-						Buffer.MemoryCopy(&valuePointer, OutValue.ToPointer(), IntPtr.Size, IntPtr.Size);
-					}
-
-				}
-			}
-			else
-			{
-				var valueSize = Marshal.SizeOf(fieldInfo.FieldType);
-				var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
-
-				unsafe
-				{
-					Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), OutValue.ToPointer(), valueSize, valueSize);
-				}
-
-				handle.Free();
-			}
+			Marshalling.MarshalReturnValue(fieldInfo.GetValue(target), fieldInfo.FieldType, OutValue);
 		}
 		catch (Exception ex)
 		{
@@ -354,7 +284,7 @@ internal static class ManagedObject
 
 			object? value;
 		
-			if (propertyInfo.PropertyType == typeof(string) || propertyInfo.PropertyType.IsPointer || propertyInfo.PropertyType == typeof(IntPtr))
+			if (propertyInfo.PropertyType.IsPointer || propertyInfo.PropertyType == typeof(IntPtr))
 			{
 				value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), propertyInfo.PropertyType);
 			}
@@ -400,46 +330,7 @@ internal static class ManagedObject
 				throw new InvalidOperationException($"Attempting to get value of property {InPropertyName} with no getter.");
 			}
 
-			var value = propertyInfo.GetValue(target);
-
-			if (propertyInfo.PropertyType.IsSZArray)
-			{
-				var array = value as Array;
-				var elementType = propertyInfo.PropertyType.GetElementType();
-				Marshalling.CopyArrayToBuffer(OutValue, array, elementType);
-			}
-			else if (value is string s)
-			{
-				NativeString nativeString = s;
-				Marshal.WriteIntPtr(OutValue, nativeString.m_NativeString);
-			}
-			else if (propertyInfo.PropertyType.IsPointer)
-			{
-				unsafe
-				{
-					if (value == null)
-					{
-						Marshal.WriteIntPtr(OutValue, IntPtr.Zero);
-					}
-					else
-					{
-						void* valuePointer = Pointer.Unbox(value);
-						Buffer.MemoryCopy(&valuePointer, OutValue.ToPointer(), IntPtr.Size, IntPtr.Size);
-					}
-				}
-			}
-			else
-			{
-				var valueSize = Marshal.SizeOf(propertyInfo.PropertyType);
-				var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
-
-				unsafe
-				{
-					Buffer.MemoryCopy(handle.AddrOfPinnedObject().ToPointer(), OutValue.ToPointer(), valueSize, valueSize);
-				}
-
-				handle.Free();
-			}
+			Marshalling.MarshalReturnValue(propertyInfo.GetValue(target), propertyInfo.PropertyType, OutValue);
 		}
 		catch (Exception ex)
 		{
