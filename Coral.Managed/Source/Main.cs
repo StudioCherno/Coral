@@ -267,7 +267,8 @@ internal static class ManagedHost
 			if (s_ExceptionCallback == null)
 				return;
 
-			using NativeString message = InException.ToString();
+			// NOTE(Peter): message will be cleaned up by C++ code
+			NativeString message = InException.ToString();
 			s_ExceptionCallback(message);
 		}
 	}
