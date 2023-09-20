@@ -47,6 +47,11 @@ public static class AssemblyLoader
 		}
 	}
 
+	internal static bool TryGetAssembly(int InAssemblyId, out Assembly? OutAssembly)
+	{
+		return s_AssemblyCache.TryGetValue(InAssemblyId, out OutAssembly);
+	}
+
 	internal static Assembly? ResolveAssembly(AssemblyLoadContext? InAssemblyLoadContext, AssemblyName InAssemblyName)
 	{
 		try
@@ -173,42 +178,6 @@ public static class AssemblyLoader
 			s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out s_LastLoadStatus);
 			ManagedHost.HandleException(ex);
 			return -1;
-		}
-	}
-
-	[UnmanagedCallersOnly]
-	private static unsafe void QueryAssemblyTypes(int InAssemblyId, ManagedHost.ReflectionType* OutTypes, int* OutTypeCount)
-	{
-		try
-		{
-			if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
-			{
-				return;
-			}
-
-			ReadOnlySpan<Type> assemblyTypes = assembly.GetTypes();
-
-			if (OutTypeCount != null)
-				*OutTypeCount = assemblyTypes.Length;
-
-			if (OutTypes == null)
-				return;
-
-			for (int i = 0; i < assemblyTypes.Length; i++)
-			{
-				var type = assemblyTypes[i];
-
-				var reflectionType = ManagedHost.BuildReflectionType(type);
-
-				if (reflectionType == null)
-					continue;
-
-				OutTypes[i] = reflectionType.Value;
-			}
-		}
-		catch (Exception ex)
-		{
-			ManagedHost.HandleException(ex);
 		}
 	}
 

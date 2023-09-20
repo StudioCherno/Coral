@@ -1,7 +1,8 @@
 ﻿#include "ManagedObject.hpp"
-#include "HostInstance.hpp"
+#include "Assembly.hpp"
 #include "CoralManagedFunctions.hpp"
 #include "StringHelper.hpp"
+#include "Type.hpp"
 
 namespace Coral {
 
@@ -41,7 +42,20 @@ namespace Coral {
 		s_ManagedFunctions.GetPropertyValueFptr(m_Handle, propertyName, OutValue);
 	}
 
-	ReflectionType& ManagedObject::GetType() { return m_Host->GetReflectionType(*this); }
+	const Type& ManagedObject::GetType() const
+	{
+		return *m_Type;
+	}
+
+	void ManagedObject::Destroy()
+	{
+		if (!m_Handle)
+			return;
+
+		s_ManagedFunctions.DestroyObjectFptr(m_Handle);
+		m_Handle = nullptr;
+		m_Type = nullptr;
+	}
 
 }
 

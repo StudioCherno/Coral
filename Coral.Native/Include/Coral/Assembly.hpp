@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Core.hpp"
-#include "ReflectionType.hpp"
+#include "Type.hpp"
 
 namespace Coral {
 
@@ -15,6 +14,8 @@ namespace Coral {
 		UnknownError
 	};
 
+	class HostInstance;
+
 	class ManagedAssembly
 	{
 	public:
@@ -25,9 +26,8 @@ namespace Coral {
 		void AddInternalCall(std::string_view InClassName, std::string_view InVariableName, void* InFunctionPtr);
 		void UploadInternalCalls();
 
-		TypeId GetTypeId(std::string_view InClassName) const;
-
-		const std::vector<ReflectionType>& GetTypes() const { return m_ReflectionTypes; }
+		const Type& GetType(std::string_view InClassName) const;
+		const std::unordered_map<std::string, Type>& GetTypes() const;
 		
 	private:
 		HostInstance* m_Host = nullptr;
@@ -42,9 +42,8 @@ namespace Coral {
 	#endif
 		
 		std::vector<InternalCall> m_InternalCalls;
+		std::unordered_map<std::string, Type> m_Types;
 
-		std::vector<ReflectionType> m_ReflectionTypes;
-		
 		friend class HostInstance;
 		friend class AssemblyLoadContext;
 	};

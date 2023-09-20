@@ -1,6 +1,7 @@
 using Coral.Managed.Interop;
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -19,21 +20,6 @@ internal static class ManagedHost
 	private static unsafe void SetExceptionCallback(delegate*<NativeString, void> InCallback)
 	{
 		s_ExceptionCallback = InCallback;
-	}
-
-	internal struct ReflectionType
-	{
-		public NativeString FullName;
-		public NativeString Name;
-		public NativeString Namespace;
-		public NativeString BaseTypeName;
-		public NativeString AssemblyQualifiedName;
-
-#pragma warning disable S1144
-#pragma warning disable CS0169
-		private readonly IntPtr m_Padding;
-#pragma warning restore CS0169
-#pragma warning restore S1144
 	}
 
 	internal enum TypeVisibility
@@ -68,77 +54,7 @@ internal static class ManagedHost
 		return TypeVisibility.Public;
 	}
 
-	internal static ReflectionType? BuildReflectionType(Type? InType)
-	{
-		if (InType == null)
-			return null;
-
-		var reflectionType = new ReflectionType
-		{
-			FullName = InType.FullName,
-			Name = InType.Name,
-			Namespace = InType.Namespace,
-			AssemblyQualifiedName = InType.AssemblyQualifiedName,
-			BaseTypeName = InType.BaseType != null ? InType.BaseType.FullName : NativeString.Null()
-		};
-
-		return reflectionType;
-	}
-
-	[UnmanagedCallersOnly]
-	private static unsafe Bool32 GetReflectionType(NativeString InTypeName, ReflectionType* OutReflectionType)
-	{
-		try
-		{
-			var type = TypeHelper.FindType(InTypeName);
-			var reflectionType = BuildReflectionType(type);
-
-			if (reflectionType == null)
-				return false;
-
-			*OutReflectionType = reflectionType.Value;
-			return true;
-		}
-		catch (Exception ex)
-		{
-			HandleException(ex);
-			return false;
-		}
-	}
-
-	[UnmanagedCallersOnly]
-	private static Bool32 IsTypeAssignableTo(NativeString InTypeName, NativeString InOtherTypeName)
-	{
-		try
-		{
-			var type = TypeHelper.FindType(InTypeName);
-			var otherType = TypeHelper.FindType(InOtherTypeName);
-			return type != null && type.IsAssignableTo(otherType);
-		}
-		catch (Exception e)
-		{
-			HandleException(e);
-			return false;
-		}
-	}
-
-	[UnmanagedCallersOnly]
-	private static Bool32 IsTypeAssignableFrom(NativeString InTypeName, NativeString InOtherTypeName)
-	{
-		try
-		{
-			var type = TypeHelper.FindType(InTypeName);
-			var otherType = TypeHelper.FindType(InOtherTypeName);
-			return type != null && type.IsAssignableFrom(otherType);
-		}
-		catch (Exception e)
-		{
-			HandleException(e);
-			return false;
-		}
-	}
-
-	[UnmanagedCallersOnly]
+	/*[UnmanagedCallersOnly]
 	private static unsafe Bool32 GetReflectionTypeFromObject(IntPtr InObjectHandle, ReflectionType* OutReflectionType)
 	{
 		try
@@ -163,7 +79,7 @@ internal static class ManagedHost
 			HandleException(e);
 			return false;
 		}
-	}
+	}*/
 
 	private struct MethodInfo
 	{
@@ -176,7 +92,7 @@ internal static class ManagedHost
 	{
 		try
 		{
-			var type = TypeHelper.FindType(InTypeName);
+			var type = TypeInterface.FindType(InTypeName);
 
 			if (type == null)
 				return;
@@ -209,21 +125,6 @@ internal static class ManagedHost
 		}
 	}
 
-#pragma warning disable CS8500
-	[UnmanagedCallersOnly]
-	private static unsafe void GetTypeId(NativeString InName, Type* OutType)
-	{
-		try
-		{
-			*OutType = TypeHelper.FindType(InName);
-		}
-		catch (Exception e)
-		{
-			HandleException(e);
-		}
-	}
-#pragma warning restore CS8500
-
 	internal struct ManagedField
 	{
 		public NativeString Name;
@@ -233,7 +134,7 @@ internal static class ManagedHost
 	[UnmanagedCallersOnly]
 	private static unsafe void QueryObjectFields(NativeString InTypeName, ManagedField* InFieldsArray, int* OutFieldCount)
 	{
-		var type = TypeHelper.FindType(InTypeName);
+		var type = TypeInterface.FindType(InTypeName);
 
 		if (type == null)
 		{

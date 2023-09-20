@@ -431,24 +431,27 @@ int main()
 	auto assemblyPath = std::filesystem::path("F:/Coral/Build") / ConfigName / "Testing.Managed.dll";
 	auto assembly = loadContext.LoadAssembly(assemblyPath.string().c_str());
 
-	const auto& assemblyTypes = assembly.GetTypes();
-
 	RegisterTestInternalCalls(assembly);
 	assembly.UploadInternalCalls();
 
-	Coral::ManagedObject objectHandle = hostInstance.CreateInstance("Testing.Managed.Tests, Testing.Managed");
-	objectHandle.InvokeMethod("RunManagedTests");
-	hostInstance.DestroyInstance(objectHandle);
+	auto testsType = assembly.GetType("Testing.Managed.Tests");
+	Coral::ManagedObject testsInstance = testsType.CreateInstance();
+	testsInstance.InvokeMethod("RunManagedTests");
+	testsInstance.Destroy();
 
-	auto fieldTestObject = hostInstance.CreateInstance("Testing.Managed.FieldMarshalTest, Testing.Managed");
-	auto object = hostInstance.CreateInstance("Testing.Managed.MemberMethodTest, Testing.Managed");
+	auto fieldTestType = assembly.GetType("Testing.Managed.FieldMarshalTest");
+	auto fieldTestObject = fieldTestType.CreateInstance();
+	
+	auto memberMethodTestType = assembly.GetType("Testing.Managed.MemberMethodTest");
+	auto memberMethodTest = memberMethodTestType.CreateInstance();
 
-	RegisterMemberMethodTests(hostInstance, object);
 	RegisterFieldMarshalTests(hostInstance, fieldTestObject);
+	RegisterMemberMethodTests(hostInstance, memberMethodTest);
 	RunTests();
 
-	hostInstance.DestroyInstance(object);
-	hostInstance.DestroyInstance(fieldTestObject);
+	memberMethodTest.Destroy();
+	fieldTestObject.Destroy();
+
 	hostInstance.UnloadAssemblyLoadContext(loadContext);
 	Coral::GC::Collect();
 

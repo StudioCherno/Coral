@@ -19,7 +19,7 @@ internal static class ManagedObject
 	{
 		try
 		{
-			var type = TypeHelper.FindType(InTypeName);
+			var type = TypeInterface.FindType(InTypeName);
 
 			if (type == null)
 			{
@@ -58,14 +58,14 @@ internal static class ManagedObject
 
 			if (currentType != type || parameters == null)
 			{
-				result = TypeHelper.CreateInstance(type);
+				result = TypeInterface.CreateInstance(type);
 
 				if (currentType != type)
 					constructor.Invoke(result, parameters);
 			}
 			else
 			{
-				result = TypeHelper.CreateInstance(type, parameters);
+				result = TypeInterface.CreateInstance(type, parameters);
 			}
 
 			if (result == null)

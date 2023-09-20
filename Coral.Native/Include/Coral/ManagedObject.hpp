@@ -1,12 +1,13 @@
 ﻿#pragma once
 
 #include "Core.hpp"
-#include "ReflectionType.hpp"
 #include "Utility.hpp"
+#include "NativeString.hpp"
 
 namespace Coral {
 
-	class HostInstance;
+	class ManagedAssembly;
+	class Type;
 
 	class ManagedObject
 	{
@@ -77,8 +78,10 @@ namespace Coral {
 			return result;
 		}
 
-		ReflectionType& GetType();
+		const Type& GetType() const;
 		
+		void Destroy();
+
 	private:
 		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, size_t InLength) const;
 		void InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, size_t InLength, void* InResultStorage) const;
@@ -89,11 +92,11 @@ namespace Coral {
 
 	private:
 		void* m_Handle = nullptr;
-		NativeString m_FullName;
-		HostInstance* m_Host = nullptr;
+		Type* m_Type;
 
 	private:
-		friend class HostInstance;
+		friend class ManagedAssembly;
+		friend class Type;
 	};
 	
 }

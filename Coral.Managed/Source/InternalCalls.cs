@@ -36,7 +36,7 @@ internal static class InternalCallsManager
 				var fieldName = name.Substring(fieldNameStart + 1, fieldNameEnd - fieldNameStart - 1);
 				var containingTypeName = name.Remove(fieldNameStart, fieldNameEnd - fieldNameStart);
 
-				var type = TypeHelper.FindType(containingTypeName);
+				var type = TypeInterface.FindType(containingTypeName);
 
 				if (type == null)
 					throw new TypeAccessException($"Can't find internal call type '{containingTypeName}'");
