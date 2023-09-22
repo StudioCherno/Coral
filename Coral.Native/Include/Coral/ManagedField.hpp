@@ -9,7 +9,7 @@ namespace Coral {
 	{
 	public:
 		NativeString Name;
-		TypeVisibility visibility;
+		//TypeVisibility visibility;
 	};
 	
 }

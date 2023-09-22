@@ -10,9 +10,11 @@ namespace Coral {
 	{
 	public:
 		std::string GetName() const;
-		Type GetReturnType() const;
 
+		Type GetReturnType() const;
 		std::vector<Type> GetParameterTypes() const;
+
+		TypeAccessibility GetAccessibility() const;
 
 	private:
 		ManagedHandle m_Handle = nullptr;

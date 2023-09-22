@@ -22,42 +22,10 @@ internal static class ManagedHost
 		s_ExceptionCallback = InCallback;
 	}
 
-	internal enum TypeVisibility
-	{
-		Public,
-		Private,
-		Protected,
-		Internal,
-		ProtectedPublic,
-		PrivateProtected
-	}
-
-	private static TypeVisibility GetTypeVisibility(FieldInfo InFieldInfo)
-	{
-		if (InFieldInfo.IsPublic) return TypeVisibility.Public;
-		if (InFieldInfo.IsPrivate) return TypeVisibility.Private;
-		if (InFieldInfo.IsFamily) return TypeVisibility.Protected;
-		if (InFieldInfo.IsAssembly) return TypeVisibility.Internal;
-		if (InFieldInfo.IsFamilyOrAssembly) return TypeVisibility.ProtectedPublic;
-		if (InFieldInfo.IsFamilyAndAssembly) return TypeVisibility.PrivateProtected;
-		return TypeVisibility.Public;
-	}
-
-	private static TypeVisibility GetTypeVisibility(System.Reflection.MethodInfo InMethodInfo)
-	{
-		if (InMethodInfo.IsPublic) return TypeVisibility.Public;
-		if (InMethodInfo.IsPrivate) return TypeVisibility.Private;
-		if (InMethodInfo.IsFamily) return TypeVisibility.Protected;
-		if (InMethodInfo.IsAssembly) return TypeVisibility.Internal;
-		if (InMethodInfo.IsFamilyOrAssembly) return TypeVisibility.ProtectedPublic;
-		if (InMethodInfo.IsFamilyAndAssembly) return TypeVisibility.PrivateProtected;
-		return TypeVisibility.Public;
-	}
-
 	internal struct ManagedField
 	{
 		public NativeString Name;
-		public TypeVisibility Visibility;
+		//public TypeVisibility Visibility;
 	}
 
 	[UnmanagedCallersOnly]
@@ -84,7 +52,7 @@ internal static class ManagedHost
 			var managedField = new ManagedField();
 
 			managedField.Name = field.Name;
-			managedField.Visibility = GetTypeVisibility(field);
+			//managedField.Visibility = GetTypeVisibility(field);
 
 			InFieldsArray[i] = managedField;
 		}

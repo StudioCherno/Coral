@@ -249,4 +249,50 @@ internal static class TypeInterface
 		}
 	}
 
+	internal enum TypeAccessibility
+	{
+		Public,
+		Private,
+		Protected,
+		Internal,
+		ProtectedPublic,
+		PrivateProtected
+	}
+
+	private static TypeAccessibility GetTypeAccessibility(FieldInfo InFieldInfo)
+	{
+		if (InFieldInfo.IsPublic) return TypeAccessibility.Public;
+		if (InFieldInfo.IsPrivate) return TypeAccessibility.Private;
+		if (InFieldInfo.IsFamily) return TypeAccessibility.Protected;
+		if (InFieldInfo.IsAssembly) return TypeAccessibility.Internal;
+		if (InFieldInfo.IsFamilyOrAssembly) return TypeAccessibility.ProtectedPublic;
+		if (InFieldInfo.IsFamilyAndAssembly) return TypeAccessibility.PrivateProtected;
+		return TypeAccessibility.Public;
+	}
+
+	private static TypeAccessibility GetTypeAccessibility(MethodInfo InMethodInfo)
+	{
+		if (InMethodInfo.IsPublic) return TypeAccessibility.Public;
+		if (InMethodInfo.IsPrivate) return TypeAccessibility.Private;
+		if (InMethodInfo.IsFamily) return TypeAccessibility.Protected;
+		if (InMethodInfo.IsAssembly) return TypeAccessibility.Internal;
+		if (InMethodInfo.IsFamilyOrAssembly) return TypeAccessibility.ProtectedPublic;
+		if (InMethodInfo.IsFamilyAndAssembly) return TypeAccessibility.PrivateProtected;
+		return TypeAccessibility.Public;
+	}
+
+
+	[UnmanagedCallersOnly]
+	private static unsafe TypeAccessibility GetMethodInfoAccessibility(MethodInfo* InMethodInfo)
+	{
+		try
+		{
+			return GetTypeAccessibility(*InMethodInfo);
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+			return TypeAccessibility.Public;
+		}
+	}
 }

@@ -34,4 +34,9 @@ namespace Coral {
 		return result;
 	}
 
+	TypeAccessibility MethodInfo::GetAccessibility() const
+	{
+		return s_ManagedFunctions.GetMethodInfoAccessibilityFptr(&m_Handle);
+	}
+
 }

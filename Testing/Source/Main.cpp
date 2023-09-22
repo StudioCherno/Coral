@@ -448,6 +448,7 @@ int main()
 	for (auto methodInfo : memberMethodTestType.GetMethods())
 	{
 		auto type = methodInfo.GetReturnType();
+		auto accessibility = methodInfo.GetAccessibility();
 		std::cout << methodInfo.GetName() << ", Returns: " << type.GetFullName() << std::endl;
 		auto parameterTypes = methodInfo.GetParameterTypes();
 		for (const auto& paramType : parameterTypes)
