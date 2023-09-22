@@ -435,6 +435,7 @@ int main()
 	assembly.UploadInternalCalls();
 
 	auto testsType = assembly.GetType("Testing.Managed.Tests");
+
 	Coral::ManagedObject testsInstance = testsType.CreateInstance();
 	testsInstance.InvokeMethod("RunManagedTests");
 	testsInstance.Destroy();
@@ -443,6 +444,13 @@ int main()
 	auto fieldTestObject = fieldTestType.CreateInstance();
 	
 	auto memberMethodTestType = assembly.GetType("Testing.Managed.MemberMethodTest");
+
+	for (auto methodInfo : memberMethodTestType.GetMethods())
+	{
+		auto type = methodInfo.GetReturnType();
+		std::cout << methodInfo.GetName() << ", Returns: " << type.GetFullName() << std::endl;
+	}
+
 	auto memberMethodTest = memberMethodTestType.CreateInstance();
 
 	RegisterFieldMarshalTests(hostInstance, fieldTestObject);

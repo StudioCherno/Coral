@@ -156,4 +156,67 @@ internal static class TypeInterface
 		}
 	}
 
+	[UnmanagedCallersOnly]
+	private static unsafe void GetTypeMethods(Type* InType, MethodInfo* InMethodArray, int* InMethodCount)
+	{
+		try
+		{
+			if (InType == null)
+				return;
+
+			ReadOnlySpan<MethodInfo> methods = InType->GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+
+			if (methods == null || methods.Length == 0)
+			{
+				*InMethodCount = 0;
+				return;
+			}
+
+			*InMethodCount = methods.Length;
+
+			if (InMethodArray == null)
+				return;
+
+			for (int i = 0; i < methods.Length; i++)
+				InMethodArray[i] = methods[i];
+		}
+		catch (Exception e)
+		{
+			ManagedHost.HandleException(e);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe NativeString GetMethodInfoName(MethodInfo* InMethodInfo)
+	{
+		try
+		{
+			if (InMethodInfo == null)
+				return NativeString.Null();
+
+			return InMethodInfo->Name;
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+			return NativeString.Null();
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void GetMethodInfoReturnType(MethodInfo* InMethodInfo, Type* OutReturnType)
+	{
+		try
+		{
+			if (InMethodInfo == null || OutReturnType == null)
+				return;
+
+			*OutReturnType = InMethodInfo->ReturnType;
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+		}
+	}
+
 }

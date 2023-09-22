@@ -1,14 +1,22 @@
 #pragma once
 
 #include "Core.hpp"
-#include "NativeString.hpp"
 
 namespace Coral {
 
-	struct MethodInfo
+	class Type;
+
+	class MethodInfo
 	{
-		NativeString Name;
-		TypeVisibility Visibility;
+	public:
+		std::string GetName() const;
+		Type GetReturnType() const;
+
+
+	private:
+		ManagedHandle m_Handle = nullptr;
+
+		friend class Type;
 	};
 
 }

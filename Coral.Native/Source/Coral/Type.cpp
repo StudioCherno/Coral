@@ -31,6 +31,20 @@ namespace Coral {
 		return s_ManagedFunctions.IsTypeAssignableFromFptr(&m_TypePtr, &InOther.m_TypePtr);
 	}
 
+	std::vector<MethodInfo> Type::GetMethods() const
+	{
+		int32_t methodCount = 0;
+		s_ManagedFunctions.GetTypeMethodsFptr(&m_TypePtr, nullptr, &methodCount);
+		std::vector<ManagedHandle> handles(methodCount);
+		s_ManagedFunctions.GetTypeMethodsFptr(&m_TypePtr, handles.data(), &methodCount);
+
+		std::vector<MethodInfo> methods(handles.size());
+		for (size_t i = 0; i < handles.size(); i++)
+			methods[i].m_Handle = handles[i];
+
+		return methods;
+	}
+
 	bool Type::operator==(const Type& InOther) const
 	{
 		return m_TypePtr == InOther.m_TypePtr;

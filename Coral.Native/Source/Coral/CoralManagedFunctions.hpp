@@ -11,7 +11,6 @@ namespace Coral {
 	enum class GCCollectionMode;
 	enum class ManagedType;
 	class ManagedField;
-	struct MethodInfo;
 
 	using SetInternalCallsFn = void(*)(void*, int32_t);
 	using CreateAssemblyLoadContextFn = int32_t(*)(NativeString);
@@ -33,7 +32,13 @@ namespace Coral {
 	using GetBaseTypeFn = void(*)(const TypeId*, TypeId*);
 	using IsTypeAssignableToFn = Bool32(*)(const TypeId*, const TypeId*);
 	using IsTypeAssignableFromFn = Bool32(*)(const TypeId*, const TypeId*);
+	using GetTypeMethodsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 
+#pragma endregion
+
+#pragma region MethodInfo
+	using GetMethodInfoNameFn = NativeString(*)(const ManagedHandle*);
+	using GetMethodInfoReturnTypeFn = void(*)(const ManagedHandle*, TypeId*);
 #pragma endregion
 	
 	using CreateObjectFn = ManagedObject(*)(NativeString, Bool32, const void**, int32_t);
@@ -71,7 +76,13 @@ namespace Coral {
 		GetBaseTypeFn GetBaseTypeFptr = nullptr;
 		IsTypeAssignableToFn IsTypeAssignableToFptr = nullptr;
 		IsTypeAssignableFromFn IsTypeAssignableFromFptr = nullptr;
+		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
 
+#pragma endregion
+
+#pragma region MethodInfo
+		GetMethodInfoNameFn GetMethodInfoNameFptr = nullptr;
+		GetMethodInfoReturnTypeFn GetMethodInfoReturnTypeFptr = nullptr;
 #pragma endregion
 		
 		CreateObjectFn CreateObjectFptr = nullptr;

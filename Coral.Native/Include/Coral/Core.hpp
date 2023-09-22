@@ -43,6 +43,7 @@ namespace Coral {
 	};
 
 	using TypeId = void*;
+	using ManagedHandle = void*;
 
 	struct InternalCall
 	{
