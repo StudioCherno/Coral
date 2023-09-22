@@ -1,5 +1,6 @@
 #include "FieldInfo.hpp"
 #include "Type.hpp"
+#include "Attribute.hpp"
 #include "CoralManagedFunctions.hpp"
 
 namespace Coral {
@@ -20,6 +21,20 @@ namespace Coral {
 	TypeAccessibility FieldInfo::GetAccessibility() const
 	{
 		return s_ManagedFunctions.GetFieldInfoAccessibilityFptr(&m_Handle);
+	}
+
+	std::vector<Attribute> FieldInfo::GetAttributes() const
+	{
+		int32_t attributeCount;
+		s_ManagedFunctions.GetFieldInfoAttributesFptr(&m_Handle, nullptr, &attributeCount);
+		std::vector<ManagedHandle> attributeHandles(attributeCount);
+		s_ManagedFunctions.GetFieldInfoAttributesFptr(&m_Handle, attributeHandles.data(), &attributeCount);
+
+		std::vector<Attribute> result(attributeHandles.size());
+		for (size_t i = 0; i < attributeHandles.size(); i++)
+			result[i].m_Handle = attributeHandles[i];
+
+		return result;
 	}
 
 }

@@ -5,6 +5,7 @@
 #include "ManagedObject.hpp"
 #include "MethodInfo.hpp"
 #include "FieldInfo.hpp"
+#include "PropertyInfo.hpp"
 
 namespace Coral {
 
@@ -23,6 +24,7 @@ namespace Coral {
 
 		std::vector<MethodInfo> GetMethods() const;
 		std::vector<FieldInfo> GetFields() const;
+		std::vector<PropertyInfo> GetProperties() const;
 
 		bool operator==(const Type& InOther) const;
 
@@ -64,6 +66,8 @@ namespace Coral {
 		friend class AssemblyLoadContext;
 		friend class MethodInfo;
 		friend class FieldInfo;
+		friend class PropertyInfo;
+		friend class Attribute;
 	};
 
 }

@@ -1,6 +1,7 @@
 #include "MethodInfo.hpp"
 #include "CoralManagedFunctions.hpp"
 #include "Type.hpp"
+#include "Attribute.hpp"
 
 namespace Coral {
 
@@ -37,6 +38,20 @@ namespace Coral {
 	TypeAccessibility MethodInfo::GetAccessibility() const
 	{
 		return s_ManagedFunctions.GetMethodInfoAccessibilityFptr(&m_Handle);
+	}
+
+	std::vector<Attribute> MethodInfo::GetAttributes() const
+	{
+		int32_t attributeCount;
+		s_ManagedFunctions.GetMethodInfoAttributesFptr(&m_Handle, nullptr, &attributeCount);
+		std::vector<ManagedHandle> attributeHandles(attributeCount);
+		s_ManagedFunctions.GetMethodInfoAttributesFptr(&m_Handle, attributeHandles.data(), &attributeCount);
+
+		std::vector<Attribute> result(attributeHandles.size());
+		for (size_t i = 0; i < attributeHandles.size(); i++)
+			result[i].m_Handle = attributeHandles[i];
+
+		return result;
 	}
 
 }

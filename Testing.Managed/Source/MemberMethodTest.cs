@@ -3,6 +3,12 @@ using System.Runtime.InteropServices;
 
 namespace Testing.Managed;
 
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Field | AttributeTargets.Property)]
+public class DummyAttribute : Attribute
+{
+	public float SomeValue;
+}
+
 public class MemberMethodTest
 {
 	
@@ -106,4 +112,8 @@ public class MemberMethodTest
 		InValue->Z *= 2;
 		return InValue;
 	}
+
+	[Dummy(SomeValue = 10.0f)]
+	public void SomeFunction(){}
+
 }

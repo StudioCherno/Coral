@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Core.hpp"
 
@@ -7,15 +7,11 @@ namespace Coral {
 	class Type;
 	class Attribute;
 
-	class MethodInfo
+	class PropertyInfo
 	{
 	public:
 		std::string GetName() const;
-
-		Type GetReturnType() const;
-		std::vector<Type> GetParameterTypes() const;
-
-		TypeAccessibility GetAccessibility() const;
+		Type GetType() const;
 
 		std::vector<Attribute> GetAttributes() const;
 
@@ -24,5 +20,5 @@ namespace Coral {
 
 		friend class Type;
 	};
-
+	
 }

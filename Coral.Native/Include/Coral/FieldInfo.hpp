@@ -5,6 +5,7 @@
 namespace Coral {
 
 	class Type;
+	class Attribute;
 
 	class FieldInfo
 	{
@@ -13,6 +14,8 @@ namespace Coral {
 		Type GetType() const;
 
 		TypeAccessibility GetAccessibility() const;
+
+		std::vector<Attribute> GetAttributes() const;
 
 	private:
 		ManagedHandle m_Handle = nullptr;

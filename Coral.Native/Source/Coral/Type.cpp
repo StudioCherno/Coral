@@ -59,6 +59,20 @@ namespace Coral {
 		return fields;
 	}
 
+	std::vector<PropertyInfo> Type::GetProperties() const
+	{
+		int32_t propertyCount = 0;
+		s_ManagedFunctions.GetTypePropertiesFptr(&m_TypePtr, nullptr, &propertyCount);
+		std::vector<ManagedHandle> handles(propertyCount);
+		s_ManagedFunctions.GetTypePropertiesFptr(&m_TypePtr, handles.data(), &propertyCount);
+
+		std::vector<PropertyInfo> properties(handles.size());
+		for (size_t i = 0; i < handles.size(); i++)
+			properties[i].m_Handle = handles[i];
+
+		return properties;
+	}
+
 	bool Type::operator==(const Type& InOther) const
 	{
 		return m_TypePtr == InOther.m_TypePtr;

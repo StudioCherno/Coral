@@ -8,6 +8,7 @@
 #include <Coral/HostInstance.hpp>
 #include <Coral/GC.hpp>
 #include <Coral/NativeArray.hpp>
+#include <Coral/Attribute.hpp>
 
 void ExceptionCallback(std::string_view InMessage)
 {
@@ -448,6 +449,30 @@ int main()
 		auto type = fieldInfo.GetType();
 		auto accessibility = fieldInfo.GetAccessibility();
 		std::cout << fieldInfo.GetName() << " is " << type.GetFullName() << std::endl;
+
+		auto attributes = fieldInfo.GetAttributes();
+		for (auto attrib : attributes)
+		{
+			auto attribType = attrib.GetType();
+
+			if (attribType.GetFullName() == "Testing.Managed.DummyAttribute")
+				std::cout << attrib.GetFieldValue<float>("SomeValue") << std::endl;
+		}
+	}
+
+	for (auto propertyInfo : fieldTestType.GetProperties())
+	{
+		auto type = propertyInfo.GetType();
+		std::cout << propertyInfo.GetName() << " is " << type.GetFullName() << std::endl;
+
+		auto attributes = propertyInfo.GetAttributes();
+		for (auto attrib : attributes)
+		{
+			auto attribType = attrib.GetType();
+
+			if (attribType.GetFullName() == "Testing.Managed.DummyAttribute")
+				std::cout << attrib.GetFieldValue<float>("SomeValue") << std::endl;
+		}
 	}
 	
 	auto memberMethodTestType = assembly.GetType("Testing.Managed.MemberMethodTest");
@@ -461,6 +486,15 @@ int main()
 		for (const auto& paramType : parameterTypes)
 		{
 			std::cout << "\t" << paramType.GetFullName() << std::endl;
+		}
+
+		auto attributes = methodInfo.GetAttributes();
+		for (auto attrib : attributes)
+		{
+			auto attribType = attrib.GetType();
+
+			if (attribType.GetFullName() == "Testing.Managed.DummyAttribute")
+				std::cout << attrib.GetFieldValue<float>("SomeValue") << std::endl;
 		}
 	}
 

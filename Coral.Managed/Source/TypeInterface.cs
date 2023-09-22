@@ -1,6 +1,7 @@
 ﻿using Coral.Managed.Interop;
 
 using System;
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -216,6 +217,36 @@ internal static class TypeInterface
 		}
 	}
 
+	[UnmanagedCallersOnly]
+	private static unsafe void GetTypeProperties(Type* InType, PropertyInfo* InPropertyArray, int* InPropertyCount)
+	{
+		try
+		{
+			if (InType == null)
+				return;
+
+			ReadOnlySpan<PropertyInfo> properties = InType->GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+
+			if (properties == null || properties.Length == 0)
+			{
+				*InPropertyCount = 0;
+				return;
+			}
+
+			*InPropertyCount = properties.Length;
+
+			if (InPropertyArray == null)
+				return;
+
+			for (int i = 0; i < properties.Length; i++)
+				InPropertyArray[i] = properties[i];
+		}
+		catch (Exception e)
+		{
+			ManagedHost.HandleException(e);
+		}
+	}
+
 	// TODO(Peter): Refactor this to GetMemberInfoName (should work for all types of members)
 	[UnmanagedCallersOnly]
 	private static unsafe NativeString GetMethodInfoName(MethodInfo* InMethodInfo)
@@ -277,6 +308,36 @@ internal static class TypeInterface
 		catch (Exception e)
 		{
 			ManagedHost.HandleException(e);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void GetMethodInfoAttributes(MethodInfo* InMethodInfo, Attribute* OutAttributes, int* OutAttributesCount)
+	{
+		try
+		{
+			if (InMethodInfo == null)
+				return;
+
+			var attributes = InMethodInfo->GetCustomAttributes().ToImmutableArray();
+
+			if (attributes.Length == 0)
+			{
+				*OutAttributesCount = 0;
+				return;
+			}
+
+			*OutAttributesCount = attributes.Length;
+
+			if (OutAttributes == null)
+				return;
+
+			for (int i = 0; i < attributes.Length; i++)
+				OutAttributes[i] = attributes[i];
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
 		}
 	}
 
@@ -371,6 +432,139 @@ internal static class TypeInterface
 		{
 			ManagedHost.HandleException(ex);
 			return TypeAccessibility.Public;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void GetFieldInfoAttributes(FieldInfo* InFieldInfo, Attribute* OutAttributes, int* OutAttributesCount)
+	{
+		try
+		{
+			if (InFieldInfo == null)
+				return;
+
+			var attributes = InFieldInfo->GetCustomAttributes().ToImmutableArray();
+
+			if (attributes.Length == 0)
+			{
+				*OutAttributesCount = 0;
+				return;
+			}
+
+			*OutAttributesCount = attributes.Length;
+
+			if (OutAttributes == null)
+				return;
+
+			for (int i = 0; i < attributes.Length; i++)
+				OutAttributes[i] = attributes[i];
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe NativeString GetPropertyInfoName(PropertyInfo* InPropertyInfo)
+	{
+		try
+		{
+			if (InPropertyInfo == null)
+				return NativeString.Null();
+
+			return InPropertyInfo->Name;
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+			return NativeString.Null();
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void GetPropertyInfoType(PropertyInfo* InPropertyInfo, Type* OutPropertyType)
+	{
+		try
+		{
+			if (InPropertyInfo == null)
+				return;
+
+			*OutPropertyType = InPropertyInfo->PropertyType;
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void GetPropertyInfoAttributes(PropertyInfo* InPropertyInfo, Attribute* OutAttributes, int* OutAttributesCount)
+	{
+		try
+		{
+			if (InPropertyInfo == null)
+				return;
+
+			var attributes = InPropertyInfo->GetCustomAttributes().ToImmutableArray();
+
+			if (attributes.Length == 0)
+			{
+				*OutAttributesCount = 0;
+				return;
+			}
+
+			*OutAttributesCount = attributes.Length;
+
+			if (OutAttributes == null)
+				return;
+
+			for (int i = 0; i < attributes.Length; i++)
+				OutAttributes[i] = attributes[i];
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void GetAttributeFieldValue(Attribute* InAttribute, NativeString InFieldName, IntPtr OutValue)
+	{
+		try
+		{
+			if (InAttribute == null)
+				return;
+
+			var targetType = InAttribute->GetType();
+			var fieldInfo = targetType.GetField(InFieldName!, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+			if (fieldInfo == null)
+			{
+				throw new MissingFieldException($"Failed to find field named {InFieldName} in {targetType}");
+			}
+
+			Marshalling.MarshalReturnValue(fieldInfo.GetValue(*InAttribute), fieldInfo.FieldType, OutValue);
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void GetAttributeType(Attribute* InAttribute, Type* OutType)
+	{
+		try
+		{
+			if (InAttribute == null)
+				return;
+
+			*OutType = InAttribute->GetType();
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
 		}
 	}
 }

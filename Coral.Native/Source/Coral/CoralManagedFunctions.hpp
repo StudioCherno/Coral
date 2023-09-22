@@ -34,6 +34,7 @@ namespace Coral {
 	using IsTypeAssignableFromFn = Bool32(*)(const TypeId*, const TypeId*);
 	using GetTypeMethodsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 	using GetTypeFieldsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
+	using GetTypePropertiesFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 
 #pragma endregion
 
@@ -42,12 +43,25 @@ namespace Coral {
 	using GetMethodInfoReturnTypeFn = void(*)(const ManagedHandle*, TypeId*);
 	using GetMethodInfoParameterTypesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
 	using GetMethodInfoAccessibilityFn = TypeAccessibility(*)(const ManagedHandle*);
+	using GetMethodInfoAttributesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
 #pragma endregion
 
 #pragma region FieldInfo
 	using GetFieldInfoNameFn = NativeString(*)(const ManagedHandle*);
 	using GetFieldInfoTypeFn = void(*)(const ManagedHandle*, TypeId*);
 	using GetFieldInfoAccessibilityFn = TypeAccessibility(*)(const ManagedHandle*);
+	using GetFieldInfoAttributesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
+#pragma endregion
+
+#pragma region PropertyInfo
+	using GetPropertyInfoNameFn = NativeString(*)(const ManagedHandle*);
+	using GetPropertyInfoTypeFn = void(*)(const ManagedHandle*, TypeId*);
+	using GetPropertyInfoAttributesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
+#pragma endregion
+
+#pragma region Attribute
+	using GetAttributeFieldValueFn = void(*)(const ManagedHandle*, NativeString, void*);
+	using GetAttributeTypeFn = void(*)(const ManagedHandle*, TypeId*);
 #pragma endregion
 
 	using CreateObjectFn = ManagedObject(*)(NativeString, Bool32, const void**, int32_t);
@@ -87,6 +101,7 @@ namespace Coral {
 		IsTypeAssignableFromFn IsTypeAssignableFromFptr = nullptr;
 		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
 		GetTypeFieldsFn GetTypeFieldsFptr = nullptr;
+		GetTypePropertiesFn GetTypePropertiesFptr = nullptr;
 
 #pragma endregion
 
@@ -95,12 +110,25 @@ namespace Coral {
 		GetMethodInfoReturnTypeFn GetMethodInfoReturnTypeFptr = nullptr;
 		GetMethodInfoParameterTypesFn GetMethodInfoParameterTypesFptr = nullptr;
 		GetMethodInfoAccessibilityFn GetMethodInfoAccessibilityFptr = nullptr;
+		GetMethodInfoAttributesFn GetMethodInfoAttributesFptr = nullptr;
 #pragma endregion
 		
 #pragma region FieldInfo
 		GetFieldInfoNameFn GetFieldInfoNameFptr = nullptr;
 		GetFieldInfoTypeFn GetFieldInfoTypeFptr = nullptr;
 		GetFieldInfoAccessibilityFn GetFieldInfoAccessibilityFptr = nullptr;
+		GetFieldInfoAttributesFn GetFieldInfoAttributesFptr = nullptr;
+#pragma endregion
+
+#pragma region PropertyInfo
+		GetPropertyInfoNameFn GetPropertyInfoNameFptr = nullptr;
+		GetPropertyInfoTypeFn GetPropertyInfoTypeFptr = nullptr;
+		GetPropertyInfoAttributesFn GetPropertyInfoAttributesFptr = nullptr;
+#pragma endregion
+
+#pragma region Attribute
+		GetAttributeFieldValueFn GetAttributeFieldValueFptr = nullptr;
+		GetAttributeTypeFn GetAttributeTypeFptr = nullptr;
 #pragma endregion
 
 		CreateObjectFn CreateObjectFptr = nullptr;

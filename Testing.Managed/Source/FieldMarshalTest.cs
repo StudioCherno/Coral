@@ -48,4 +48,10 @@ public class FieldMarshalTest
 		return new float[]{ 10.0f, 20.0f, 30.0f, 40.0f, 50.0f };
 	}
 
+	[Dummy(SomeValue = 1000.0f)]
+	public float AttributeFieldTest = 50.0f;
+
+	[Dummy(SomeValue = 10000.0f)]
+	public float AttributePropertyTest { get; private set; } = 50.0f;
+
 }
