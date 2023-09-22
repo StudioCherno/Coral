@@ -249,6 +249,7 @@ namespace Coral {
 		
 		s_ManagedFunctions.GetMethodInfoNameFptr = LoadCoralManagedFunctionPtr<GetMethodInfoNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetMethodInfoName"));
 		s_ManagedFunctions.GetMethodInfoReturnTypeFptr = LoadCoralManagedFunctionPtr<GetMethodInfoReturnTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetMethodInfoReturnType"));
+		s_ManagedFunctions.GetMethodInfoParameterTypesFptr = LoadCoralManagedFunctionPtr<GetMethodInfoParameterTypesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetMethodInfoParameterTypes"));
 
 		s_ManagedFunctions.SetInternalCallsFptr = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.Managed.Interop.InternalCallsManager, Coral.Managed"), CORAL_STR("SetInternalCalls"));
 		s_ManagedFunctions.CreateObjectFptr = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("CreateObject"));

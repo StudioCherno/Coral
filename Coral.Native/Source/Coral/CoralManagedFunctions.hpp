@@ -39,6 +39,7 @@ namespace Coral {
 #pragma region MethodInfo
 	using GetMethodInfoNameFn = NativeString(*)(const ManagedHandle*);
 	using GetMethodInfoReturnTypeFn = void(*)(const ManagedHandle*, TypeId*);
+	using GetMethodInfoParameterTypesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
 #pragma endregion
 	
 	using CreateObjectFn = ManagedObject(*)(NativeString, Bool32, const void**, int32_t);
@@ -83,6 +84,7 @@ namespace Coral {
 #pragma region MethodInfo
 		GetMethodInfoNameFn GetMethodInfoNameFptr = nullptr;
 		GetMethodInfoReturnTypeFn GetMethodInfoReturnTypeFptr = nullptr;
+		GetMethodInfoParameterTypesFn GetMethodInfoParameterTypesFptr = nullptr;
 #pragma endregion
 		
 		CreateObjectFn CreateObjectFptr = nullptr;

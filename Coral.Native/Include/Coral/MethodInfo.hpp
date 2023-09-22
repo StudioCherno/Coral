@@ -12,6 +12,7 @@ namespace Coral {
 		std::string GetName() const;
 		Type GetReturnType() const;
 
+		std::vector<Type> GetParameterTypes() const;
 
 	private:
 		ManagedHandle m_Handle = nullptr;

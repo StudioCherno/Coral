@@ -219,4 +219,34 @@ internal static class TypeInterface
 		}
 	}
 
+	[UnmanagedCallersOnly]
+	private static unsafe void GetMethodInfoParameterTypes(MethodInfo* InMethodInfo, Type* OutParameterTypes, int* OutParameterCount)
+	{
+		try
+		{
+			if (InMethodInfo == null)
+				return;
+
+			ReadOnlySpan<ParameterInfo> parameters = InMethodInfo->GetParameters();
+
+			if (parameters == null || parameters.Length == 0)
+			{
+				*OutParameterCount = 0;
+				return;
+			}
+
+			*OutParameterCount = parameters.Length;
+
+			if (OutParameterTypes == null)
+				return;
+
+			for (int i = 0; i < parameters.Length; i++)
+				OutParameterTypes[i] = parameters[i].ParameterType;
+		}
+		catch (Exception e)
+		{
+			ManagedHost.HandleException(e);
+		}
+	}
+
 }

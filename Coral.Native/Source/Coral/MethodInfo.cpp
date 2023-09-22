@@ -17,4 +17,21 @@ namespace Coral {
 		return returnType;
 	}
 
+	std::vector<Type> MethodInfo::GetParameterTypes() const
+	{
+		int32_t parameterCount;
+		s_ManagedFunctions.GetMethodInfoParameterTypesFptr(&m_Handle, nullptr, &parameterCount);
+		std::vector<TypeId> parameterTypes(parameterCount);
+		s_ManagedFunctions.GetMethodInfoParameterTypesFptr(&m_Handle, parameterTypes.data(), &parameterCount);
+
+		std::vector<Type> result(parameterTypes.size());
+		for (size_t i = 0; i < parameterTypes.size(); i++)
+		{
+			result[i].m_TypePtr = parameterTypes[i];
+			result[i].RetrieveName();
+		}
+
+		return result;
+	}
+
 }

@@ -449,6 +449,11 @@ int main()
 	{
 		auto type = methodInfo.GetReturnType();
 		std::cout << methodInfo.GetName() << ", Returns: " << type.GetFullName() << std::endl;
+		auto parameterTypes = methodInfo.GetParameterTypes();
+		for (const auto& paramType : parameterTypes)
+		{
+			std::cout << "\t" << paramType.GetFullName() << std::endl;
+		}
 	}
 
 	auto memberMethodTest = memberMethodTestType.CreateInstance();
