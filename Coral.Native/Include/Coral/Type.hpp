@@ -4,6 +4,7 @@
 #include "NativeString.hpp"
 #include "ManagedObject.hpp"
 #include "MethodInfo.hpp"
+#include "FieldInfo.hpp"
 
 namespace Coral {
 
@@ -21,6 +22,7 @@ namespace Coral {
 		bool IsTypeAssignableFrom(const Type& InOther);
 
 		std::vector<MethodInfo> GetMethods() const;
+		std::vector<FieldInfo> GetFields() const;
 
 		bool operator==(const Type& InOther) const;
 
@@ -61,6 +63,7 @@ namespace Coral {
 		friend class ManagedAssembly;
 		friend class AssemblyLoadContext;
 		friend class MethodInfo;
+		friend class FieldInfo;
 	};
 
 }

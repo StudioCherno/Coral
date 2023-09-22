@@ -33,6 +33,7 @@ namespace Coral {
 	using IsTypeAssignableToFn = Bool32(*)(const TypeId*, const TypeId*);
 	using IsTypeAssignableFromFn = Bool32(*)(const TypeId*, const TypeId*);
 	using GetTypeMethodsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
+	using GetTypeFieldsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 
 #pragma endregion
 
@@ -42,7 +43,13 @@ namespace Coral {
 	using GetMethodInfoParameterTypesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
 	using GetMethodInfoAccessibilityFn = TypeAccessibility(*)(const ManagedHandle*);
 #pragma endregion
-	
+
+#pragma region FieldInfo
+	using GetFieldInfoNameFn = NativeString(*)(const ManagedHandle*);
+	using GetFieldInfoTypeFn = void(*)(const ManagedHandle*, TypeId*);
+	using GetFieldInfoAccessibilityFn = TypeAccessibility(*)(const ManagedHandle*);
+#pragma endregion
+
 	using CreateObjectFn = ManagedObject(*)(NativeString, Bool32, const void**, int32_t);
 	using InvokeMethodFn = void(*)(void*, NativeString, const void**, int32_t);
 	using InvokeMethodRetFn = void(*)(void*, NativeString, const void**, int32_t, void*);
@@ -79,6 +86,7 @@ namespace Coral {
 		IsTypeAssignableToFn IsTypeAssignableToFptr = nullptr;
 		IsTypeAssignableFromFn IsTypeAssignableFromFptr = nullptr;
 		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
+		GetTypeFieldsFn GetTypeFieldsFptr = nullptr;
 
 #pragma endregion
 
@@ -89,6 +97,12 @@ namespace Coral {
 		GetMethodInfoAccessibilityFn GetMethodInfoAccessibilityFptr = nullptr;
 #pragma endregion
 		
+#pragma region FieldInfo
+		GetFieldInfoNameFn GetFieldInfoNameFptr = nullptr;
+		GetFieldInfoTypeFn GetFieldInfoTypeFptr = nullptr;
+		GetFieldInfoAccessibilityFn GetFieldInfoAccessibilityFptr = nullptr;
+#pragma endregion
+
 		CreateObjectFn CreateObjectFptr = nullptr;
 		CreateAssemblyLoadContextFn CreateAssemblyLoadContextFptr = nullptr;
 		InvokeMethodFn InvokeMethodFptr = nullptr;

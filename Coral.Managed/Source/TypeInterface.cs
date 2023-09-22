@@ -187,6 +187,37 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
+	private static unsafe void GetTypeFields(Type* InType, FieldInfo* InFieldArray, int* InFieldCount)
+	{
+		try
+		{
+			if (InType == null)
+				return;
+
+			ReadOnlySpan<FieldInfo> fields = InType->GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+
+			if (fields == null || fields.Length == 0)
+			{
+				*InFieldCount = 0;
+				return;
+			}
+
+			*InFieldCount = fields.Length;
+
+			if (InFieldArray == null)
+				return;
+
+			for (int i = 0; i < fields.Length; i++)
+				InFieldArray[i] = fields[i];
+		}
+		catch (Exception e)
+		{
+			ManagedHost.HandleException(e);
+		}
+	}
+
+	// TODO(Peter): Refactor this to GetMemberInfoName (should work for all types of members)
+	[UnmanagedCallersOnly]
 	private static unsafe NativeString GetMethodInfoName(MethodInfo* InMethodInfo)
 	{
 		try
@@ -288,6 +319,53 @@ internal static class TypeInterface
 		try
 		{
 			return GetTypeAccessibility(*InMethodInfo);
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+			return TypeAccessibility.Public;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe NativeString GetFieldInfoName(FieldInfo* InFieldInfo)
+	{
+		try
+		{
+			if (InFieldInfo == null)
+				return NativeString.Null();
+
+			return InFieldInfo->Name;
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+			return NativeString.Null();
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void GetFieldInfoType(FieldInfo* InFieldInfo, Type* OutFieldType)
+	{
+		try
+		{
+			if (InFieldInfo == null)
+				return;
+
+			*OutFieldType = InFieldInfo->FieldType;
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe TypeAccessibility GetFieldInfoAccessibility(FieldInfo* InFieldInfo)
+	{
+		try
+		{
+			return GetTypeAccessibility(*InFieldInfo);
 		}
 		catch (Exception ex)
 		{

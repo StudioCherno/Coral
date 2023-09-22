@@ -3,8 +3,6 @@
 #include "Core.hpp"
 #include "Assembly.hpp"
 #include "ManagedObject.hpp"
-#include "ManagedField.hpp"
-#include "MethodInfo.hpp"
 
 #include <functional>
 
@@ -33,9 +31,6 @@ namespace Coral {
 		AssemblyLoadContext CreateAssemblyLoadContext(std::string_view InName);
 		void UnloadAssemblyLoadContext(AssemblyLoadContext& InLoadContext);
 		
-		/*const std::vector<ManagedField>& GetFields(const NativeString& InTypeName);
-		const std::vector<MethodInfo>& GetMethods(const NativeString& InTypeName);*/
-		
 	private:
 		void LoadHostFXR() const;
 		bool InitializeCoralManaged();
@@ -54,9 +49,6 @@ namespace Coral {
 		std::filesystem::path m_CoralManagedAssemblyPath;
 		void* m_HostFXRContext = nullptr;
 		bool m_Initialized = false;
-
-		std::unordered_map<size_t, std::vector<ManagedField>> m_Fields;
-		std::unordered_map<size_t, std::vector<MethodInfo>> m_Methods;
 
 		friend class AssemblyLoadContext;
 	};

@@ -442,6 +442,13 @@ int main()
 
 	auto fieldTestType = assembly.GetType("Testing.Managed.FieldMarshalTest");
 	auto fieldTestObject = fieldTestType.CreateInstance();
+
+	for (auto fieldInfo : fieldTestType.GetFields())
+	{
+		auto type = fieldInfo.GetType();
+		auto accessibility = fieldInfo.GetAccessibility();
+		std::cout << fieldInfo.GetName() << " is " << type.GetFullName() << std::endl;
+	}
 	
 	auto memberMethodTestType = assembly.GetType("Testing.Managed.MemberMethodTest");
 
