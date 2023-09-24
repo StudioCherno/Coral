@@ -26,8 +26,8 @@ namespace Coral {
 		void AddInternalCall(std::string_view InClassName, std::string_view InVariableName, void* InFunctionPtr);
 		void UploadInternalCalls();
 
-		const Type& GetType(std::string_view InClassName) const;
-		const std::unordered_map<std::string, Type>& GetTypes() const;
+		Type& GetType(std::string_view InClassName) const;
+		const std::vector<Type*>& GetTypes() const;
 		
 	private:
 		HostInstance* m_Host = nullptr;
@@ -42,7 +42,8 @@ namespace Coral {
 	#endif
 		
 		std::vector<InternalCall> m_InternalCalls;
-		std::unordered_map<std::string, Type> m_Types;
+
+		std::vector<Type*> m_Types;
 
 		friend class HostInstance;
 		friend class AssemblyLoadContext;

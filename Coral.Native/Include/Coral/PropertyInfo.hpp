@@ -11,12 +11,13 @@ namespace Coral {
 	{
 	public:
 		std::string GetName() const;
-		Type GetType() const;
+		Type& GetType();
 
 		std::vector<Attribute> GetAttributes() const;
 
 	private:
 		ManagedHandle m_Handle = nullptr;
+		Type* m_Type = nullptr;
 
 		friend class Type;
 	};

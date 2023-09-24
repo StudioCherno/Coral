@@ -17,7 +17,7 @@ namespace Coral {
 		std::string GetFullName() const;
 		std::string GetAssemblyQualifiedName() const;
 
-		Type GetBaseType() const;
+		Type& GetBaseType();
 
 		bool IsTypeAssignableTo(const Type& InOther);
 		bool IsTypeAssignableFrom(const Type& InOther);
@@ -59,6 +59,8 @@ namespace Coral {
 
 	private:
 		TypeId m_TypePtr = nullptr;
+		Type* m_BaseType = nullptr;
+
 		std::string m_Name;
 		std::string m_Namespace;
 

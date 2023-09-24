@@ -4,6 +4,7 @@
 #include "Verify.hpp"
 #include "StringHelper.hpp"
 #include "NativeArray.hpp"
+#include "TypeCache.hpp"
 
 namespace Coral {
 
@@ -16,7 +17,7 @@ namespace Coral {
 		assemblyQualifiedName += InVariableName;
 		assemblyQualifiedName += ", ";
 		assemblyQualifiedName += m_Name;
-		
+
 		const auto& name = m_InternalCallNameStorage.emplace_back(StringHelper::ConvertUtf8ToWide(assemblyQualifiedName));
 
 		InternalCall internalCall;
@@ -30,14 +31,14 @@ namespace Coral {
 		s_ManagedFunctions.SetInternalCallsFptr(m_InternalCalls.data(), static_cast<int32_t>(m_InternalCalls.size()));
 	}
 
-	const Type& ManagedAssembly::GetType(std::string_view InClassName) const
+	Type& ManagedAssembly::GetType(std::string_view InClassName) const
 	{
 		static Type s_NullType;
-		std::string name(InClassName);
-		return m_Types.contains(name) ? m_Types.at(name) : s_NullType;
+		Type* type = TypeCache::Get().GetTypeByName(InClassName);
+		return type != nullptr ? *type : s_NullType;
 	}
 
-	const std::unordered_map<std::string, Type>& ManagedAssembly::GetTypes() const
+	const std::vector<Type*>& ManagedAssembly::GetTypes() const
 	{
 		return m_Types;
 	}
@@ -65,7 +66,7 @@ namespace Coral {
 				Type type;
 				type.m_TypePtr = typeId;
 				type.RetrieveName();
-				result.m_Types[type.GetFullName()] = type;
+				result.m_Types.push_back(TypeCache::Get().CacheType(std::move(type)));
 			}
 		}
 

@@ -2,6 +2,7 @@
 #include "Type.hpp"
 #include "Attribute.hpp"
 #include "CoralManagedFunctions.hpp"
+#include "TypeCache.hpp"
 
 namespace Coral {
 
@@ -10,12 +11,17 @@ namespace Coral {
 		return s_ManagedFunctions.GetFieldInfoNameFptr(&m_Handle).ToString();
 	}
 
-	Type FieldInfo::GetType() const
+	Type& FieldInfo::GetType()
 	{
-		Type fieldType;
-		s_ManagedFunctions.GetFieldInfoTypeFptr(&m_Handle, &fieldType.m_TypePtr);
-		fieldType.RetrieveName();
-		return fieldType;
+		if (!m_Type)
+		{
+			Type fieldType;
+			s_ManagedFunctions.GetFieldInfoTypeFptr(&m_Handle, &fieldType.m_TypePtr);
+			fieldType.RetrieveName();
+			m_Type = TypeCache::Get().CacheType(std::move(fieldType));
+		}
+
+		return *m_Type;
 	}
 
 	TypeAccessibility FieldInfo::GetAccessibility() const

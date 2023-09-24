@@ -9,7 +9,7 @@ namespace Coral {
 	class Attribute
 	{
 	public:
-		Type GetType() const;
+		Type& GetType();
 
 		template<typename TReturn>
 		TReturn GetFieldValue(std::string_view InFieldName)
@@ -24,6 +24,7 @@ namespace Coral {
 
 	private:
 		ManagedHandle m_Handle = nullptr;
+		Type* m_Type = nullptr;
 
 		friend class MethodInfo;
 		friend class FieldInfo;

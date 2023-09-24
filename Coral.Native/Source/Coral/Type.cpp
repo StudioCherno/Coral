@@ -1,5 +1,6 @@
 #include "Type.hpp"
 #include "CoralManagedFunctions.hpp"
+#include "TypeCache.hpp"
 
 namespace Coral {
 
@@ -16,12 +17,17 @@ namespace Coral {
 		return s_ManagedFunctions.GetAssemblyQualifiedNameFptr(&m_TypePtr).ToString();
 	}
 
-	Type Type::GetBaseType() const
+	Type& Type::GetBaseType()
 	{
-		Type baseType;
-		s_ManagedFunctions.GetBaseTypeFptr(&m_TypePtr, &baseType.m_TypePtr);
-		baseType.RetrieveName();
-		return baseType;
+		if (!m_BaseType)
+		{
+			Type baseType;
+			s_ManagedFunctions.GetBaseTypeFptr(&m_TypePtr, &baseType.m_TypePtr);
+			baseType.RetrieveName();
+			m_BaseType = TypeCache::Get().CacheType(std::move(baseType));
+		}
+
+		return *m_BaseType;
 	}
 
 	bool Type::IsTypeAssignableTo(const Type& InOther)

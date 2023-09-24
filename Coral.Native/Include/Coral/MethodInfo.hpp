@@ -12,8 +12,8 @@ namespace Coral {
 	public:
 		std::string GetName() const;
 
-		Type GetReturnType() const;
-		std::vector<Type> GetParameterTypes() const;
+		Type& GetReturnType();
+		const std::vector<Type*>& GetParameterTypes();
 
 		TypeAccessibility GetAccessibility() const;
 
@@ -21,6 +21,8 @@ namespace Coral {
 
 	private:
 		ManagedHandle m_Handle = nullptr;
+		Type* m_ReturnType = nullptr;
+		std::vector<Type*> m_ParameterTypes;
 
 		friend class Type;
 	};

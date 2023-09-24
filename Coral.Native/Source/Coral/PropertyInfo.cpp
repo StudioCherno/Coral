@@ -2,6 +2,7 @@
 #include "Type.hpp"
 #include "Attribute.hpp"
 #include "CoralManagedFunctions.hpp"
+#include "TypeCache.hpp"
 
 namespace Coral {
 
@@ -10,12 +11,17 @@ namespace Coral {
 		return s_ManagedFunctions.GetPropertyInfoNameFptr(&m_Handle).ToString();
 	}
 
-	Type PropertyInfo::GetType() const
+	Type& PropertyInfo::GetType()
 	{
-		Type propertyType;
-		s_ManagedFunctions.GetPropertyInfoTypeFptr(&m_Handle, &propertyType.m_TypePtr);
-		propertyType.RetrieveName();
-		return propertyType;
+		if (!m_Type)
+		{
+			Type propertyType;
+			s_ManagedFunctions.GetPropertyInfoTypeFptr(&m_Handle, &propertyType.m_TypePtr);
+			propertyType.RetrieveName();
+			m_Type = TypeCache::Get().CacheType(std::move(propertyType));
+		}
+
+		return *m_Type;
 	}
 
 	std::vector<Attribute> PropertyInfo::GetAttributes() const

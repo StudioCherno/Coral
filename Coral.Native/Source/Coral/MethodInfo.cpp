@@ -2,6 +2,7 @@
 #include "CoralManagedFunctions.hpp"
 #include "Type.hpp"
 #include "Attribute.hpp"
+#include "TypeCache.hpp"
 
 namespace Coral {
 
@@ -10,29 +11,40 @@ namespace Coral {
 		return s_ManagedFunctions.GetMethodInfoNameFptr(&m_Handle).ToString();
 	}
 
-	Type MethodInfo::GetReturnType() const
+	Type& MethodInfo::GetReturnType()
 	{
-		Type returnType;
-		s_ManagedFunctions.GetMethodInfoReturnTypeFptr(&m_Handle, &returnType.m_TypePtr);
-		returnType.RetrieveName();
-		return returnType;
-	}
-
-	std::vector<Type> MethodInfo::GetParameterTypes() const
-	{
-		int32_t parameterCount;
-		s_ManagedFunctions.GetMethodInfoParameterTypesFptr(&m_Handle, nullptr, &parameterCount);
-		std::vector<TypeId> parameterTypes(parameterCount);
-		s_ManagedFunctions.GetMethodInfoParameterTypesFptr(&m_Handle, parameterTypes.data(), &parameterCount);
-
-		std::vector<Type> result(parameterTypes.size());
-		for (size_t i = 0; i < parameterTypes.size(); i++)
+		if (!m_ReturnType)
 		{
-			result[i].m_TypePtr = parameterTypes[i];
-			result[i].RetrieveName();
+			Type returnType;
+			s_ManagedFunctions.GetMethodInfoReturnTypeFptr(&m_Handle, &returnType.m_TypePtr);
+			returnType.RetrieveName();
+			m_ReturnType = TypeCache::Get().CacheType(std::move(returnType));
 		}
 
-		return result;
+		return *m_ReturnType;
+	}
+
+	const std::vector<Type*>& MethodInfo::GetParameterTypes()
+	{
+		if (m_ParameterTypes.empty())
+		{
+			int32_t parameterCount;
+			s_ManagedFunctions.GetMethodInfoParameterTypesFptr(&m_Handle, nullptr, &parameterCount);
+			std::vector<TypeId> parameterTypes(parameterCount);
+			s_ManagedFunctions.GetMethodInfoParameterTypesFptr(&m_Handle, parameterTypes.data(), &parameterCount);
+
+			m_ParameterTypes.resize(parameterTypes.size());
+
+			for (size_t i = 0; i < parameterTypes.size(); i++)
+			{
+				Type type;
+				type.m_TypePtr = parameterTypes[i];
+				type.RetrieveName();
+				m_ParameterTypes[i] = TypeCache::Get().CacheType(std::move(type));
+			}
+		}
+
+		return m_ParameterTypes;
 	}
 
 	TypeAccessibility MethodInfo::GetAccessibility() const

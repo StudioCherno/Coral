@@ -11,7 +11,7 @@ namespace Coral {
 	{
 	public:
 		std::string GetName() const;
-		Type GetType() const;
+		Type& GetType();
 
 		TypeAccessibility GetAccessibility() const;
 
@@ -19,6 +19,7 @@ namespace Coral {
 
 	private:
 		ManagedHandle m_Handle = nullptr;
+		Type* m_Type = nullptr;
 
 		friend class Type;
 	};
