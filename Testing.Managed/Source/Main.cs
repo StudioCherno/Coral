@@ -26,11 +26,6 @@ namespace Testing.Managed {
 		internal static unsafe delegate*<Type, Type> TypeMarshalIcall;
 		internal static unsafe delegate*<NativeArray<float>> FloatArrayIcall;
 
-		~Tests()
-		{
-			Console.WriteLine("AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHTests is dying");
-		}
-
 		internal struct DummyStruct
 		{
 			public int X;

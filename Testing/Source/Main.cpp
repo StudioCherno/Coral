@@ -516,6 +516,8 @@ int main()
 
 	Coral::GC::Collect();
 
+	std::cin.get();
+
 	loadContext = hostInstance.CreateAssemblyLoadContext("Fucku");
 	auto& newAssembly = loadContext.LoadAssembly(assemblyPath.string());
 
