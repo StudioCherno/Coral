@@ -30,6 +30,8 @@ namespace Coral {
 
 		operator bool() const { return m_TypePtr != nullptr; }
 
+		TypeId GetTypeId() const { return m_TypePtr; }
+
 	public:
 		template<typename... TArgs>
 		ManagedObject CreateInstance(TArgs&&... InArguments)
