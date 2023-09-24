@@ -122,7 +122,6 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 		return Coral::NativeString::ToUTF8(str) == "Hello, World!";
 	});
 	
-	// TODO(Peter): Struct Marshalling
 	RegisterTest("DummyStructTest", [InObject]() mutable
 	{
 		DummyStruct value =

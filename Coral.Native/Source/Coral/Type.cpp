@@ -5,6 +5,9 @@ namespace Coral {
 
 	std::string Type::GetFullName() const
 	{
+		if (m_Namespace.empty())
+			return m_Name;
+
 		return m_Namespace + "." + m_Name;
 	}
 
