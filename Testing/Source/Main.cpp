@@ -36,6 +36,10 @@ Coral::NativeString StringMarshalIcall(Coral::NativeString InStr)
 {
 	return InStr;
 }
+void StringMarshalIcall2(Coral::NativeString InStr)
+{
+	std::cout << InStr.ToString() << std::endl;
+}
 Coral::TypeId TypeMarshalIcall(Coral::TypeId InTypeId)
 {
 	return InTypeId;
@@ -84,6 +88,7 @@ void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "BoolMarshalIcall", &BoolMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "IntPtrMarshalIcall", &IntPtrMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "StringMarshalIcall", &StringMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "StringMarshalIcall2", &StringMarshalIcall2);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructMarshalIcall", &DummyStructMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructPtrMarshalIcall", &DummyStructPtrMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", &TypeMarshalIcall);
@@ -508,7 +513,20 @@ int main()
 	fieldTestObject.Destroy();
 
 	hostInstance.UnloadAssemblyLoadContext(loadContext);
+
 	Coral::GC::Collect();
+
+	loadContext = hostInstance.CreateAssemblyLoadContext("Fucku");
+	auto& newAssembly = loadContext.LoadAssembly(assemblyPath.string());
+
+	RegisterTestInternalCalls(newAssembly);
+	newAssembly.UploadInternalCalls();
+
+	auto& testsType2 = newAssembly.GetType("Testing.Managed.Tests");
+
+	Coral::ManagedObject testsInstance2 = testsType2.CreateInstance();
+	testsInstance2.InvokeMethod("RunManagedTests");
+	testsInstance2.Destroy();
 
 	return 0;
 }

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Reflection;
+using System.Runtime.Loader;
 
 namespace Coral.Managed.Interop;
 
