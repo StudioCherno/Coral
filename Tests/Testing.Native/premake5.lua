@@ -1,6 +1,6 @@
 local CoralDotNetPath = os.getenv("CORAL_DOTNET_PATH")
 
-project "Testing"
+project "Testing.Native"
     language "C++"
     cppdialect "C++20"
     kind "ConsoleApp"
@@ -14,7 +14,7 @@ project "Testing"
         "Source/**.hpp",
     }
 
-    externalincludedirs { "../Coral.Native/Include/" }
+    externalincludedirs { "../../Coral.Native/Include/" }
 
     libdirs { "%{wks.location}/NetCore/7.0.7/" }
 
@@ -28,6 +28,7 @@ project "Testing"
     postbuildcommands {
         '{ECHO} Copying "%{wks.location}/NetCore/7.0.7/nethost.dll" to "%{cfg.targetdir}"',
         '{COPYFILE} "%{wks.location}/NetCore/7.0.7/nethost.dll" "%{cfg.targetdir}"',
+        '{COPYFILE} "%{wks.location}/Coral.Managed/Coral.Managed.runtimeconfig.json" "%{cfg.targetdir}"',
     }
 
     filter { "configurations:Debug" }

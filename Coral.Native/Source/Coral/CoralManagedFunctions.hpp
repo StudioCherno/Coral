@@ -31,6 +31,7 @@ namespace Coral {
 	using GetTypeMethodsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 	using GetTypeFieldsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 	using GetTypePropertiesFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
+	using GetTypeAttributesFn = void (*)(const ManagedHandle*, TypeId*, int32_t*);
 
 #pragma endregion
 
@@ -94,6 +95,7 @@ namespace Coral {
 		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
 		GetTypeFieldsFn GetTypeFieldsFptr = nullptr;
 		GetTypePropertiesFn GetTypePropertiesFptr = nullptr;
+		GetTypeAttributesFn GetTypeAttributesFptr = nullptr;
 
 #pragma endregion
 

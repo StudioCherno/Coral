@@ -26,6 +26,7 @@ namespace Coral {
 		ManagedHandle m_Handle = nullptr;
 		Type* m_Type = nullptr;
 
+		friend class Type;
 		friend class MethodInfo;
 		friend class FieldInfo;
 		friend class PropertyInfo;

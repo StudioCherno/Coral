@@ -1,6 +1,7 @@
 #include "Type.hpp"
 #include "CoralManagedFunctions.hpp"
 #include "TypeCache.hpp"
+#include "Attribute.hpp"
 
 namespace Coral {
 
@@ -80,6 +81,20 @@ namespace Coral {
 			properties[i].m_Handle = handles[i];
 
 		return properties;
+	}
+
+	std::vector<Attribute> Type::GetAttributes() const
+	{
+		int32_t attributeCount;
+		s_ManagedFunctions.GetTypeAttributesFptr(&m_TypePtr, nullptr, &attributeCount);
+		std::vector<ManagedHandle> attributeHandles(attributeCount);
+		s_ManagedFunctions.GetTypeAttributesFptr(&m_TypePtr, attributeHandles.data(), &attributeCount);
+
+		std::vector<Attribute> result(attributeHandles.size());
+		for (size_t i = 0; i < attributeHandles.size(); i++)
+			result[i].m_Handle = attributeHandles[i];
+
+		return result;
 	}
 
 	bool Type::operator==(const Type& InOther) const

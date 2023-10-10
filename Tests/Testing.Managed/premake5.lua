@@ -1,4 +1,4 @@
-include "../Premake/CSExtensions.lua"
+include "../../Premake/CSExtensions.lua"
 
 project "Testing.Managed"
     language "C#"

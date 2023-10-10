@@ -425,7 +425,7 @@ void RunTests()
 	std::cout << "[NativeTest]: Done. " << passedTests << " passed, " << tests.size() - passedTests  << " failed.";
 }
 
-int main()
+int main(int argc, char** argv)
 {
 #ifdef CORAL_TESTING_DEBUG
 	const char* ConfigName = "Debug";
@@ -433,10 +433,11 @@ int main()
 	const char* ConfigName = "Release";
 #endif
 
-	auto coralDir = (std::filesystem::current_path().parent_path() / "Build" / ConfigName).string();
+	auto exeDir = std::filesystem::path(argv[0]).parent_path();
+	auto coralDir = exeDir.string();
 	Coral::HostSettings settings =
 	{
-		.CoralDirectory = coralDir.c_str(),
+		.CoralDirectory = coralDir,
 		.ExceptionCallback = ExceptionCallback
 	};
 	Coral::HostInstance hostInstance;
@@ -444,8 +445,8 @@ int main()
 
 	auto loadContext = hostInstance.CreateAssemblyLoadContext("TestContext");
 
-	auto assemblyPath = std::filesystem::path("F:/Coral/Build") / ConfigName / "Testing.Managed.dll";
-	auto& assembly = loadContext.LoadAssembly(assemblyPath.string().c_str());
+	auto assemblyPath = exeDir / "Testing.Managed.dll";
+	auto& assembly = loadContext.LoadAssembly(assemblyPath.string());
 
 	RegisterTestInternalCalls(assembly);
 	assembly.UploadInternalCalls();

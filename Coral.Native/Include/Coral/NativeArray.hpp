@@ -23,6 +23,13 @@ namespace Coral {
 			memcpy(m_Ptr, InValues.data(), InValues.size() * sizeof(TValue));
 		}
 
+		NativeArray(std::initializer_list<TValue> InValues)
+		{
+			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
+			m_Length = static_cast<int32_t>(InValues.size());
+			memcpy(m_Ptr, InValues.begin(), InValues.size() * sizeof(TValue));
+		}
+
 		NativeArray(const NativeArray& InOther)
 		{
 			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InOther.m_Length * sizeof(TValue)));

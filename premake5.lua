@@ -4,9 +4,17 @@ workspace "Coral"
     targetdir "%{wks.location}/Build/%{cfg.buildcfg}"
 	objdir "%{wks.location}/Intermediates/%{cfg.buildcfg}"
 
-    startproject "Testing"
+    startproject "Example.Native"
 
 include "Coral.Native"
 include "Coral.Managed"
-include "Testing"
-include "Testing.Managed"
+
+group "Tests"
+	include "Tests/Testing.Native"
+	include "Tests/Testing.Managed"
+group ""
+
+group "Example"
+	include "Example/Example.Native"
+	include "Example/Example.Managed"
+group ""

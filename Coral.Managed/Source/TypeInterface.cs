@@ -316,6 +316,36 @@ internal static class TypeInterface
 		}
 	}
 
+	[UnmanagedCallersOnly]
+	private static unsafe void GetTypeAttributes(Type* InType, Attribute* OutAttributes, int* OutAttributesCount)
+	{
+		try
+		{
+			if (InType == null)
+				return;
+
+			var attributes = InType->GetCustomAttributes().ToImmutableArray();
+
+			if (attributes.Length == 0)
+			{
+				*OutAttributesCount = 0;
+				return;
+			}
+
+			*OutAttributesCount = attributes.Length;
+
+			if (OutAttributes == null)
+				return;
+
+			for (int i = 0; i < attributes.Length; i++)
+				OutAttributes[i] = attributes[i];
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+		}
+	}
+
 	// TODO(Peter): Refactor this to GetMemberInfoName (should work for all types of members)
 	[UnmanagedCallersOnly]
 	private static unsafe NativeString GetMethodInfoName(MethodInfo* InMethodInfo)

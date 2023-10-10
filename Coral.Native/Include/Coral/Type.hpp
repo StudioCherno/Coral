@@ -26,6 +26,8 @@ namespace Coral {
 		std::vector<FieldInfo> GetFields() const;
 		std::vector<PropertyInfo> GetProperties() const;
 
+		std::vector<Attribute> GetAttributes() const;
+
 		bool operator==(const Type& InOther) const;
 
 		operator bool() const { return m_TypePtr != nullptr; }
