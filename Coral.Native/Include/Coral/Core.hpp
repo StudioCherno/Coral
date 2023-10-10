@@ -30,7 +30,16 @@
 
 namespace Coral {
 
-	using Bool32 = uint32_t;
+	struct Bool32
+	{
+		uint32_t Value;
+
+		Bool32() = default;
+		Bool32(bool InValue)
+		    : Value(InValue ? 1 : 0) {}
+
+		operator bool() const { return Value > 0; }
+	};
 
 	enum class TypeAccessibility
 	{

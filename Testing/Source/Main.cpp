@@ -150,6 +150,16 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 		auto* result = InObject.InvokeMethod<DummyStruct*, DummyStruct*>("DummyStructPtrTest", &value);
 		return result->X == 20 && result->Y - 20.0f < 0.001f && result->Z == 20;
 	});
+
+	RegisterTest("OverloadTest", [InObject]() mutable
+	{
+		return InObject.InvokeMethod<int32_t, int32_t>("Int32 OverloadTest(Int32)", 50) == 1050;
+	});
+
+	RegisterTest("OverloadTest", [InObject]() mutable
+	{
+		return InObject.InvokeMethod<float, float>("OverloadTest", 5) == 15.0f;
+	});
 }
 
 void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject InObject)

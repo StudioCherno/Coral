@@ -106,10 +106,10 @@ namespace Coral {
 		m_Namespace = fullName.substr(0, namespaceEnd);
 	}
 
-	ManagedObject Type::CreateInstanceInternal(const void** InParameters, size_t InLength)
+	ManagedObject Type::CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength)
 	{
 		auto name = NativeString::FromUTF8(GetAssemblyQualifiedName());
-		auto result = s_ManagedFunctions.CreateObjectFptr(name, false, InParameters, static_cast<int32_t>(InLength));
+		auto result = s_ManagedFunctions.CreateObjectFptr(name, false, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 		result.m_Type = this;
 		return result;
 	}

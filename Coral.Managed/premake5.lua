@@ -22,4 +22,3 @@ project "Coral.Managed"
     files {
         "Source/**.cs"
     }
-

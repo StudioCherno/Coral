@@ -6,6 +6,27 @@ using System.Runtime.InteropServices;
 
 namespace Coral.Managed;
 
+internal enum ManagedType
+{
+	Unknown,
+
+	SByte,
+	Byte,
+	Short,
+	UShort,
+	Int,
+	UInt,
+	Long,
+	ULong,
+
+	Float,
+	Double,
+
+	Bool,
+
+	Pointer
+};
+
 internal static class ManagedObject
 {
 	private struct ObjectData
@@ -13,9 +34,9 @@ internal static class ManagedObject
 		public IntPtr Handle;
 		public NativeString FullName;
 	}
-	
+
 	[UnmanagedCallersOnly]
-	private static unsafe ObjectData CreateObject(NativeString InTypeName, Bool32 InWeakRef, IntPtr InParameters, int InParameterCount)
+	private static unsafe ObjectData CreateObject(NativeString InTypeName, Bool32 InWeakRef, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
 	{
 		try
 		{
@@ -27,19 +48,13 @@ internal static class ManagedObject
 			}
 
 			ConstructorInfo? constructor = null;
-			
+
 			var currentType = type;
 			while (currentType != null)
 			{
 				ReadOnlySpan<ConstructorInfo> constructors = currentType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-				foreach (var constructorInfo in constructors)
-				{
-					if (constructorInfo.GetParameters().Length != InParameterCount)
-						continue;
-
-					constructor = constructorInfo;
-					break;
-				}
+				
+				constructor = TypeInterface.FindSuitableMethod(".ctor", InParameterTypes, InParameterCount, constructors);
 
 				if (constructor != null)
 					break;
@@ -48,9 +63,7 @@ internal static class ManagedObject
 			}
 
 			if (constructor == null)
-			{
 				throw new MissingMethodException($"No suitable constructor found for type {type}");
-			}
 
 			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, constructor);
 
@@ -99,7 +112,7 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static void InvokeMethod(IntPtr InObjectHandle, NativeString InMethodName, IntPtr InParameters, int InParameterCount)
+	private static unsafe void InvokeMethod(IntPtr InObjectHandle, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
 	{
 		try
 		{
@@ -114,16 +127,8 @@ internal static class ManagedObject
 
 			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods();
 
-			MethodInfo? methodInfo = null;
-			foreach (var mi in methods)
-			{
-				// TODO(Peter): Check types
-				if (mi.Name != InMethodName || mi.GetParameters().Length != InParameterCount)
-					continue;
-
-				methodInfo = mi;
-				break;
-			}
+			// NOTE(Peter): Consider caching this if it becomes to performance heavy
+			MethodInfo? methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
 
 			if (methodInfo == null)
 			{
@@ -141,7 +146,7 @@ internal static class ManagedObject
 	}
 	
 	[UnmanagedCallersOnly]
-	private static void InvokeMethodRet(IntPtr InObjectHandle, NativeString InMethodName, IntPtr InParameters, int InParameterCount, IntPtr InResultStorage)
+	private static unsafe void InvokeMethodRet(IntPtr InObjectHandle, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
 	{
 		try
 		{
@@ -156,15 +161,8 @@ internal static class ManagedObject
 
 			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods();
 
-			MethodInfo? methodInfo = null;
-			foreach (var mi in methods)
-			{
-				if (mi.Name != InMethodName || mi.GetParameters().Length != InParameterCount)
-					continue;
-				
-				methodInfo = mi;
-				break;
-			}
+			// NOTE(Peter): Consider caching this if it becomes to performance heavy
+			MethodInfo? methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
 
 			if (methodInfo == null)
 			{

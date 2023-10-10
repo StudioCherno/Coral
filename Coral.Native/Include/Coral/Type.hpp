@@ -43,12 +43,13 @@ namespace Coral {
 			if constexpr (argumentCount > 0)
 			{
 				const void* argumentsArr[argumentCount];
-				AddToArray<TArgs...>(argumentsArr, std::forward<TArgs>(InArguments)..., std::make_index_sequence<argumentCount> {});
-				result = CreateInstanceInternal(argumentsArr, argumentCount);
+				ManagedType argumentTypes[argumentCount];
+				AddToArray<TArgs...>(argumentsArr, argumentTypes, std::forward<TArgs>(InArguments)..., std::make_index_sequence<argumentCount> {});
+				result = CreateInstanceInternal(argumentsArr, argumentTypes, argumentCount);
 			}
 			else
 			{
-				result = CreateInstanceInternal(nullptr, 0);
+				result = CreateInstanceInternal(nullptr, nullptr, 0);
 			}
 
 			return result;
@@ -57,7 +58,7 @@ namespace Coral {
 	private:
 		void RetrieveName();
 
-		ManagedObject CreateInstanceInternal(const void** InParameters, size_t InLength);
+		ManagedObject CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength);
 
 	private:
 		TypeId m_TypePtr = nullptr;

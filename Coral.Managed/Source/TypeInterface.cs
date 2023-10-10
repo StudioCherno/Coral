@@ -1,6 +1,7 @@
 ﻿using Coral.Managed.Interop;
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -23,6 +24,74 @@ internal static class TypeInterface
 	internal static object? CreateInstance(Type InType, params object?[]? InArguments)
 	{
 		return InType.Assembly.CreateInstance(InType.FullName ?? string.Empty, false, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, InArguments!, null, null);
+	}
+
+	private static Dictionary<Type, ManagedType> s_TypeConverters = new()
+	{
+		{ typeof(sbyte), ManagedType.SByte },
+		{ typeof(byte), ManagedType.Byte },
+		{ typeof(short), ManagedType.Short },
+		{ typeof(ushort), ManagedType.UShort },
+		{ typeof(int), ManagedType.Int },
+		{ typeof(uint), ManagedType.UInt },
+		{ typeof(long), ManagedType.Long },
+		{ typeof(ulong), ManagedType.ULong },
+		{ typeof(float), ManagedType.Float },
+		{ typeof(double), ManagedType.Double },
+		{ typeof(bool), ManagedType.Bool },
+		{ typeof(Bool32), ManagedType.Bool },
+	};
+
+	internal static unsafe T? FindSuitableMethod<T>(string InMethodName, ManagedType* InParameterTypes, int InParameterCount, ReadOnlySpan<T> InMethods) where T : MethodBase
+	{
+		T? result = null;
+
+		foreach (var methodInfo in InMethods)
+		{
+			var methodParams = methodInfo.GetParameters();
+
+			if (methodParams.Length != InParameterCount)
+				continue;
+
+			// Check if the method name matches the signature of methodInfo, if so we ignore the automatic type checking
+			if (InMethodName == methodInfo.ToString())
+			{
+				result = methodInfo;
+				break;
+			}
+
+			if (methodInfo.Name != InMethodName)
+				continue;
+
+			int matchingTypes = 0;
+
+			for (int i = 0; i < methodParams.Length; i++)
+			{
+				ManagedType paramType;
+
+				if (methodParams[i].ParameterType.IsPointer || methodParams[i].ParameterType == typeof(IntPtr))
+				{
+					paramType = ManagedType.Pointer;
+				}
+				else if (!s_TypeConverters.TryGetValue(methodParams[i].ParameterType, out paramType))
+				{
+					paramType = ManagedType.Unknown;
+				}
+
+				if (paramType == InParameterTypes[i])
+				{
+					matchingTypes++;
+				}
+			}
+
+			if (matchingTypes == InParameterCount)
+			{
+				result = methodInfo;
+				break;
+			}
+		}
+
+		return result;
 	}
 
 	[UnmanagedCallersOnly]
