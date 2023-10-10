@@ -156,7 +156,7 @@ public static class Marshalling
 				var elements = Marshal.ReadIntPtr(InValue, 0);
 				var elementCount = Marshal.ReadInt32(InValue, Marshal.SizeOf<IntPtr>());
 				var genericType = typeof(NativeArray<>).MakeGenericType(InType.GetGenericArguments().First());
-				return TypeHelper.CreateInstance(genericType, elements, elementCount);
+				return TypeInterface.CreateInstance(genericType, elements, elementCount);
 			}
 		}
 

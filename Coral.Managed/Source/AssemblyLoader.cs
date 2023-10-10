@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
@@ -42,16 +43,21 @@ public static class AssemblyLoader
 	{
 		foreach (var assembly in s_CoralAssemblyLoadContext!.Assemblies)
 		{
-			int assemblyId = assembly.GetName().FullName.GetHashCode();
+			int assemblyId = assembly.GetName().Name!.GetHashCode();
 			s_AssemblyCache.Add(assemblyId, assembly);
 		}
+	}
+
+	internal static bool TryGetAssembly(int InAssemblyId, out Assembly? OutAssembly)
+	{
+		return s_AssemblyCache.TryGetValue(InAssemblyId, out OutAssembly);
 	}
 
 	internal static Assembly? ResolveAssembly(AssemblyLoadContext? InAssemblyLoadContext, AssemblyName InAssemblyName)
 	{
 		try
 		{
-			int assemblyId = InAssemblyName.FullName.GetHashCode();
+			int assemblyId = InAssemblyName.Name!.GetHashCode();
 			
 			if (s_AssemblyCache.TryGetValue(assemblyId, out var cachedAssembly))
 			{
@@ -64,7 +70,7 @@ public static class AssemblyLoader
 				{
 					if (assembly.GetName().Name != InAssemblyName.Name)
 						continue;
-					
+
 					s_AssemblyCache.Add(assemblyId, assembly);
 					return assembly;
 				}
@@ -93,7 +99,7 @@ public static class AssemblyLoader
 			foreach (var assembly in ctx.Assemblies)
 			{
 				var assemblyName = assembly.GetName();
-				int assemblyId = assemblyName.FullName.GetHashCode();
+				int assemblyId = assemblyName.Name!.GetHashCode();
 				s_AssemblyCache.Remove(assemblyId);
 			}
 		};
@@ -118,8 +124,8 @@ public static class AssemblyLoader
 			return;
 		}
 
-		alc.Unload();
 		s_AssemblyContexts.Remove(InContextId);
+		alc.Unload();
 	}
 
 	[UnmanagedCallersOnly]
@@ -162,8 +168,9 @@ public static class AssemblyLoader
 				assembly = alc.LoadFromStream(stream);
 			}
 
+			Console.WriteLine($"Loading {InAssemblyFilePath}");
 			var assemblyName = assembly.GetName();
-			int assemblyId = assemblyName.FullName.GetHashCode();
+			int assemblyId = assemblyName.Name!.GetHashCode();
 			s_AssemblyCache.Add(assemblyId, assembly);
 			s_LastLoadStatus = AssemblyLoadStatus.Success;
 			return assemblyId;
@@ -173,42 +180,6 @@ public static class AssemblyLoader
 			s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out s_LastLoadStatus);
 			ManagedHost.HandleException(ex);
 			return -1;
-		}
-	}
-
-	[UnmanagedCallersOnly]
-	private static unsafe void QueryAssemblyTypes(int InAssemblyId, ManagedHost.ReflectionType* OutTypes, int* OutTypeCount)
-	{
-		try
-		{
-			if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
-			{
-				return;
-			}
-
-			ReadOnlySpan<Type> assemblyTypes = assembly.GetTypes();
-
-			if (OutTypeCount != null)
-				*OutTypeCount = assemblyTypes.Length;
-
-			if (OutTypes == null)
-				return;
-
-			for (int i = 0; i < assemblyTypes.Length; i++)
-			{
-				var type = assemblyTypes[i];
-
-				var reflectionType = ManagedHost.BuildReflectionType(type);
-
-				if (reflectionType == null)
-					continue;
-
-				OutTypes[i] = reflectionType.Value;
-			}
-		}
-		catch (Exception ex)
-		{
-			ManagedHost.HandleException(ex);
 		}
 	}
 

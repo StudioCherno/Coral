@@ -4,10 +4,12 @@
 #include <filesystem>
 #include <chrono>
 #include <functional>
+#include <ranges>
 
 #include <Coral/HostInstance.hpp>
 #include <Coral/GC.hpp>
 #include <Coral/NativeArray.hpp>
+#include <Coral/Attribute.hpp>
 
 void ExceptionCallback(std::string_view InMessage)
 {
@@ -33,6 +35,10 @@ int32_t* IntPtrMarshalIcall(int32_t* InValue)
 Coral::NativeString StringMarshalIcall(Coral::NativeString InStr)
 {
 	return InStr;
+}
+void StringMarshalIcall2(Coral::NativeString InStr)
+{
+	std::cout << InStr.ToString() << std::endl;
 }
 Coral::TypeId TypeMarshalIcall(Coral::TypeId InTypeId)
 {
@@ -82,6 +88,7 @@ void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "BoolMarshalIcall", &BoolMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "IntPtrMarshalIcall", &IntPtrMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "StringMarshalIcall", &StringMarshalIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "StringMarshalIcall2", &StringMarshalIcall2);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructMarshalIcall", &DummyStructMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructPtrMarshalIcall", &DummyStructPtrMarshalIcall);
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", &TypeMarshalIcall);
@@ -121,7 +128,6 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 		return Coral::NativeString::ToUTF8(str) == "Hello, World!";
 	});
 	
-	// TODO(Peter): Struct Marshalling
 	RegisterTest("DummyStructTest", [InObject]() mutable
 	{
 		DummyStruct value =
@@ -143,6 +149,16 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 		};
 		auto* result = InObject.InvokeMethod<DummyStruct*, DummyStruct*>("DummyStructPtrTest", &value);
 		return result->X == 20 && result->Y - 20.0f < 0.001f && result->Z == 20;
+	});
+
+	RegisterTest("OverloadTest", [InObject]() mutable
+	{
+		return InObject.InvokeMethod<int32_t, int32_t>("Int32 OverloadTest(Int32)", 50) == 1050;
+	});
+
+	RegisterTest("OverloadTest", [InObject]() mutable
+	{
+		return InObject.InvokeMethod<float, float>("OverloadTest", 5) == 15.0f;
 	});
 }
 
@@ -429,28 +445,100 @@ int main()
 	auto loadContext = hostInstance.CreateAssemblyLoadContext("TestContext");
 
 	auto assemblyPath = std::filesystem::path("F:/Coral/Build") / ConfigName / "Testing.Managed.dll";
-	auto assembly = loadContext.LoadAssembly(assemblyPath.string().c_str());
-
-	const auto& assemblyTypes = assembly.GetTypes();
+	auto& assembly = loadContext.LoadAssembly(assemblyPath.string().c_str());
 
 	RegisterTestInternalCalls(assembly);
 	assembly.UploadInternalCalls();
 
-	Coral::ManagedObject objectHandle = hostInstance.CreateInstance("Testing.Managed.Tests, Testing.Managed");
-	objectHandle.InvokeMethod("RunManagedTests");
-	hostInstance.DestroyInstance(objectHandle);
+	auto& testsType = assembly.GetType("Testing.Managed.Tests");
 
-	auto fieldTestObject = hostInstance.CreateInstance("Testing.Managed.FieldMarshalTest, Testing.Managed");
-	auto object = hostInstance.CreateInstance("Testing.Managed.MemberMethodTest, Testing.Managed");
+	Coral::ManagedObject testsInstance = testsType.CreateInstance();
+	testsInstance.InvokeMethod("RunManagedTests");
+	testsInstance.Destroy();
 
-	RegisterMemberMethodTests(hostInstance, object);
+	auto& fieldTestType = assembly.GetType("Testing.Managed.FieldMarshalTest");
+	auto fieldTestObject = fieldTestType.CreateInstance();
+
+	for (auto fieldInfo : fieldTestType.GetFields())
+	{
+		auto& type = fieldInfo.GetType();
+		auto accessibility = fieldInfo.GetAccessibility();
+		std::cout << fieldInfo.GetName() << " is " << type.GetFullName() << std::endl;
+
+		auto attributes = fieldInfo.GetAttributes();
+		for (auto attrib : attributes)
+		{
+			auto& attribType = attrib.GetType();
+
+			if (attribType.GetFullName() == "Testing.Managed.DummyAttribute")
+				std::cout << attrib.GetFieldValue<float>("SomeValue") << std::endl;
+		}
+	}
+
+	for (auto propertyInfo : fieldTestType.GetProperties())
+	{
+		auto& type = propertyInfo.GetType();
+		std::cout << propertyInfo.GetName() << " is " << type.GetFullName() << std::endl;
+
+		auto attributes = propertyInfo.GetAttributes();
+		for (auto attrib : attributes)
+		{
+			auto& attribType = attrib.GetType();
+
+			if (attribType.GetFullName() == "Testing.Managed.DummyAttribute")
+				std::cout << attrib.GetFieldValue<float>("SomeValue") << std::endl;
+		}
+	}
+	
+	auto& memberMethodTestType = assembly.GetType("Testing.Managed.MemberMethodTest");
+
+	for (auto methodInfo : memberMethodTestType.GetMethods())
+	{
+		auto& type = methodInfo.GetReturnType();
+		auto accessibility = methodInfo.GetAccessibility();
+		std::cout << methodInfo.GetName() << ", Returns: " << type.GetFullName() << std::endl;
+		const auto& parameterTypes = methodInfo.GetParameterTypes();
+		for (const auto& paramType : parameterTypes)
+		{
+			std::cout << "\t" << paramType->GetFullName() << std::endl;
+		}
+
+		auto attributes = methodInfo.GetAttributes();
+		for (auto attrib : attributes)
+		{
+			auto& attribType = attrib.GetType();
+
+			if (attribType.GetFullName() == "Testing.Managed.DummyAttribute")
+				std::cout << attrib.GetFieldValue<float>("SomeValue") << std::endl;
+		}
+	}
+
+	auto memberMethodTest = memberMethodTestType.CreateInstance();
+
 	RegisterFieldMarshalTests(hostInstance, fieldTestObject);
+	RegisterMemberMethodTests(hostInstance, memberMethodTest);
 	RunTests();
 
-	hostInstance.DestroyInstance(object);
-	hostInstance.DestroyInstance(fieldTestObject);
+	memberMethodTest.Destroy();
+	fieldTestObject.Destroy();
+
 	hostInstance.UnloadAssemblyLoadContext(loadContext);
+
 	Coral::GC::Collect();
+
+	std::cin.get();
+
+	loadContext = hostInstance.CreateAssemblyLoadContext("Fucku");
+	auto& newAssembly = loadContext.LoadAssembly(assemblyPath.string());
+
+	RegisterTestInternalCalls(newAssembly);
+	newAssembly.UploadInternalCalls();
+
+	auto& testsType2 = newAssembly.GetType("Testing.Managed.Tests");
+
+	Coral::ManagedObject testsInstance2 = testsType2.CreateInstance();
+	testsInstance2.InvokeMethod("RunManagedTests");
+	testsInstance2.Destroy();
 
 	return 0;
 }

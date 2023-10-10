@@ -3,6 +3,12 @@ using System.Runtime.InteropServices;
 
 namespace Testing.Managed;
 
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Field | AttributeTargets.Property)]
+public class DummyAttribute : Attribute
+{
+	public float SomeValue;
+}
+
 public class MemberMethodTest
 {
 	
@@ -98,7 +104,17 @@ public class MemberMethodTest
 		InValue.Z *= 2;
 		return InValue;
 	}
-	
+
+	public int OverloadTest(int InValue)
+	{
+		return InValue + 1000;
+	}
+
+	public float OverloadTest(float InValue)
+	{
+		return InValue + 10.0f;
+	}
+
 	public unsafe DummyStruct* DummyStructPtrTest(DummyStruct* InValue)
 	{
 		InValue->X *= 2;
@@ -106,4 +122,8 @@ public class MemberMethodTest
 		InValue->Z *= 2;
 		return InValue;
 	}
+
+	[Dummy(SomeValue = 10.0f)]
+	public void SomeFunction(){}
+
 }

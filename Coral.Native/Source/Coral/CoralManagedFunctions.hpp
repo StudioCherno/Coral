@@ -10,9 +10,7 @@ namespace Coral {
 	class ManagedObject;
 	enum class GCCollectionMode;
 	enum class ManagedType;
-	class ReflectionType;
 	class ManagedField;
-	struct MethodInfo;
 
 	using SetInternalCallsFn = void(*)(void*, int32_t);
 	using CreateAssemblyLoadContextFn = int32_t(*)(NativeString);
@@ -20,24 +18,56 @@ namespace Coral {
 	using LoadManagedAssemblyFn = int32_t(*)(int32_t, NativeString);
 	using GetLastLoadStatusFn = AssemblyLoadStatus(*)();
 	using GetAssemblyNameFn = NativeString(*)(int32_t);
-	using QueryAssemblyTypesFn = void(*)(int32_t, ReflectionType*, int32_t*);
-	using GetReflectionTypeFn = Bool32(*)(NativeString, ReflectionType*);
-	using GetReflectionTypeFromObjectFn = Bool32(*)(void*, ReflectionType*);
-	using GetFieldsFn = void(*)(NativeString, ManagedField*, int32_t*);
-	using GetTypeMethodsFn = void(*)(NativeString, MethodInfo*, int32_t*);
+
+#pragma region TypeInterface
+
+	using GetAssemblyTypesFn = void(*)(int32_t, TypeId*, int32_t*);
 	using GetTypeIdFn = void(*)(NativeString, TypeId*);
-	
-	using CreateObjectFn = ManagedObject(*)(NativeString, Bool32, const void**, int32_t);
-	using InvokeMethodFn = void(*)(void*, NativeString, const void**, int32_t);
-	using InvokeMethodRetFn = void(*)(void*, NativeString, const void**, int32_t, void*);
+	using GetFullTypeNameFn = NativeString(*)(const TypeId*);
+	using GetAssemblyQualifiedNameFn = NativeString(*)(const TypeId*);
+	using GetBaseTypeFn = void(*)(const TypeId*, TypeId*);
+	using IsTypeAssignableToFn = Bool32(*)(const TypeId*, const TypeId*);
+	using IsTypeAssignableFromFn = Bool32(*)(const TypeId*, const TypeId*);
+	using GetTypeMethodsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
+	using GetTypeFieldsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
+	using GetTypePropertiesFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
+
+#pragma endregion
+
+#pragma region MethodInfo
+	using GetMethodInfoNameFn = NativeString(*)(const ManagedHandle*);
+	using GetMethodInfoReturnTypeFn = void(*)(const ManagedHandle*, TypeId*);
+	using GetMethodInfoParameterTypesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
+	using GetMethodInfoAccessibilityFn = TypeAccessibility(*)(const ManagedHandle*);
+	using GetMethodInfoAttributesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
+#pragma endregion
+
+#pragma region FieldInfo
+	using GetFieldInfoNameFn = NativeString(*)(const ManagedHandle*);
+	using GetFieldInfoTypeFn = void(*)(const ManagedHandle*, TypeId*);
+	using GetFieldInfoAccessibilityFn = TypeAccessibility(*)(const ManagedHandle*);
+	using GetFieldInfoAttributesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
+#pragma endregion
+
+#pragma region PropertyInfo
+	using GetPropertyInfoNameFn = NativeString(*)(const ManagedHandle*);
+	using GetPropertyInfoTypeFn = void(*)(const ManagedHandle*, TypeId*);
+	using GetPropertyInfoAttributesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
+#pragma endregion
+
+#pragma region Attribute
+	using GetAttributeFieldValueFn = void(*)(const ManagedHandle*, NativeString, void*);
+	using GetAttributeTypeFn = void(*)(const ManagedHandle*, TypeId*);
+#pragma endregion
+
+	using CreateObjectFn = ManagedObject(*)(NativeString, Bool32, const void**, const ManagedType*, int32_t);
+	using InvokeMethodFn = void(*)(void*, NativeString, const void**, const ManagedType*, int32_t);
+	using InvokeMethodRetFn = void(*)(void*, NativeString, const void**, const ManagedType*, int32_t, void*);
 	using SetFieldValueFn = void(*)(void*, NativeString, void*);
 	using GetFieldValueFn = void(*)(void*, NativeString, void*);
 	using SetPropertyValueFn = void(*)(void*, NativeString, void*);
 	using GetPropertyValueFn = void(*)(void*, NativeString, void*);
 	using DestroyObjectFn = void(*)(void*);
-
-	using IsAssignableToFn = Bool32(*)(NativeString, NativeString);
-	using IsAssignableFromFn = Bool32(*)(NativeString, NativeString);
 
 	using SetExceptionCallbackFn = void(*)(void(*)(NativeString));
 
@@ -51,13 +81,48 @@ namespace Coral {
 		UnloadAssemblyLoadContextFn UnloadAssemblyLoadContextFptr = nullptr;
 		GetLastLoadStatusFn GetLastLoadStatusFptr = nullptr;
 		GetAssemblyNameFn GetAssemblyNameFptr = nullptr;
-		QueryAssemblyTypesFn QueryAssemblyTypesFptr = nullptr;
-		GetReflectionTypeFn GetReflectionTypeFptr = nullptr;
-		GetReflectionTypeFromObjectFn GetReflectionTypeFromObjectFptr = nullptr;
-		GetFieldsFn GetFieldsFptr = nullptr;
-		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
-		GetTypeIdFn GetTypeIdFptr = nullptr;
 		
+#pragma region TypeInterface
+
+		GetAssemblyTypesFn GetAssemblyTypes = nullptr;
+		GetTypeIdFn GetTypeIdFptr = nullptr;
+		GetFullTypeNameFn GetFullTypeNameFptr = nullptr;
+		GetAssemblyQualifiedNameFn GetAssemblyQualifiedNameFptr = nullptr;
+		GetBaseTypeFn GetBaseTypeFptr = nullptr;
+		IsTypeAssignableToFn IsTypeAssignableToFptr = nullptr;
+		IsTypeAssignableFromFn IsTypeAssignableFromFptr = nullptr;
+		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
+		GetTypeFieldsFn GetTypeFieldsFptr = nullptr;
+		GetTypePropertiesFn GetTypePropertiesFptr = nullptr;
+
+#pragma endregion
+
+#pragma region MethodInfo
+		GetMethodInfoNameFn GetMethodInfoNameFptr = nullptr;
+		GetMethodInfoReturnTypeFn GetMethodInfoReturnTypeFptr = nullptr;
+		GetMethodInfoParameterTypesFn GetMethodInfoParameterTypesFptr = nullptr;
+		GetMethodInfoAccessibilityFn GetMethodInfoAccessibilityFptr = nullptr;
+		GetMethodInfoAttributesFn GetMethodInfoAttributesFptr = nullptr;
+#pragma endregion
+		
+#pragma region FieldInfo
+		GetFieldInfoNameFn GetFieldInfoNameFptr = nullptr;
+		GetFieldInfoTypeFn GetFieldInfoTypeFptr = nullptr;
+		GetFieldInfoAccessibilityFn GetFieldInfoAccessibilityFptr = nullptr;
+		GetFieldInfoAttributesFn GetFieldInfoAttributesFptr = nullptr;
+#pragma endregion
+
+#pragma region PropertyInfo
+		GetPropertyInfoNameFn GetPropertyInfoNameFptr = nullptr;
+		GetPropertyInfoTypeFn GetPropertyInfoTypeFptr = nullptr;
+		GetPropertyInfoAttributesFn GetPropertyInfoAttributesFptr = nullptr;
+#pragma endregion
+
+#pragma region Attribute
+		GetAttributeFieldValueFn GetAttributeFieldValueFptr = nullptr;
+		GetAttributeTypeFn GetAttributeTypeFptr = nullptr;
+#pragma endregion
+
 		CreateObjectFn CreateObjectFptr = nullptr;
 		CreateAssemblyLoadContextFn CreateAssemblyLoadContextFptr = nullptr;
 		InvokeMethodFn InvokeMethodFptr = nullptr;
@@ -67,9 +132,6 @@ namespace Coral {
 		SetPropertyValueFn SetPropertyValueFptr = nullptr;
 		GetPropertyValueFn GetPropertyValueFptr = nullptr;
 		DestroyObjectFn DestroyObjectFptr = nullptr;
-
-		IsAssignableToFn IsTypeAssignableTo = nullptr;
-		IsAssignableFromFn IsTypeAssignableFrom = nullptr;
 
 		SetExceptionCallbackFn SetExceptionCallbackFptr = nullptr;
 

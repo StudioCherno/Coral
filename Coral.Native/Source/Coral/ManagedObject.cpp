@@ -1,20 +1,21 @@
 ﻿#include "ManagedObject.hpp"
-#include "HostInstance.hpp"
+#include "Assembly.hpp"
 #include "CoralManagedFunctions.hpp"
 #include "StringHelper.hpp"
+#include "Type.hpp"
 
 namespace Coral {
 
-	void ManagedObject::InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, size_t InLength) const
+	void ManagedObject::InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
 	{
 		auto methodName = NativeString::FromUTF8(InMethodName);
-		s_ManagedFunctions.InvokeMethodFptr(m_Handle, methodName, InParameters, static_cast<int32_t>(InLength));
+		s_ManagedFunctions.InvokeMethodFptr(m_Handle, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 	}
 
-	void ManagedObject::InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, size_t InLength, void* InResultStorage) const
+	void ManagedObject::InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
 	{
 		auto methodName = NativeString::FromUTF8(InMethodName);
-		s_ManagedFunctions.InvokeMethodRetFptr(m_Handle, methodName, InParameters, static_cast<int32_t>(InLength), InResultStorage);
+		s_ManagedFunctions.InvokeMethodRetFptr(m_Handle, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
 	}
 
 	void ManagedObject::SetFieldValueInternal(std::string_view InFieldName, void* InValue) const
@@ -41,7 +42,20 @@ namespace Coral {
 		s_ManagedFunctions.GetPropertyValueFptr(m_Handle, propertyName, OutValue);
 	}
 
-	ReflectionType& ManagedObject::GetType() { return m_Host->GetReflectionType(*this); }
+	const Type& ManagedObject::GetType() const
+	{
+		return *m_Type;
+	}
+
+	void ManagedObject::Destroy()
+	{
+		if (!m_Handle)
+			return;
+
+		s_ManagedFunctions.DestroyObjectFptr(m_Handle);
+		m_Handle = nullptr;
+		m_Type = nullptr;
+	}
 
 }
 

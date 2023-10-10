@@ -1,12 +1,13 @@
 ﻿#pragma once
 
 #include "Core.hpp"
-#include "ReflectionType.hpp"
 #include "Utility.hpp"
+#include "NativeString.hpp"
 
 namespace Coral {
 
-	class HostInstance;
+	class ManagedAssembly;
+	class Type;
 
 	class ManagedObject
 	{
@@ -21,12 +22,13 @@ namespace Coral {
 			if constexpr (parameterCount > 0)
 			{
 				const void* parameterValues[parameterCount];
-				AddToArray<TArgs...>(parameterValues, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount>{});
-				InvokeMethodRetInternal(InMethodName, parameterValues, parameterCount, &result);
+				ManagedType parameterTypes[parameterCount];
+				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
+				InvokeMethodRetInternal(InMethodName, parameterValues, parameterTypes, parameterCount, &result);
 			}
 			else
 			{
-				InvokeMethodRetInternal(InMethodName, nullptr, 0, &result);
+				InvokeMethodRetInternal(InMethodName, nullptr, nullptr, 0, &result);
 			}
 
 			return result;
@@ -40,12 +42,13 @@ namespace Coral {
 			if constexpr (parameterCount > 0)
 			{
 				const void* parameterValues[parameterCount];
-				AddToArray<TArgs...>(parameterValues, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount>{});
-				InvokeMethodInternal(InMethodName, parameterValues, parameterCount);
+				ManagedType parameterTypes[parameterCount];
+				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
+				InvokeMethodInternal(InMethodName, parameterValues, parameterTypes, parameterCount);
 			}
 			else
 			{
-				InvokeMethodInternal(InMethodName, nullptr, 0);
+				InvokeMethodInternal(InMethodName, nullptr, nullptr, 0);
 			}
 		}
 
@@ -77,11 +80,13 @@ namespace Coral {
 			return result;
 		}
 
-		ReflectionType& GetType();
+		const Type& GetType() const;
 		
+		void Destroy();
+
 	private:
-		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, size_t InLength) const;
-		void InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, size_t InLength, void* InResultStorage) const;
+		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
+		void InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
 		void SetFieldValueInternal(std::string_view InFieldName, void* InValue) const;
 		void GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const;
 		void SetPropertyValueInternal(std::string_view InPropertyName, void* InValue) const;
@@ -89,11 +94,11 @@ namespace Coral {
 
 	private:
 		void* m_Handle = nullptr;
-		NativeString m_FullName;
-		HostInstance* m_Host = nullptr;
+		Type* m_Type;
 
 	private:
-		friend class HostInstance;
+		friend class ManagedAssembly;
+		friend class Type;
 	};
 	
 }

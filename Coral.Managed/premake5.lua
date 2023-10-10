@@ -15,7 +15,10 @@ project "Coral.Managed"
         { "Nullable", "enable" },
     }
 
+    disablewarnings {
+        "CS8500"
+    }
+
     files {
         "Source/**.cs"
     }
-

@@ -4,6 +4,7 @@
 #include "Verify.hpp"
 #include "StringHelper.hpp"
 #include "NativeArray.hpp"
+#include "TypeCache.hpp"
 
 namespace Coral {
 
@@ -16,7 +17,7 @@ namespace Coral {
 		assemblyQualifiedName += InVariableName;
 		assemblyQualifiedName += ", ";
 		assemblyQualifiedName += m_Name;
-		
+
 		const auto& name = m_InternalCallNameStorage.emplace_back(StringHelper::ConvertUtf8ToWide(assemblyQualifiedName));
 
 		InternalCall internalCall;
@@ -30,18 +31,16 @@ namespace Coral {
 		s_ManagedFunctions.SetInternalCallsFptr(m_InternalCalls.data(), static_cast<int32_t>(m_InternalCalls.size()));
 	}
 
-	TypeId ManagedAssembly::GetTypeId(std::string_view InClassName) const
+	Type& ManagedAssembly::GetType(std::string_view InClassName) const
 	{
-		auto name = NativeString::FromUTF8(InClassName);
-		TypeId typeId = nullptr;
-		s_ManagedFunctions.GetTypeIdFptr(name, &typeId);
-		return typeId;
+		static Type s_NullType;
+		Type* type = TypeCache::Get().GetTypeByName(InClassName);
+		return type != nullptr ? *type : s_NullType;
 	}
 
-	static bool IsInvalidType(const ReflectionType& InType)
+	const std::vector<Type*>& ManagedAssembly::GetTypes() const
 	{
-		static ReflectionType s_NullType;
-		return memcmp(&InType, &s_NullType, sizeof(ReflectionType)) == 0;
+		return m_Types;
 	}
 
 	ManagedAssembly& AssemblyLoadContext::LoadAssembly(std::string_view InFilePath)
@@ -57,23 +56,17 @@ namespace Coral {
 			auto name = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
 			result.m_Name = NativeString::ToUTF8(name);
 
-			int32_t typeCount;
-			s_ManagedFunctions.QueryAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);
-			result.m_ReflectionTypes.resize(typeCount);
-			s_ManagedFunctions.QueryAssemblyTypesFptr(result.m_AssemblyID, result.m_ReflectionTypes.data(), &typeCount);
+			int32_t typeCount = 0;
+			s_ManagedFunctions.GetAssemblyTypes(result.m_AssemblyID, nullptr, &typeCount);
+			std::vector<TypeId> typeIds(typeCount);
+			s_ManagedFunctions.GetAssemblyTypes(result.m_AssemblyID, typeIds.data(), &typeCount);
 
-			std::erase_if(result.m_ReflectionTypes, [](const ReflectionType& InType)
+			for (auto typeId : typeIds)
 			{
-				return IsInvalidType(InType);
-			});
-
-			for (auto& type : result.m_ReflectionTypes)
-			{
-				type.m_Host = m_Host;
-
-				std::string str = type.FullName.ToString();
-				size_t id = std::hash<std::string>()(str);
-				m_Host->m_ReflectionTypes[id] = type;
+				Type type;
+				type.m_TypePtr = typeId;
+				type.RetrieveName();
+				result.m_Types.push_back(TypeCache::Get().CacheType(std::move(type)));
 			}
 		}
 

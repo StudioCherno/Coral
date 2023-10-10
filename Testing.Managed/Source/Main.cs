@@ -22,6 +22,7 @@ namespace Testing.Managed {
 		internal static unsafe delegate*<bool, bool> BoolMarshalIcall;
 		internal static unsafe delegate*<IntPtr, IntPtr> IntPtrMarshalIcall;
 		internal static unsafe delegate*<NativeString, NativeString> StringMarshalIcall;
+		internal static unsafe delegate*<NativeString, void> StringMarshalIcall2;
 		internal static unsafe delegate*<Type, Type> TypeMarshalIcall;
 		internal static unsafe delegate*<NativeArray<float>> FloatArrayIcall;
 
@@ -63,7 +64,7 @@ namespace Testing.Managed {
 		{
 			unsafe { return IntMarshalIcall(10) == 20; }
 		}
-		
+
 		[Test]
 		public bool UIntMarshalTest()
 		{
@@ -133,6 +134,13 @@ namespace Testing.Managed {
 		public bool StringMarshalTest()
 		{
 			unsafe { return StringMarshalIcall("Hello") == "Hello"; }
+		}
+
+		[Test]
+		public bool StringMarshalTest2()
+		{
+			unsafe { StringMarshalIcall2("Hello, World!"); }
+			return true;
 		}
 
 		[Test]
