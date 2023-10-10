@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 	auto exampleInstance = exampleType.CreateInstance(50);
 
 	// Invoke the method named "MemberMethod" with a MyVec3 argument (doesn't return anything)
-	exampleInstance.InvokeMethod("MemberMethod", MyVec3{ 10.0f, 10.0f, 10.0f });
+	exampleInstance.InvokeMethod("Void MemberMethod(MyVec3)", MyVec3 { 10.0f, 10.0f, 10.0f });
 
 	// Invokes the setter on PublicProp with the value 10 (will be multiplied by 2 in C#)
 	exampleInstance.SetPropertyValue("PublicProp", 10);

@@ -42,8 +42,11 @@ internal static class TypeInterface
 		{ typeof(Bool32), ManagedType.Bool },
 	};
 
-	internal static unsafe T? FindSuitableMethod<T>(string InMethodName, ManagedType* InParameterTypes, int InParameterCount, ReadOnlySpan<T> InMethods) where T : MethodBase
+	internal static unsafe T? FindSuitableMethod<T>(string? InMethodName, ManagedType* InParameterTypes, int InParameterCount, ReadOnlySpan<T> InMethods) where T : MethodBase
 	{
+		if (InMethodName == null)
+			return null;
+
 		T? result = null;
 
 		foreach (var methodInfo in InMethods)

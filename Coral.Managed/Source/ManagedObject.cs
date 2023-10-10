@@ -1,6 +1,9 @@
 ﻿using Coral.Managed.Interop;
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -29,6 +32,55 @@ internal enum ManagedType
 
 internal static class ManagedObject
 {
+
+	public readonly struct MethodKey : IEquatable<MethodKey>
+	{
+		public readonly string Name;
+		public readonly ManagedType[] Types;
+		public readonly int ParameterCount;
+
+		public MethodKey(string InName, ManagedType[] InTypes, int InParameterCount)
+		{
+			Name = InName;
+			Types = InTypes;
+			ParameterCount = InParameterCount;
+		}
+
+		public override bool Equals([NotNullWhen(true)] object? obj) => obj is MethodKey other && Equals(other);
+
+		bool IEquatable<MethodKey>.Equals(MethodKey other)
+		{
+			if (Name != other.Name)
+				return false;
+
+			for (int i = 0; i < Types.Length; i++)
+			{
+				if (Types[i] != other.Types[i])
+					return false;
+			}
+
+			return ParameterCount == other.ParameterCount;
+		}
+
+		public override int GetHashCode()
+		{
+			// NOTE(Peter): Josh Bloch's Hash (from https://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-overriding-gethashcode)
+			unchecked
+			{
+				int hash = 17;
+				
+				hash = hash * 23 + Name.GetHashCode();
+				foreach (var type in Types)
+					hash = hash * 23 + type.GetHashCode();
+				hash = hash * 23 + ParameterCount.GetHashCode();
+
+				return hash;
+			}
+		}
+	}
+
+	private static Dictionary<MethodKey, MethodInfo> s_CachedMethods = new Dictionary<MethodKey, MethodInfo>();
+
 	private struct ObjectData
 	{
 		public IntPtr Handle;
@@ -128,11 +180,29 @@ internal static class ManagedObject
 			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods();
 
 			// NOTE(Peter): Consider caching this if it becomes to performance heavy
-			MethodInfo? methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
+			MethodInfo? methodInfo = null;
 
-			if (methodInfo == null)
+			var parameterTypes = new ManagedType[InParameterCount];
+
+			unsafe
 			{
-				throw new MissingMethodException($"Method {InMethodName} wasn't found.");
+				fixed (ManagedType* parameterTypesPtr = parameterTypes)
+				{
+					ulong size = sizeof(ManagedType) * (ulong)InParameterCount;
+					Buffer.MemoryCopy(InParameterTypes, parameterTypesPtr, size, size);
+				}
+			}
+
+			var methodKey = new MethodKey(InMethodName, parameterTypes, InParameterCount);
+
+			if (!s_CachedMethods.TryGetValue(methodKey, out methodInfo))
+			{
+				methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
+
+				if (methodInfo == null)
+					throw new MissingMethodException($"Method {InMethodName} wasn't found.");
+
+				s_CachedMethods.Add(methodKey, methodInfo);
 			}
 
 			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
@@ -162,11 +232,29 @@ internal static class ManagedObject
 			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods();
 
 			// NOTE(Peter): Consider caching this if it becomes to performance heavy
-			MethodInfo? methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
+			MethodInfo? methodInfo = null;
 
-			if (methodInfo == null)
+			var parameterTypes = new ManagedType[InParameterCount];
+
+			unsafe
 			{
-				throw new MissingMethodException($"Method {InMethodName} wasn't found.");
+				fixed (ManagedType* parameterTypesPtr = parameterTypes)
+				{
+					ulong size = sizeof(ManagedType) * (ulong)InParameterCount;
+					Buffer.MemoryCopy(InParameterTypes, parameterTypesPtr, size, size);
+				}
+			}
+
+			var methodKey = new MethodKey(InMethodName, parameterTypes, InParameterCount);
+
+			if (!s_CachedMethods.TryGetValue(methodKey, out methodInfo))
+			{
+				methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
+
+				if (methodInfo == null)
+					throw new MissingMethodException($"Method {InMethodName} wasn't found.");
+
+				s_CachedMethods.Add(methodKey, methodInfo);
 			}
 
 			var methodParameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
