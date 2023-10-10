@@ -51,7 +51,6 @@ Coral::NativeArray<float> ArrayReturnIcall()
 	return { 10.0f, 5000.0f, 1000.0f };
 }
 
-
 int main(int argc, char** argv)
 {
 	auto exeDir = std::filesystem::path(argv[0]).parent_path();
@@ -69,10 +68,10 @@ int main(int argc, char** argv)
 	auto assemblyPath = exeDir / "Example.Managed.dll";
 	auto& assembly = loadContext.LoadAssembly(assemblyPath.string());
 
-	assembly.AddInternalCall("Example.Managed.ExampleClass", "VectorAddIcall", static_cast<void*>(&VectorAddIcall));
-	assembly.AddInternalCall("Example.Managed.ExampleClass", "PrintStringIcall", static_cast<void*>(&PrintStringIcall));
-	assembly.AddInternalCall("Example.Managed.ExampleClass", "NativeArrayIcall", static_cast<void*>(&NativeArrayIcall));
-	assembly.AddInternalCall("Example.Managed.ExampleClass", "ArrayReturnIcall", static_cast<void*>(&ArrayReturnIcall));
+	assembly.AddInternalCall("Example.Managed.ExampleClass", "VectorAddIcall",   reinterpret_cast<void*>(&VectorAddIcall));
+	assembly.AddInternalCall("Example.Managed.ExampleClass", "PrintStringIcall", reinterpret_cast<void*>(&PrintStringIcall));
+	assembly.AddInternalCall("Example.Managed.ExampleClass", "NativeArrayIcall", reinterpret_cast<void*>(&NativeArrayIcall));
+	assembly.AddInternalCall("Example.Managed.ExampleClass", "ArrayReturnIcall", reinterpret_cast<void*>(&ArrayReturnIcall));
 	assembly.UploadInternalCalls();
 
 	// Get a reference to the ExampleClass type

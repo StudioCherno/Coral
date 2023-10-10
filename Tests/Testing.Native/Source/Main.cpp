@@ -75,25 +75,25 @@ Coral::NativeArray<float> FloatArrayIcall()
 
 void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 {
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "SByteMarshalIcall", &SByteMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "ByteMarshalIcall", &ByteMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "ShortMarshalIcall", &ShortMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "UShortMarshalIcall", &UShortMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "IntMarshalIcall", &IntMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "UIntMarshalIcall", &UIntMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "LongMarshalIcall", &LongMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "ULongMarshalIcall", &ULongMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "FloatMarshalIcall", &FloatMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "DoubleMarshalIcall", &DoubleMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "BoolMarshalIcall", &BoolMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "IntPtrMarshalIcall", &IntPtrMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "StringMarshalIcall", &StringMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "StringMarshalIcall2", &StringMarshalIcall2);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructMarshalIcall", &DummyStructMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructPtrMarshalIcall", &DummyStructPtrMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", &TypeMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", &TypeMarshalIcall);
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "FloatArrayIcall", &FloatArrayIcall);
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "SByteMarshalIcall", reinterpret_cast<void*>(&SByteMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "ByteMarshalIcall", reinterpret_cast<void*>(&ByteMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "ShortMarshalIcall", reinterpret_cast<void*>(&ShortMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "UShortMarshalIcall", reinterpret_cast<void*>(&UShortMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "IntMarshalIcall", reinterpret_cast<void*>(&IntMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "UIntMarshalIcall", reinterpret_cast<void*>(&UIntMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "LongMarshalIcall", reinterpret_cast<void*>(&LongMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "ULongMarshalIcall", reinterpret_cast<void*>(&ULongMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "FloatMarshalIcall", reinterpret_cast<void*>(&FloatMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "DoubleMarshalIcall", reinterpret_cast<void*>(&DoubleMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "BoolMarshalIcall", reinterpret_cast<void*>(&BoolMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "IntPtrMarshalIcall", reinterpret_cast<void*>(&IntPtrMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "StringMarshalIcall", reinterpret_cast<void*>(&StringMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "StringMarshalIcall2", reinterpret_cast<void*>(&StringMarshalIcall2));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructMarshalIcall", reinterpret_cast<void*>(&DummyStructMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructPtrMarshalIcall", reinterpret_cast<void*>(&DummyStructPtrMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", reinterpret_cast<void*>(&TypeMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", reinterpret_cast<void*>(&TypeMarshalIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "FloatArrayIcall", reinterpret_cast<void*>(&FloatArrayIcall));
 }
 
 struct Test

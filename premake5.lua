@@ -6,6 +6,10 @@ workspace "Coral"
 
     startproject "Example.Native"
 
+	defines {
+		"_CRT_SECURE_NO_WARNINGS"
+	}
+
 include "Coral.Native"
 include "Coral.Managed"
 
