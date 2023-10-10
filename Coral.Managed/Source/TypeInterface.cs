@@ -442,7 +442,6 @@ internal static class TypeInterface
 		return TypeAccessibility.Public;
 	}
 
-
 	[UnmanagedCallersOnly]
 	private static unsafe TypeAccessibility GetMethodInfoAccessibility(MethodInfo* InMethodInfo)
 	{

@@ -77,66 +77,6 @@ namespace Coral {
 		InLoadContext.m_LoadedAssemblies.clear();
 	}
 
-	/*ReflectionType& HostInstance::GetReflectionType(const NativeString& InTypeName)
-	{
-		size_t id = std::hash<std::string>()(InTypeName.ToString());
-
-		if (!m_ReflectionTypes.contains(id))
-		{
-			ReflectionType reflectionType;
-			s_ManagedFunctions.GetReflectionTypeFptr(InTypeName, &reflectionType);
-			reflectionType.m_Host = this;
-			m_ReflectionTypes[id] = std::move(reflectionType);
-		}
-		
-		return m_ReflectionTypes.at(id);
-	}
-	
-	ReflectionType& HostInstance::GetReflectionType(ManagedObject InObject)
-	{
-		size_t id = std::hash<std::string>()(InObject.m_FullName.ToString());
-
-		if (!m_ReflectionTypes.contains(id))
-		{
-			ReflectionType reflectionType;
-			s_ManagedFunctions.GetReflectionTypeFromObjectFptr(InObject.m_Handle, &reflectionType);
-			reflectionType.m_Host = this;
-			m_ReflectionTypes[id] = std::move(reflectionType);
-		}
-		
-		return m_ReflectionTypes.at(id);
-	}
-
-	const std::vector<ManagedField>& HostInstance::GetFields(const NativeString& InTypeName)
-	{
-		size_t id = std::hash<std::string>()(InTypeName.ToString());
-
-		if (!m_Fields.contains(id))
-		{
-			int32_t fieldCount;
-			s_ManagedFunctions.GetFieldsFptr(InTypeName, nullptr, &fieldCount);
-			m_Fields[id].resize(fieldCount);
-			s_ManagedFunctions.GetFieldsFptr(InTypeName, m_Fields[id].data(), &fieldCount);
-		}
-
-		return m_Fields.at(id);
-	}
-
-	const std::vector<MethodInfo>& HostInstance::GetMethods(const NativeString& InTypeName)
-	{
-		size_t id = std::hash<const CharType*>()(InTypeName.Data());
-
-		if (!m_Methods.contains(id))
-		{
-			int32_t methodCount;
-			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName, nullptr, &methodCount);
-			m_Methods[id].resize(methodCount);
-			s_ManagedFunctions.GetTypeMethodsFptr(InTypeName, m_Methods[id].data(), &methodCount);
-		}
-
-		return m_Methods.at(id);
-	}*/
-
 #ifdef _WIN32
 	template <typename TFunc>
 	TFunc LoadFunctionPtr(void* InLibraryHandle, const char* InFunctionName)

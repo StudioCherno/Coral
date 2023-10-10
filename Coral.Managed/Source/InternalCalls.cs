@@ -29,7 +29,7 @@ internal static class InternalCallsManager
 				var name = internalCall.Name;
 
 				if (name == null)
-					throw new ArgumentNullException(nameof(name), "Internal call name is null!");
+					throw new NullReferenceException("Internal call name is null!");
 
 				var fieldNameStart = name.IndexOf('+');
 				var fieldNameEnd = name.IndexOf(",", fieldNameStart, StringComparison.CurrentCulture);

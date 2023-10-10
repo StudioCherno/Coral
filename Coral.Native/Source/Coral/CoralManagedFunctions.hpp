@@ -18,10 +18,6 @@ namespace Coral {
 	using LoadManagedAssemblyFn = int32_t(*)(int32_t, NativeString);
 	using GetLastLoadStatusFn = AssemblyLoadStatus(*)();
 	using GetAssemblyNameFn = NativeString(*)(int32_t);
-	/*
-	using GetFieldsFn = void(*)(NativeString, ManagedField*, int32_t*);
-	using GetTypeMethodsFn = void(*)(NativeString, MethodInfo*, int32_t*);
-	*/
 
 #pragma region TypeInterface
 
@@ -85,10 +81,6 @@ namespace Coral {
 		UnloadAssemblyLoadContextFn UnloadAssemblyLoadContextFptr = nullptr;
 		GetLastLoadStatusFn GetLastLoadStatusFptr = nullptr;
 		GetAssemblyNameFn GetAssemblyNameFptr = nullptr;
-		/*
-		GetFieldsFn GetFieldsFptr = nullptr;
-		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
-		*/
 		
 #pragma region TypeInterface
 
