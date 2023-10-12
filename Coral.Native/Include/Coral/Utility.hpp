@@ -50,7 +50,7 @@ namespace Coral {
 			return ManagedType::Float;
 		else if constexpr (std::same_as<TArg, double>)
 			return ManagedType::Double;
-		else if constexpr (std::same_as<TArg, bool> || std::same_as<TArg, Bool32>)
+		else if constexpr (std::same_as<TArg, bool>)
 			return ManagedType::Bool;
 		else
 			return ManagedType::Unknown;

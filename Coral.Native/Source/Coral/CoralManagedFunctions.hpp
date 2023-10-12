@@ -26,8 +26,8 @@ namespace Coral {
 	using GetFullTypeNameFn = NativeString(*)(const TypeId*);
 	using GetAssemblyQualifiedNameFn = NativeString(*)(const TypeId*);
 	using GetBaseTypeFn = void(*)(const TypeId*, TypeId*);
-	using IsTypeAssignableToFn = Bool32(*)(const TypeId*, const TypeId*);
-	using IsTypeAssignableFromFn = Bool32(*)(const TypeId*, const TypeId*);
+	using IsTypeAssignableToFn = Bool32(*)(TypeId*, const TypeId*);
+	using IsTypeAssignableFromFn = Bool32(*)(TypeId*, const TypeId*);
 	using GetTypeMethodsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 	using GetTypeFieldsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 	using GetTypePropertiesFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);

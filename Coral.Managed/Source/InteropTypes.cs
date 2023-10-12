@@ -154,6 +154,7 @@ public struct NativeString : IDisposable
 	public static implicit operator string?(NativeString InString) => Marshal.PtrToStringAuto(InString.m_NativeString);
 }
 
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct Bool32
 {
 	public uint Value { get; set; }
