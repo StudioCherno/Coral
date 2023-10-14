@@ -124,6 +124,8 @@ public static class AssemblyLoader
 			return;
 		}
 
+		ManagedObject.s_CachedMethods.Clear();
+
 		s_AssemblyContexts.Remove(InContextId);
 		alc.Unload();
 	}

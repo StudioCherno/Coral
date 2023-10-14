@@ -79,7 +79,7 @@ internal static class ManagedObject
 		}
 	}
 
-	private static Dictionary<MethodKey, MethodInfo> s_CachedMethods = new Dictionary<MethodKey, MethodInfo>();
+	internal static Dictionary<MethodKey, MethodInfo> s_CachedMethods = new Dictionary<MethodKey, MethodInfo>();
 
 	private struct ObjectData
 	{
