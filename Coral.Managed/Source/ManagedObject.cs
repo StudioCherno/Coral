@@ -177,7 +177,7 @@ internal static class ManagedObject
 
 			var targetType = target.GetType();
 
-			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods();
+			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
 			// NOTE(Peter): Consider caching this if it becomes to performance heavy
 			MethodInfo? methodInfo = null;
@@ -229,7 +229,7 @@ internal static class ManagedObject
 
 			var targetType = target.GetType();
 
-			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods();
+			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
 			// NOTE(Peter): Consider caching this if it becomes to performance heavy
 			MethodInfo? methodInfo = null;

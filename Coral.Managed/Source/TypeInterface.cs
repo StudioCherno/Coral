@@ -15,7 +15,10 @@ internal static class TypeInterface
 	{
 		var type = Type.GetType(InTypeName!,
 			(name) => AssemblyLoader.ResolveAssembly(null, name),
-			(assembly, name, ignore) => assembly != null ? assembly.GetType(name, false, ignore) : Type.GetType(name, false, ignore)
+			(assembly, name, ignore) =>
+			{
+				return assembly != null ? assembly.GetType(name, false, ignore) : Type.GetType(name, false, ignore);
+			}
 		);
 
 		return type;
@@ -196,6 +199,23 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
+	private static unsafe Bool32 IsTypeSubclassOf(Type* InType0, Type* InType1)
+	{
+		try
+		{
+			if (InType0 == null || InType1 == null)
+				return false;
+
+			return InType0->IsSubclassOf(*InType1);
+		}
+		catch (Exception e)
+		{
+			ManagedHost.HandleException(e);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
 	private static unsafe Bool32 IsTypeAssignableTo(Type* InType0, Type* InType1)
 	{
 		try
@@ -346,6 +366,26 @@ internal static class TypeInterface
 		catch (Exception ex)
 		{
 			ManagedHost.HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe ManagedType GetTypeManagedType(Type* InType)
+	{
+		try
+		{
+			if (InType == null)
+				return ManagedType.Unknown;
+
+			if (!s_TypeConverters.TryGetValue(*InType, out var managedType))
+				managedType = ManagedType.Unknown;
+
+			return managedType;
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+			return ManagedType.Unknown;
 		}
 	}
 

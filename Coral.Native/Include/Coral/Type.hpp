@@ -19,14 +19,17 @@ namespace Coral {
 
 		Type& GetBaseType();
 
-		bool IsTypeAssignableTo(const Type& InOther);
-		bool IsTypeAssignableFrom(const Type& InOther);
+		bool IsSubclassOf(const Type& InOther);
+		bool IsAssignableTo(const Type& InOther);
+		bool IsAssignableFrom(const Type& InOther);
 
 		std::vector<MethodInfo> GetMethods() const;
 		std::vector<FieldInfo> GetFields() const;
 		std::vector<PropertyInfo> GetProperties() const;
 
 		std::vector<Attribute> GetAttributes() const;
+
+		ManagedType GetManagedType() const;
 
 		bool operator==(const Type& InOther) const;
 
@@ -69,6 +72,7 @@ namespace Coral {
 		std::string m_Name;
 		std::string m_Namespace;
 
+		friend class HostInstance;
 		friend class ManagedAssembly;
 		friend class AssemblyLoadContext;
 		friend class MethodInfo;

@@ -26,12 +26,14 @@ namespace Coral {
 	using GetFullTypeNameFn = NativeString(*)(const TypeId*);
 	using GetAssemblyQualifiedNameFn = NativeString(*)(const TypeId*);
 	using GetBaseTypeFn = void(*)(const TypeId*, TypeId*);
+	using IsTypeSubclassOfFn = Bool32(*)(TypeId*, const TypeId*);
 	using IsTypeAssignableToFn = Bool32(*)(TypeId*, const TypeId*);
 	using IsTypeAssignableFromFn = Bool32(*)(TypeId*, const TypeId*);
 	using GetTypeMethodsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 	using GetTypeFieldsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 	using GetTypePropertiesFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
 	using GetTypeAttributesFn = void (*)(const ManagedHandle*, TypeId*, int32_t*);
+	using GetTypeManagedTypeFn = ManagedType(*)(const TypeId*);
 
 #pragma endregion
 
@@ -82,7 +84,7 @@ namespace Coral {
 		UnloadAssemblyLoadContextFn UnloadAssemblyLoadContextFptr = nullptr;
 		GetLastLoadStatusFn GetLastLoadStatusFptr = nullptr;
 		GetAssemblyNameFn GetAssemblyNameFptr = nullptr;
-		
+
 #pragma region TypeInterface
 
 		GetAssemblyTypesFn GetAssemblyTypes = nullptr;
@@ -90,12 +92,14 @@ namespace Coral {
 		GetFullTypeNameFn GetFullTypeNameFptr = nullptr;
 		GetAssemblyQualifiedNameFn GetAssemblyQualifiedNameFptr = nullptr;
 		GetBaseTypeFn GetBaseTypeFptr = nullptr;
+		IsTypeSubclassOfFn IsTypeSubclassOfFptr = nullptr;
 		IsTypeAssignableToFn IsTypeAssignableToFptr = nullptr;
 		IsTypeAssignableFromFn IsTypeAssignableFromFptr = nullptr;
 		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
 		GetTypeFieldsFn GetTypeFieldsFptr = nullptr;
 		GetTypePropertiesFn GetTypePropertiesFptr = nullptr;
 		GetTypeAttributesFn GetTypeAttributesFptr = nullptr;
+		GetTypeManagedTypeFn GetTypeManagedTypeFptr = nullptr;
 
 #pragma endregion
 

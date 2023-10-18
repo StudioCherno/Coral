@@ -30,7 +30,7 @@ namespace Coral {
 	{
 		if constexpr (std::is_pointer_v<std::remove_reference_t<TArg>>)
 			return ManagedType::Pointer;
-		else if constexpr (std::same_as<TArg, uint8_t>)
+		else if constexpr (std::same_as<TArg, uint8_t> || std::same_as<TArg, std::byte>)
 			return ManagedType::Byte;
 		else if constexpr (std::same_as<TArg, uint16_t>)
 			return ManagedType::UShort;

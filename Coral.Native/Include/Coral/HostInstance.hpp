@@ -30,7 +30,7 @@ namespace Coral {
 
 		AssemblyLoadContext CreateAssemblyLoadContext(std::string_view InName);
 		void UnloadAssemblyLoadContext(AssemblyLoadContext& InLoadContext);
-		
+
 	private:
 		void LoadHostFXR() const;
 		bool InitializeCoralManaged();

@@ -31,12 +31,17 @@ namespace Coral {
 		return *m_BaseType;
 	}
 
-	bool Type::IsTypeAssignableTo(const Type& InOther)
+	bool Type::IsSubclassOf(const Type& InOther)
+	{
+		return s_ManagedFunctions.IsTypeSubclassOfFptr(&m_TypePtr, &InOther.m_TypePtr);
+	}
+
+	bool Type::IsAssignableTo(const Type& InOther)
 	{
 		return s_ManagedFunctions.IsTypeAssignableToFptr(&m_TypePtr, &InOther.m_TypePtr);
 	}
 
-	bool Type::IsTypeAssignableFrom(const Type& InOther)
+	bool Type::IsAssignableFrom(const Type& InOther)
 	{
 		return s_ManagedFunctions.IsTypeAssignableFromFptr(&m_TypePtr, &InOther.m_TypePtr);
 	}
@@ -95,6 +100,11 @@ namespace Coral {
 			result[i].m_Handle = attributeHandles[i];
 
 		return result;
+	}
+
+	ManagedType Type::GetManagedType() const
+	{
+		return s_ManagedFunctions.GetTypeManagedTypeFptr(&m_TypePtr);
 	}
 
 	bool Type::operator==(const Type& InOther) const
