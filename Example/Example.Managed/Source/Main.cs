@@ -33,6 +33,11 @@ namespace Example.Managed {
 			Console.WriteLine($"Example({someValue})");
 		}
 
+		public static void StaticMethod(float value)
+		{
+			Console.WriteLine($"StaticMethod: {value}");
+		}
+
 		public void MemberMethod(MyVec3 vec3)
 		{
 			MyVec3 anotherVector = new()

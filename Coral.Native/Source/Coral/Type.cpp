@@ -139,4 +139,17 @@ namespace Coral {
 		return result;
 	}
 
+	void Type::InvokeStaticMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
+	{
+		auto methodName = NativeString::FromUTF8(InMethodName);
+		s_ManagedFunctions.InvokeStaticMethodFptr(&m_TypePtr, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+	}
+
+	void Type::InvokeStaticMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
+	{
+		auto methodName = NativeString::FromUTF8(InMethodName);
+		s_ManagedFunctions.InvokeStaticMethodRetFptr(&m_TypePtr, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
+	}
+
+
 }

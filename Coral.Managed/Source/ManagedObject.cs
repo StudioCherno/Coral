@@ -166,6 +166,85 @@ internal static class ManagedObject
 		}
 	}
 
+	private static unsafe MethodInfo? TryGetMethodInfo(Type InType, string InMethodName, ManagedType* InParameterTypes, int InParameterCount, BindingFlags InBindingFlags)
+	{
+		ReadOnlySpan<MethodInfo> methods = InType.GetMethods(InBindingFlags);
+
+		MethodInfo? methodInfo = null;
+
+		var parameterTypes = new ManagedType[InParameterCount];
+
+		unsafe
+		{
+			fixed (ManagedType* parameterTypesPtr = parameterTypes)
+			{
+				ulong size = sizeof(ManagedType) * (ulong)InParameterCount;
+				Buffer.MemoryCopy(InParameterTypes, parameterTypesPtr, size, size);
+			}
+		}
+
+		var methodKey = new MethodKey(InType.FullName, InMethodName, parameterTypes, InParameterCount);
+
+		if (!s_CachedMethods.TryGetValue(methodKey, out methodInfo))
+		{
+			methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
+
+			if (methodInfo == null)
+				throw new MissingMethodException($"Method {InMethodName} wasn't found.");
+
+			s_CachedMethods.Add(methodKey, methodInfo);
+		}
+
+		return methodInfo;
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void InvokeStaticMethod(Type* InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
+	{
+		try
+		{
+			if (InType == null)
+			{
+				throw new ArgumentNullException(nameof(InType), $"Trying to invoke method {InMethodName} on a null type.");
+			}
+
+			var methodInfo = TryGetMethodInfo(*InType, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
+
+			methodInfo.Invoke(null, parameters);
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void InvokeStaticMethodRet(Type* InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
+	{
+		try
+		{
+			if (InType == null)
+			{
+				throw new ArgumentNullException(nameof(InType), $"Trying to invoke method {InMethodName} on a null type.");
+			}
+
+			var methodInfo = TryGetMethodInfo(*InType, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			var methodParameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
+
+			object? value = methodInfo.Invoke(null, methodParameters);
+
+			if (value == null)
+				return;
+
+			Marshalling.MarshalReturnValue(value, methodInfo.ReturnType, InResultStorage);
+		}
+		catch (Exception ex)
+		{
+			ManagedHost.HandleException(ex);
+		}
+	}
+
 	[UnmanagedCallersOnly]
 	private static unsafe void InvokeMethod(IntPtr InObjectHandle, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
 	{
@@ -180,34 +259,7 @@ internal static class ManagedObject
 
 			var targetType = target.GetType();
 
-			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-			// NOTE(Peter): Consider caching this if it becomes to performance heavy
-			MethodInfo? methodInfo = null;
-
-			var parameterTypes = new ManagedType[InParameterCount];
-
-			unsafe
-			{
-				fixed (ManagedType* parameterTypesPtr = parameterTypes)
-				{
-					ulong size = sizeof(ManagedType) * (ulong)InParameterCount;
-					Buffer.MemoryCopy(InParameterTypes, parameterTypesPtr, size, size);
-				}
-			}
-
-			var methodKey = new MethodKey(targetType.FullName, InMethodName, parameterTypes, InParameterCount);
-
-			if (!s_CachedMethods.TryGetValue(methodKey, out methodInfo))
-			{
-				methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
-
-				if (methodInfo == null)
-					throw new MissingMethodException($"Method {InMethodName} wasn't found.");
-
-				s_CachedMethods.Add(methodKey, methodInfo);
-			}
-
+			var methodInfo = TryGetMethodInfo(targetType, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
 
 			methodInfo.Invoke(target, parameters);
@@ -232,34 +284,7 @@ internal static class ManagedObject
 
 			var targetType = target.GetType();
 
-			ReadOnlySpan<MethodInfo> methods = targetType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-			// NOTE(Peter): Consider caching this if it becomes to performance heavy
-			MethodInfo? methodInfo = null;
-
-			var parameterTypes = new ManagedType[InParameterCount];
-
-			unsafe
-			{
-				fixed (ManagedType* parameterTypesPtr = parameterTypes)
-				{
-					ulong size = sizeof(ManagedType) * (ulong)InParameterCount;
-					Buffer.MemoryCopy(InParameterTypes, parameterTypesPtr, size, size);
-				}
-			}
-
-			var methodKey = new MethodKey(targetType.FullName, InMethodName, parameterTypes, InParameterCount);
-
-			if (!s_CachedMethods.TryGetValue(methodKey, out methodInfo))
-			{
-				methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
-
-				if (methodInfo == null)
-					throw new MissingMethodException($"Method {InMethodName} wasn't found.");
-
-				s_CachedMethods.Add(methodKey, methodInfo);
-			}
-
+			var methodInfo = TryGetMethodInfo(targetType, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 			var methodParameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
 			
 			object? value = methodInfo.Invoke(target, methodParameters);

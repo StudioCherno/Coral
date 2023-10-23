@@ -60,10 +60,52 @@ namespace Coral {
 			return result;
 		}
 
+		template <typename TReturn, typename... TArgs>
+		TReturn InvokeStaticMethod(std::string_view InMethodName, TArgs&&... InParameters)
+		{
+			constexpr size_t parameterCount = sizeof...(InParameters);
+
+			TReturn result;
+
+			if constexpr (parameterCount > 0)
+			{
+				const void* parameterValues[parameterCount];
+				ManagedType parameterTypes[parameterCount];
+				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
+				InvokeStaticMethodRetInternal(InMethodName, parameterValues, parameterTypes, parameterCount, &result);
+			}
+			else
+			{
+				InvokeStaticMethodRetInternal(InMethodName, nullptr, nullptr, 0, &result);
+			}
+
+			return result;
+		}
+
+		template <typename... TArgs>
+		void InvokeStaticMethod(std::string_view InMethodName, TArgs&&... InParameters)
+		{
+			constexpr size_t parameterCount = sizeof...(InParameters);
+
+			if constexpr (parameterCount > 0)
+			{
+				const void* parameterValues[parameterCount];
+				ManagedType parameterTypes[parameterCount];
+				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
+				InvokeStaticMethodInternal(InMethodName, parameterValues, parameterTypes, parameterCount);
+			}
+			else
+			{
+				InvokeStaticMethodInternal(InMethodName, nullptr, nullptr, 0);
+			}
+		}
+
 	private:
 		void RetrieveName();
 
 		ManagedObject CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength);
+		void InvokeStaticMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
+		void InvokeStaticMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
 
 	private:
 		TypeId m_TypePtr = nullptr;

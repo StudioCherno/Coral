@@ -66,6 +66,8 @@ namespace Coral {
 	using CreateObjectFn = ManagedObject(*)(NativeString, Bool32, const void**, const ManagedType*, int32_t);
 	using InvokeMethodFn = void(*)(void*, NativeString, const void**, const ManagedType*, int32_t);
 	using InvokeMethodRetFn = void(*)(void*, NativeString, const void**, const ManagedType*, int32_t, void*);
+	using InvokeStaticMethodFn = void (*)(const TypeId*, NativeString, const void**, const ManagedType*, int32_t);
+	using InvokeStaticMethodRetFn = void (*)(const TypeId*, NativeString, const void**, const ManagedType*, int32_t, void*);
 	using SetFieldValueFn = void(*)(void*, NativeString, void*);
 	using GetFieldValueFn = void(*)(void*, NativeString, void*);
 	using SetPropertyValueFn = void(*)(void*, NativeString, void*);
@@ -133,6 +135,8 @@ namespace Coral {
 		CreateAssemblyLoadContextFn CreateAssemblyLoadContextFptr = nullptr;
 		InvokeMethodFn InvokeMethodFptr = nullptr;
 		InvokeMethodRetFn InvokeMethodRetFptr = nullptr;
+		InvokeStaticMethodFn InvokeStaticMethodFptr = nullptr;
+		InvokeStaticMethodRetFn InvokeStaticMethodRetFptr = nullptr;
 		SetFieldValueFn SetFieldValueFptr = nullptr;
 		GetFieldValueFn GetFieldValueFptr = nullptr;
 		SetPropertyValueFn SetPropertyValueFptr = nullptr;

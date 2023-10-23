@@ -77,6 +77,9 @@ int main(int argc, char** argv)
 	// Get a reference to the ExampleClass type
 	auto& exampleType = assembly.GetType("Example.Managed.ExampleClass");
 
+	// Call the static method "StaticMethod" with value 50
+	exampleType.InvokeStaticMethod("StaticMethod", 50.0f);
+
 	// Get a reference to the CustomAttribute type
 	auto& customAttributeType = assembly.GetType("Example.Managed.CustomAttribute");
 
