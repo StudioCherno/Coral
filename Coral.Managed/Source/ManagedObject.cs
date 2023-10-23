@@ -35,12 +35,14 @@ internal static class ManagedObject
 
 	public readonly struct MethodKey : IEquatable<MethodKey>
 	{
+		public readonly string TypeName;
 		public readonly string Name;
 		public readonly ManagedType[] Types;
 		public readonly int ParameterCount;
 
-		public MethodKey(string InName, ManagedType[] InTypes, int InParameterCount)
+		public MethodKey(string InTypeName, string InName, ManagedType[] InTypes, int InParameterCount)
 		{
+			TypeName = InTypeName;
 			Name = InName;
 			Types = InTypes;
 			ParameterCount = InParameterCount;
@@ -50,7 +52,7 @@ internal static class ManagedObject
 
 		bool IEquatable<MethodKey>.Equals(MethodKey other)
 		{
-			if (Name != other.Name)
+			if (TypeName != other.TypeName || Name != other.Name)
 				return false;
 
 			for (int i = 0; i < Types.Length; i++)
@@ -68,7 +70,8 @@ internal static class ManagedObject
 			unchecked
 			{
 				int hash = 17;
-				
+
+				hash = hash * 23 + TypeName.GetHashCode();
 				hash = hash * 23 + Name.GetHashCode();
 				foreach (var type in Types)
 					hash = hash * 23 + type.GetHashCode();
@@ -193,7 +196,7 @@ internal static class ManagedObject
 				}
 			}
 
-			var methodKey = new MethodKey(InMethodName, parameterTypes, InParameterCount);
+			var methodKey = new MethodKey(targetType.FullName, InMethodName, parameterTypes, InParameterCount);
 
 			if (!s_CachedMethods.TryGetValue(methodKey, out methodInfo))
 			{
@@ -245,7 +248,7 @@ internal static class ManagedObject
 				}
 			}
 
-			var methodKey = new MethodKey(InMethodName, parameterTypes, InParameterCount);
+			var methodKey = new MethodKey(targetType.FullName, InMethodName, parameterTypes, InParameterCount);
 
 			if (!s_CachedMethods.TryGetValue(methodKey, out methodInfo))
 			{

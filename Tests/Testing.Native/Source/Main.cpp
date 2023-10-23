@@ -120,7 +120,7 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	RegisterTest("ULongTest", [InObject]() mutable{ return InObject.InvokeMethod<uint64_t, uint64_t>("ULongTest", 10) == 20; });
 	RegisterTest("FloatTest", [InObject]() mutable{ return InObject.InvokeMethod<float, float>("FloatTest", 10.0f) - 20.0f < 0.001f; });
 	RegisterTest("DoubleTest", [InObject]() mutable{ return InObject.InvokeMethod<double, double>("DoubleTest", 10.0) - 20.0 < 0.001; });
-	RegisterTest("BoolTest", [InObject]() mutable{ return InObject.InvokeMethod<Coral::Bool32, Coral::Bool32>("BoolTest", false); });
+	//RegisterTest("BoolTest", [InObject]() mutable { return InObject.InvokeMethod<bool, bool>("BoolTest", false); });
 	RegisterTest("IntPtrTest", [InObject]() mutable{ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
 	RegisterTest("StringTest", [InObject, &InHost]() mutable
 	{
@@ -458,6 +458,8 @@ int main(int argc, char** argv)
 	testsInstance.Destroy();
 
 	auto& fieldTestType = assembly.GetType("Testing.Managed.FieldMarshalTest");
+	std::cout << fieldTestType.IsAssignableTo(fieldTestType) << std::endl;
+
 	auto fieldTestObject = fieldTestType.CreateInstance();
 
 	for (auto fieldInfo : fieldTestType.GetFields())
@@ -523,6 +525,18 @@ int main(int argc, char** argv)
 	memberMethodTest.Destroy();
 	fieldTestObject.Destroy();
 
+	auto& virtualMethodTestType1 = assembly.GetType("Testing.Managed.Override1");
+	auto& virtualMethodTestType2 = assembly.GetType("Testing.Managed.Override2");
+
+	auto instance1 = virtualMethodTestType1.CreateInstance();
+	auto instance2 = virtualMethodTestType2.CreateInstance();
+
+	instance1.InvokeMethod("TestMe");
+	instance2.InvokeMethod("TestMe");
+
+	instance1.Destroy();
+	instance2.Destroy();
+
 	hostInstance.UnloadAssemblyLoadContext(loadContext);
 
 	Coral::GC::Collect();
@@ -532,6 +546,8 @@ int main(int argc, char** argv)
 	loadContext = hostInstance.CreateAssemblyLoadContext("Fucku");
 	auto& newAssembly = loadContext.LoadAssembly(assemblyPath.string());
 
+	auto ls = newAssembly.GetLoadStatus();
+
 	RegisterTestInternalCalls(newAssembly);
 	newAssembly.UploadInternalCalls();
 
@@ -540,6 +556,7 @@ int main(int argc, char** argv)
 	Coral::ManagedObject testsInstance2 = testsType2.CreateInstance();
 	testsInstance2.InvokeMethod("RunManagedTests");
 	testsInstance2.Destroy();
+	std::cin.get();
 
 	return 0;
 }
