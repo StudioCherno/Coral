@@ -75,7 +75,7 @@ namespace Coral {
 	{
 		s_ManagedFunctions.UnloadAssemblyLoadContextFptr(InLoadContext.m_ContextId);
 		InLoadContext.m_ContextId = -1;
-		InLoadContext.m_LoadedAssemblies.clear();
+		InLoadContext.m_LoadedAssemblies.Clear();
 	}
 
 #ifdef _WIN32

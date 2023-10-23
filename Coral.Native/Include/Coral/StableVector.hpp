@@ -3,6 +3,7 @@
 #include <vector>
 #include <array>
 #include <shared_mutex>
+#include <list>
 
 namespace Coral {
 
@@ -10,10 +11,42 @@ namespace Coral {
 	class StableVector
 	{
 	public:
+		StableVector() = default;
+
+		StableVector(const StableVector& other)
+		{
+			other.ForEach([this](const TElement& elem) mutable
+			{
+				EmplaceBackNoLock().second = elem;
+			});
+		}
+
 		~StableVector()
 		{
 			for (size_t i = 0; i < m_PageCount; i++)
 				delete m_PageTable[i];
+		}
+
+		StableVector& operator=(const StableVector& other)
+		{
+			Clear();
+
+			other.ForEach([this](const TElement& elem) mutable
+			{
+				EmplaceBackNoLock().second = elem;
+			});
+
+			return *this;
+		}
+
+		void Clear()
+		{
+			for (size_t i = 0; i < m_PageCount; i++)
+				delete m_PageTable[i];
+
+			m_ElementCount = 0;
+			m_Capacity = 0;
+			m_PageCount = 0;
 		}
 
 		TElement& operator[](size_t index)
@@ -63,7 +96,7 @@ namespace Coral {
 			return { index, m_PageTable[pageIndex]->Elements[index - (pageIndex * PageSize)] };
 		}
 
-		std::pair<uint32_t, TElement&> EmplaceBack()
+		std::pair<uint32_t, TElement&> InsertNoLock(TElement&& InElement)
 		{
 			size_t pageIndex = m_ElementCount / PageSize;
 
@@ -89,6 +122,34 @@ namespace Coral {
 
 					m_Capacity += PageSize;
 				}
+			}
+
+			uint32_t index = (++m_ElementCount - 1);
+			m_PageTable[pageIndex]->Elements[index - (pageIndex * PageSize)] = std::move(InElement);
+			return { index, m_PageTable[pageIndex]->Elements[index - (pageIndex * PageSize)] };
+		}
+
+		std::pair<uint32_t, TElement&> EmplaceBack()
+		{
+			size_t pageIndex = m_ElementCount / PageSize;
+
+			if (m_ElementCount >= m_Capacity)
+			{
+				auto* newPage = new Page();
+
+				if (pageIndex >= m_PageCount)
+				{
+					auto oldPages = m_PageCount;
+					m_PageCount = std::max(16ull, m_PageCount * 2);
+					auto newPageTable = std::make_unique<Page*[]>(m_PageCount);
+					std::memcpy(newPageTable.get(), m_PageTable.load(), oldPages * sizeof(void*));
+					m_PageTable.exchange(newPageTable.get());
+					m_PageTables.push_back(std::move(newPageTable));
+				}
+
+				m_PageTable[pageIndex] = newPage;
+
+				m_Capacity += PageSize;
 			}
 
 			uint32_t index = (++m_ElementCount - 1);
@@ -124,6 +185,13 @@ namespace Coral {
 
 		template <typename Fn>
 		void ForEach(Fn&& fn)
+		{
+			for (uint32_t i = 0; i < m_ElementCount; ++i)
+				fn((*this)[i]);
+		}
+
+		template <typename Fn>
+		void ForEach(Fn&& fn) const
 		{
 			for (uint32_t i = 0; i < m_ElementCount; ++i)
 				fn((*this)[i]);

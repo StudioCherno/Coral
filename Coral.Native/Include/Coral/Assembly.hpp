@@ -2,6 +2,8 @@
 
 #include "Type.hpp"
 
+#include "StableVector.hpp"
+
 namespace Coral {
 
 	enum class AssemblyLoadStatus
@@ -53,11 +55,11 @@ namespace Coral {
 	{
 	public:
 		ManagedAssembly& LoadAssembly(std::string_view InFilePath);
-		const std::vector<ManagedAssembly>& GetLoadedAssemblies() const { return m_LoadedAssemblies; }
+		const StableVector<ManagedAssembly>& GetLoadedAssemblies() const { return m_LoadedAssemblies; }
 
 	private:
 		int32_t m_ContextId;
-		std::vector<ManagedAssembly> m_LoadedAssemblies;
+		StableVector<ManagedAssembly> m_LoadedAssemblies;
 
 		HostInstance* m_Host = nullptr;
 

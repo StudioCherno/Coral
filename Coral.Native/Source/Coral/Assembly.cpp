@@ -45,7 +45,7 @@ namespace Coral {
 
 	ManagedAssembly& AssemblyLoadContext::LoadAssembly(std::string_view InFilePath)
 	{
-		ManagedAssembly& result = m_LoadedAssemblies.emplace_back();
+		auto[idx, result] = m_LoadedAssemblies.EmplaceBack();
 		auto filepath = NativeString::FromUTF8(InFilePath);
 		result.m_Host = m_Host;
 		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(m_ContextId, filepath);
