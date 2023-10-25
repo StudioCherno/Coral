@@ -7,6 +7,16 @@ using Coral.Managed.Interop;
 
 namespace Testing.Managed {
 
+	public class InstanceTest
+	{
+		public float X = 50.0f;
+
+		public float Stuff()
+		{
+			return X * 10.0f;
+		}
+	}
+
 	public class Tests
 	{
 		internal static unsafe delegate*<sbyte, sbyte> SByteMarshalIcall;
@@ -25,6 +35,7 @@ namespace Testing.Managed {
 		internal static unsafe delegate*<NativeString, void> StringMarshalIcall2;
 		internal static unsafe delegate*<Type, Type> TypeMarshalIcall;
 		internal static unsafe delegate*<NativeArray<float>> FloatArrayIcall;
+		internal static unsafe delegate*<NativeInstance<InstanceTest>> NativeInstanceIcall;
 
 		internal struct DummyStruct
 		{
@@ -35,6 +46,16 @@ namespace Testing.Managed {
 		internal static unsafe delegate*<DummyStruct, DummyStruct> DummyStructMarshalIcall;
 		internal static unsafe delegate*<DummyStruct*, DummyStruct*> DummyStructPtrMarshalIcall;
 		
+		public static void StaticMethodTest(float value)
+		{
+			Console.WriteLine(value);
+		}
+
+		public static void StaticMethodTest(int value)
+		{
+			Console.WriteLine(value);
+		}
+
 		[Test]
 		public bool SByteMarshalTest()
 		{
@@ -182,6 +203,14 @@ namespace Testing.Managed {
 		{
 			var t = typeof(Tests);
 			unsafe { return TypeMarshalIcall(t) == t; }
+		}
+
+		[Test]
+		public bool NativeInstanceTest()
+		{
+			InstanceTest? instanceTest;
+			unsafe { instanceTest = NativeInstanceIcall(); }
+			return instanceTest!.X == 500.0f;
 		}
 
 		public void RunManagedTests()

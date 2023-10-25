@@ -73,6 +73,12 @@ Coral::NativeArray<float> FloatArrayIcall()
 	return Coral::NativeArray(floats);
 }
 
+Coral::ManagedObject instance;
+Coral::ManagedObject NativeInstanceIcall()
+{
+	return instance;
+}
+
 void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 {
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "SByteMarshalIcall", reinterpret_cast<void*>(&SByteMarshalIcall));
@@ -94,6 +100,7 @@ void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", reinterpret_cast<void*>(&TypeMarshalIcall));
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", reinterpret_cast<void*>(&TypeMarshalIcall));
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "FloatArrayIcall", reinterpret_cast<void*>(&FloatArrayIcall));
+	InAssembly.AddInternalCall("Testing.Managed.Tests", "NativeInstanceIcall", reinterpret_cast<void*>(&NativeInstanceIcall));
 }
 
 struct Test
@@ -447,11 +454,23 @@ int main(int argc, char** argv)
 
 	auto assemblyPath = exeDir / "Testing.Managed.dll";
 	auto& assembly = loadContext.LoadAssembly(assemblyPath.string());
+	auto& assembly2 = loadContext.LoadAssembly("F:/Coral/Tests/Dummy/bin/Debug/net7.0/Dummy.dll");
+
+	auto& dummyClass = assembly2.GetType("Dummy.DummyClass");
+	auto dummyInstance = dummyClass.CreateInstance();
+	dummyInstance.InvokeMethod("Test");
+	dummyInstance.Destroy();
 
 	RegisterTestInternalCalls(assembly);
 	assembly.UploadInternalCalls();
 
 	auto& testsType = assembly.GetType("Testing.Managed.Tests");
+	testsType.InvokeStaticMethod("StaticMethodTest", 50.0f);
+	testsType.InvokeStaticMethod("StaticMethodTest", 1000);
+
+	auto& instanceTestType = assembly.GetType("Testing.Managed.InstanceTest");
+	instance = instanceTestType.CreateInstance();
+	instance.SetFieldValue("X", 500.0f);
 
 	Coral::ManagedObject testsInstance = testsType.CreateInstance();
 	testsInstance.InvokeMethod("RunManagedTests");
@@ -543,8 +562,14 @@ int main(int argc, char** argv)
 
 	std::cin.get();
 
-	loadContext = hostInstance.CreateAssemblyLoadContext("Fucku");
+	loadContext = hostInstance.CreateAssemblyLoadContext("ALC2");
 	auto& newAssembly = loadContext.LoadAssembly(assemblyPath.string());
+	auto& newAssembly2 = loadContext.LoadAssembly("F:/Coral/Tests/Dummy/bin/Debug/net7.0/Dummy.dll");
+
+	auto& dummyClass2 = assembly2.GetType("Dummy.DummyClass");
+	auto dummyInstance2 = dummyClass2.CreateInstance();
+	dummyInstance2.InvokeMethod("Test");
+	dummyInstance2.Destroy();
 
 	auto ls = newAssembly.GetLoadStatus();
 

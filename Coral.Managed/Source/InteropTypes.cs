@@ -124,6 +124,31 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 
 }
 
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct NativeInstance<T>
+{
+	private readonly IntPtr m_Handle;
+	private readonly IntPtr m_Unused;
+
+	public T? Get()
+	{
+		if (m_Handle == IntPtr.Zero)
+			return default;
+
+		GCHandle handle = GCHandle.FromIntPtr(m_Handle);
+
+		if (!(handle.Target is T))
+			return default;
+		
+		return (T)handle.Target;
+	}
+
+	public static implicit operator T?(NativeInstance<T> InInstance)
+	{
+		return InInstance.Get();
+	}
+}
+
 [StructLayout(LayoutKind.Sequential)]
 public struct NativeString : IDisposable
 {
