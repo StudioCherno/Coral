@@ -31,20 +31,7 @@ public sealed class NativeArrayEnumerator<T> : IEnumerator<T>
 
 	object IEnumerator.Current => Current!;
 
-	public T Current
-	{
-		get
-		{
-			try
-			{
-				return m_Elements[m_Index];
-			}
-			catch (IndexOutOfRangeException)
-			{
-				throw new InvalidOperationException();
-			}
-		}
-	}
+	public T Current => m_Elements[m_Index];
 
 }
 

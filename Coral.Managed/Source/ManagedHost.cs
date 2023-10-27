@@ -5,19 +5,27 @@ using System.Runtime.InteropServices;
 
 namespace Coral.Managed;
 
+internal enum MessageLevel { Info = 1, Warning = 2, Error = 4 }
+
 internal static class ManagedHost
 {
 	private static unsafe delegate*<NativeString, void> s_ExceptionCallback;
 
-	[UnmanagedCallersOnly]
-	private static void Initialize()
-	{
-	}
+	private static unsafe delegate*<NativeString, MessageLevel, void> s_MessageCallback;
 
 	[UnmanagedCallersOnly]
-	private static unsafe void SetExceptionCallback(delegate*<NativeString, void> InCallback)
+	private static unsafe void Initialize(delegate*<NativeString, MessageLevel, void> InMessageCallback, delegate*<NativeString, void> InExceptionCallback)
 	{
-		s_ExceptionCallback = InCallback;
+		s_MessageCallback = InMessageCallback;
+		s_ExceptionCallback = InExceptionCallback;
+	}
+
+	internal static void LogMessage(string InMessage, MessageLevel InLevel)
+	{
+		unsafe
+		{
+			s_MessageCallback(InMessage, InLevel);
+		}
 	}
 
 	internal static void HandleException(Exception InException)

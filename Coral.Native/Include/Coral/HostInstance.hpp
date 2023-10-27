@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.hpp"
+#include "MessageLevel.hpp"
 #include "Assembly.hpp"
 #include "ManagedObject.hpp"
 
@@ -8,7 +9,6 @@
 
 namespace Coral {
 
-	using ErrorCallbackFn = std::function<void(std::string_view)>;
 	using ExceptionCallbackFn = std::function<void(std::string_view)>;
 
 	struct HostSettings
@@ -18,8 +18,10 @@ namespace Coral {
 		/// </summary>
 		std::string_view CoralDirectory;
 		
-		ErrorCallbackFn ErrorCallback;
-		ExceptionCallbackFn ExceptionCallback;
+		MessageCallbackFn MessageCallback = nullptr;
+		MessageLevel MessageFilter = MessageLevel::All;
+
+		ExceptionCallbackFn ExceptionCallback = nullptr;
 	};
 
 	class HostInstance

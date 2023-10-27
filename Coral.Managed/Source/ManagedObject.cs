@@ -9,6 +9,8 @@ using System.Runtime.InteropServices;
 
 namespace Coral.Managed;
 
+using static ManagedHost;
+
 internal enum ManagedType
 {
 	Unknown,
@@ -99,7 +101,7 @@ internal static class ManagedObject
 
 			if (type == null)
 			{
-				throw new TypeNotFoundException($"Failed to find type with name {InTypeName}");
+				LogMessage($"Failed to find type with name '{InTypeName}'.", MessageLevel.Error);
 			}
 
 			ConstructorInfo? constructor = null;
@@ -118,7 +120,10 @@ internal static class ManagedObject
 			}
 
 			if (constructor == null)
-				throw new MissingMethodException($"No suitable constructor found for type {type}");
+			{
+				LogMessage($"Failed to find constructor for type {InTypeName} with {InParameterCount} parameters.", MessageLevel.Error);
+				return default;
+			}
 
 			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, constructor);
 
@@ -137,9 +142,12 @@ internal static class ManagedObject
 			}
 
 			if (result == null)
-				return new() { Handle = IntPtr.Zero, FullName = "" }; // TODO(Peter): Exception
+			{
+				LogMessage($"Failed to instantiate type {InTypeName}.", MessageLevel.Error);
+			}
 
 			var handle = GCHandle.Alloc(result, InWeakRef ? GCHandleType.Weak : GCHandleType.Normal);
+			AssemblyLoader.RegisterHandle(type.Assembly, handle);
 			return new()
 			{
 				Handle = GCHandle.ToIntPtr(handle),
@@ -148,7 +156,7 @@ internal static class ManagedObject
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 			return new() { Handle = IntPtr.Zero, FullName = "" };
 		}
 	}
@@ -162,7 +170,7 @@ internal static class ManagedObject
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -190,7 +198,10 @@ internal static class ManagedObject
 			methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
 
 			if (methodInfo == null)
-				throw new MissingMethodException($"Method {InMethodName} wasn't found.");
+			{
+				LogMessage($"Failed to find method '{InMethodName}' for type {InType.FullName} with {InParameterCount} parameters.", MessageLevel.Error);
+				return null;
+			}
 
 			s_CachedMethods.Add(methodKey, methodInfo);
 		}
@@ -205,7 +216,8 @@ internal static class ManagedObject
 		{
 			if (InType == null)
 			{
-				throw new ArgumentNullException(nameof(InType), $"Trying to invoke method {InMethodName} on a null type.");
+				LogMessage($"Cannot invoke method {InMethodName} on a null type.", MessageLevel.Error);
+				return;
 			}
 
 			var methodInfo = TryGetMethodInfo(*InType, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -215,7 +227,7 @@ internal static class ManagedObject
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -226,7 +238,8 @@ internal static class ManagedObject
 		{
 			if (InType == null)
 			{
-				throw new ArgumentNullException(nameof(InType), $"Trying to invoke method {InMethodName} on a null type.");
+				LogMessage($"Cannot invoke method {InMethodName} on a null type.", MessageLevel.Error);
+				return;
 			}
 
 			var methodInfo = TryGetMethodInfo(*InType, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -241,7 +254,7 @@ internal static class ManagedObject
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -254,7 +267,8 @@ internal static class ManagedObject
 
 			if (target == null)
 			{
-				throw new ArgumentNullException(nameof(InObjectHandle), $"Trying to invoke method {InMethodName} on a null object.");
+				LogMessage($"Cannot invoke method {InMethodName} on a null type.", MessageLevel.Error);
+				return;
 			}
 
 			var targetType = target.GetType();
@@ -266,7 +280,7 @@ internal static class ManagedObject
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 	
@@ -279,7 +293,8 @@ internal static class ManagedObject
 
 			if (target == null)
 			{
-				throw new ArgumentNullException(nameof(InObjectHandle), $"Trying to invoke method {InMethodName} on a null object.");
+				LogMessage($"Cannot invoke method {InMethodName} on object with handle {InObjectHandle}. Target was null.", MessageLevel.Error);
+				return;
 			}
 
 			var targetType = target.GetType();
@@ -296,7 +311,7 @@ internal static class ManagedObject
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -309,7 +324,8 @@ internal static class ManagedObject
 
 			if (target == null)
 			{
-				throw new ArgumentNullException(nameof(InTarget), $"Tried setting value of field {InFieldName} on a null object.");
+				LogMessage($"Cannot set value of field {InFieldName} on object with handle {InTarget}. Target was null.", MessageLevel.Error);
+				return;
 			}
 
 			var targetType = target.GetType();
@@ -317,7 +333,8 @@ internal static class ManagedObject
 
 			if (fieldInfo == null)
 			{
-				throw new MissingFieldException($"Failed to find field named {InFieldName} in {targetType}");
+				LogMessage($"Failed to find field '{InFieldName}' in type '{targetType.FullName}'.", MessageLevel.Error);
+				return;
 			}
 
 			object? value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
@@ -325,7 +342,7 @@ internal static class ManagedObject
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -338,7 +355,8 @@ internal static class ManagedObject
 
 			if (target == null)
 			{
-				throw new ArgumentNullException(nameof(InTarget), $"Tried getting value of field {InFieldName} on a null object.");
+				LogMessage($"Cannot get value of field {InFieldName} from object with handle {InTarget}. Target was null.", MessageLevel.Error);
+				return;
 			}
 
 			var targetType = target.GetType();
@@ -346,14 +364,15 @@ internal static class ManagedObject
 
 			if (fieldInfo == null)
 			{
-				throw new MissingFieldException($"Failed to find field named {InFieldName} in {targetType}");
+				LogMessage($"Failed to find field '{InFieldName}' in type '{targetType.FullName}'.", MessageLevel.Error);
+				return;
 			}
 
 			Marshalling.MarshalReturnValue(fieldInfo.GetValue(target), fieldInfo.FieldType, OutValue);
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -366,7 +385,8 @@ internal static class ManagedObject
 
 			if (target == null)
 			{
-				throw new ArgumentNullException(nameof(InTarget), $"Tried setting value of property {InPropertyName} on a null object.");
+				LogMessage($"Cannot set value of property {InPropertyName} on object with handle {InTarget}. Target was null.", MessageLevel.Error);
+				return;
 			}
 
 			var targetType = target.GetType();
@@ -374,12 +394,14 @@ internal static class ManagedObject
 		
 			if (propertyInfo == null)
 			{
-				throw new MissingMemberException($"Failed to find property named {InPropertyName} in type {targetType}");
+				LogMessage($"Failed to find property '{InPropertyName}' in type '{targetType.FullName}'", MessageLevel.Error);
+				return;
 			}
 
 			if (propertyInfo.SetMethod == null)
 			{
-				throw new InvalidOperationException($"Attempting to set value of property {InPropertyName} with no setter.");
+				LogMessage($"Cannot set value of property '{InPropertyName}'. No setter was found.", MessageLevel.Error);
+				return;
 			}
 
 			object? value = Marshalling.MarshalPointer(InValue, propertyInfo.PropertyType);
@@ -387,7 +409,7 @@ internal static class ManagedObject
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -400,7 +422,8 @@ internal static class ManagedObject
 
 			if (target == null)
 			{
-				throw new ArgumentNullException(nameof(InTarget), $"Tried getting value of property {InPropertyName} on a null object.");
+				LogMessage($"Cannot get value of property '{InPropertyName}' from object with handle {InTarget}. Target was null.", MessageLevel.Error);
+				return;
 			}
 
 			var targetType = target.GetType();
@@ -408,19 +431,21 @@ internal static class ManagedObject
 
 			if (propertyInfo == null)
 			{
-				throw new MissingMemberException($"Failed to find property named {InPropertyName} in type {targetType}");
+				LogMessage($"Failed to find property '{InPropertyName}' in type '{targetType.FullName}'.", MessageLevel.Error);
+				return;
 			}
 
 			if (propertyInfo.GetMethod == null)
 			{
-				throw new InvalidOperationException($"Attempting to get value of property {InPropertyName} with no getter.");
+				LogMessage($"Cannot get value of property '{InPropertyName}'. No getter was found.", MessageLevel.Error);
+				return;
 			}
 
 			Marshalling.MarshalReturnValue(propertyInfo.GetValue(target), propertyInfo.PropertyType, OutValue);
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 }

@@ -210,7 +210,7 @@ namespace Testing.Managed {
 		{
 			InstanceTest? instanceTest;
 			unsafe { instanceTest = NativeInstanceIcall(); }
-			return instanceTest!.X == 500.0f;
+			return instanceTest?.X == 500.0f;
 		}
 
 		public void RunManagedTests()

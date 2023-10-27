@@ -11,6 +11,8 @@ using System.Runtime.Loader;
 
 namespace Coral.Managed;
 
+using static ManagedHost;
+
 public enum AssemblyLoadStatus
 {
 	Success, FileNotFound, FileLoadFailure, InvalidFilePath, InvalidAssembly, UnknownError
@@ -21,6 +23,7 @@ public static class AssemblyLoader
 	private static readonly Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup = new();
 	private static readonly Dictionary<int, AssemblyLoadContext?> s_AssemblyContexts = new();
 	private static readonly Dictionary<int, Assembly> s_AssemblyCache = new();
+	private static readonly Dictionary<int, List<GCHandle>> s_AllocatedHandles = new();
 	private static AssemblyLoadStatus s_LastLoadStatus = AssemblyLoadStatus.Success;
 
 	private static readonly AssemblyLoadContext? s_CoralAssemblyLoadContext;
@@ -114,14 +117,36 @@ public static class AssemblyLoader
 	{
 		if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
 		{
-			// TODO(Peter): Pass error message to error callback or throw exception
+			LogMessage($"Cannot unload AssemblyLoadContext '{InContextId}', it was either never loaded or already unloaded.", MessageLevel.Warning);
 			return;
 		}
 
 		if (alc == null)
 		{
-			// TODO(Peter): Pass error message to error callback or throw exception
+			LogMessage($"AssemblyLoadContext '{InContextId}' was found in dictionary but was null. This is most likely a bug.", MessageLevel.Error);
 			return;
+		}
+
+		foreach (var assembly in alc.Assemblies)
+		{
+			var assemblyName = assembly.GetName();
+			int assemblyId = assemblyName.Name!.GetHashCode();
+
+			if (!s_AllocatedHandles.TryGetValue(assemblyId, out var handles))
+			{
+				continue;
+			}
+
+			foreach (var handle in handles)
+			{
+				if (!handle.IsAllocated || handle.Target == null)
+				{
+					continue;
+				}
+
+				LogMessage($"Found unfreed object '{handle.Target}' from assembly '{assemblyName}'. Deallocating.", MessageLevel.Warning);
+				handle.Free();
+			}
 		}
 
 		ManagedObject.s_CachedMethods.Clear();
@@ -143,21 +168,21 @@ public static class AssemblyLoader
 
 			if (!File.Exists(InAssemblyFilePath))
 			{
-				Console.WriteLine($"File {InAssemblyFilePath} not found!");
+				LogMessage($"Failed to load assembly '{InAssemblyFilePath}', file not found.", MessageLevel.Error);
 				s_LastLoadStatus = AssemblyLoadStatus.FileNotFound;
 				return -1;
 			}
 
 			if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
 			{
-				Console.WriteLine($"Failed to find ALC with id {InContextId}");
+				LogMessage($"Failed to load assembly '{InAssemblyFilePath}', couldn't find AssemblyLoadContext with id {InContextId}.", MessageLevel.Error);
 				s_LastLoadStatus = AssemblyLoadStatus.UnknownError;
 				return -1;
 			}
 
 			if (alc == null)
 			{
-				Console.WriteLine($"Assembly Load Context was null!");
+				LogMessage($"Failed to load assembly '{InAssemblyFilePath}', AssemblyLoadContext with id {InContextId} was null.", MessageLevel.Error);
 				s_LastLoadStatus = AssemblyLoadStatus.UnknownError;
 				return -1;
 			}
@@ -170,7 +195,7 @@ public static class AssemblyLoader
 				assembly = alc.LoadFromStream(stream);
 			}
 
-			Console.WriteLine($"Loading {InAssemblyFilePath}");
+			LogMessage($"Loading assembly '{InAssemblyFilePath}'", MessageLevel.Info);
 			var assemblyName = assembly.GetName();
 			int assemblyId = assemblyName.Name!.GetHashCode();
 			s_AssemblyCache.Add(assemblyId, assembly);
@@ -180,7 +205,7 @@ public static class AssemblyLoader
 		catch (Exception ex)
 		{
 			s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out s_LastLoadStatus);
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 			return -1;
 		}
 	}
@@ -192,10 +217,27 @@ public static class AssemblyLoader
 	private static NativeString GetAssemblyName(int InAssemblyId)
 	{
 		if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
+		{
+			LogMessage($"Couldn't get assembly name for assembly '{InAssemblyId}', assembly not in dictionary.", MessageLevel.Error);
 			return "";
+		}
 
 		var assemblyName = assembly.GetName();
 		return assemblyName.Name;
+	}
+
+	internal static void RegisterHandle(Assembly InAssembly, GCHandle InHandle)
+	{
+		var assemblyName = InAssembly.GetName();
+		int assemblyId = assemblyName.Name!.GetHashCode();
+
+		if (!s_AllocatedHandles.TryGetValue(assemblyId, out var handles))
+		{
+			s_AllocatedHandles.Add(assemblyId, new List<GCHandle>());
+			handles = s_AllocatedHandles[assemblyId];
+		}
+
+		handles.Add(InHandle);
 	}
 
 }

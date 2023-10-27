@@ -209,7 +209,7 @@ namespace Coral {
 		std::atomic<Page**> m_PageTable;
 		std::atomic<uint32_t> m_ElementCount = 0;
 		std::atomic<uint32_t> m_Capacity = 0;
-		size_t m_PageCount = 0;
+		uint64_t m_PageCount = 0;
 	};
 
 }

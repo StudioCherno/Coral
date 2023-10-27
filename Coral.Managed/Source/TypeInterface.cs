@@ -8,6 +8,8 @@ using System.Runtime.InteropServices;
 
 namespace Coral.Managed;
 
+using static ManagedHost;
+
 internal static class TypeInterface
 {
 
@@ -107,11 +109,15 @@ internal static class TypeInterface
 		{
 			if (!AssemblyLoader.TryGetAssembly(InAssemblyId, out var assembly))
 			{
+				LogMessage($"Couldn't get types for assembly '{InAssemblyId}', assembly not found.", MessageLevel.Error);
 				return;
 			}
 
 			if (assembly == null)
+			{
+				LogMessage($"Couldn't get types for assembly '{InAssemblyId}', assembly was null.", MessageLevel.Error);
 				return;
+			}
 
 			ReadOnlySpan<Type> assemblyTypes = assembly.GetTypes();
 
@@ -126,7 +132,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -138,7 +144,10 @@ internal static class TypeInterface
 			var type = FindType(InName);
 
 			if (type == null)
+			{
+				LogMessage($"Failed to find type with name '{InName}'.", MessageLevel.Error);
 				return;
+			}
 
 			*OutType = type;
 		}
@@ -160,7 +169,7 @@ internal static class TypeInterface
 		}
 		catch (Exception e)
 		{
-			ManagedHost.HandleException(e);
+			HandleException(e);
 			return NativeString.Null();
 		}
 	}
@@ -177,7 +186,7 @@ internal static class TypeInterface
 		}
 		catch (Exception e)
 		{
-			ManagedHost.HandleException(e);
+			HandleException(e);
 			return NativeString.Null();
 		}
 	}
@@ -194,7 +203,7 @@ internal static class TypeInterface
 		}
 		catch (Exception e)
 		{
-			ManagedHost.HandleException(e);
+			HandleException(e);
 		}
 	}
 
@@ -210,7 +219,7 @@ internal static class TypeInterface
 		}
 		catch (Exception e)
 		{
-			ManagedHost.HandleException(e);
+			HandleException(e);
 			return false;
 		}
 	}
@@ -227,7 +236,7 @@ internal static class TypeInterface
 		}
 		catch (Exception e)
 		{
-			ManagedHost.HandleException(e);
+			HandleException(e);
 			return false;
 		}
 	}
@@ -244,7 +253,7 @@ internal static class TypeInterface
 		}
 		catch (Exception e)
 		{
-			ManagedHost.HandleException(e);
+			HandleException(e);
 			return false;
 		}
 	}
@@ -275,7 +284,7 @@ internal static class TypeInterface
 		}
 		catch (Exception e)
 		{
-			ManagedHost.HandleException(e);
+			HandleException(e);
 		}
 	}
 
@@ -305,7 +314,7 @@ internal static class TypeInterface
 		}
 		catch (Exception e)
 		{
-			ManagedHost.HandleException(e);
+			HandleException(e);
 		}
 	}
 
@@ -335,7 +344,7 @@ internal static class TypeInterface
 		}
 		catch (Exception e)
 		{
-			ManagedHost.HandleException(e);
+			HandleException(e);
 		}
 	}
 
@@ -365,7 +374,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -384,7 +393,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 			return ManagedType.Unknown;
 		}
 	}
@@ -402,7 +411,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 			return NativeString.Null();
 		}
 	}
@@ -419,7 +428,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -449,7 +458,7 @@ internal static class TypeInterface
 		}
 		catch (Exception e)
 		{
-			ManagedHost.HandleException(e);
+			HandleException(e);
 		}
 	}
 
@@ -479,7 +488,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -524,7 +533,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 			return TypeAccessibility.Public;
 		}
 	}
@@ -541,7 +550,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 			return NativeString.Null();
 		}
 	}
@@ -558,7 +567,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -571,7 +580,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 			return TypeAccessibility.Public;
 		}
 	}
@@ -602,7 +611,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -618,7 +627,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 			return NativeString.Null();
 		}
 	}
@@ -635,7 +644,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -665,7 +674,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -682,14 +691,15 @@ internal static class TypeInterface
 
 			if (fieldInfo == null)
 			{
-				throw new MissingFieldException($"Failed to find field named {InFieldName} in {targetType}");
+				LogMessage($"Failed to find field with name '{InFieldName}' in attribute {targetType.FullName}.", MessageLevel.Error);
+				return;
 			}
 
 			Marshalling.MarshalReturnValue(fieldInfo.GetValue(*InAttribute), fieldInfo.FieldType, OutValue);
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 
@@ -705,7 +715,7 @@ internal static class TypeInterface
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 }

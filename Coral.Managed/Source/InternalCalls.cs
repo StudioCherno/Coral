@@ -5,6 +5,8 @@ using System.Reflection;
 
 namespace Coral.Managed.Interop;
 
+using static ManagedHost;
+
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public readonly struct InternalCall
 {
@@ -29,7 +31,10 @@ internal static class InternalCallsManager
 				var name = internalCall.Name;
 
 				if (name == null)
-					throw new NullReferenceException("Internal call name is null!");
+				{
+					LogMessage($"Cannot register internal at index '{i}' call with null name!", MessageLevel.Error);
+					continue;
+				}
 
 				var fieldNameStart = name.IndexOf('+');
 				var fieldNameEnd = name.IndexOf(",", fieldNameStart, StringComparison.CurrentCulture);
@@ -39,21 +44,24 @@ internal static class InternalCallsManager
 				var type = TypeInterface.FindType(containingTypeName);
 
 				if (type == null)
-					throw new TypeAccessException($"Can't find internal call type '{containingTypeName}'");
+				{
+					LogMessage($"Cannot register internal call '{name}', failed to type '{containingTypeName}'.", MessageLevel.Error);
+					continue;
+				}
 
 				var bindingFlags = BindingFlags.Static | BindingFlags.NonPublic;
 				var field = type.GetFields(bindingFlags).FirstOrDefault(field => field.Name == fieldName);
 
 				if (field == null)
 				{
-					Console.WriteLine($"Couldn't find field {fieldName} in {containingTypeName}");
+					LogMessage($"Cannot register internal '{name}', failed to find it in type '{containingTypeName}'", MessageLevel.Error);
 					continue;
 				}
 
 				// TODO(Peter): Changed to !field.FieldType.IsFunctionPointer when .NET 8 is out
 				if (field.FieldType != typeof(IntPtr))
 				{
-					Console.WriteLine($"{fieldName} is not a function pointer!");
+					LogMessage($"Field '{name}' is not a function pointer type!", MessageLevel.Error);
 					continue;
 				}
 
@@ -62,7 +70,7 @@ internal static class InternalCallsManager
 		}
 		catch (Exception ex)
 		{
-			ManagedHost.HandleException(ex);
+			HandleException(ex);
 		}
 	}
 }

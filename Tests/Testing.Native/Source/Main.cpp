@@ -98,7 +98,6 @@ void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructMarshalIcall", reinterpret_cast<void*>(&DummyStructMarshalIcall));
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "DummyStructPtrMarshalIcall", reinterpret_cast<void*>(&DummyStructPtrMarshalIcall));
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", reinterpret_cast<void*>(&TypeMarshalIcall));
-	InAssembly.AddInternalCall("Testing.Managed.Tests", "TypeMarshalIcall", reinterpret_cast<void*>(&TypeMarshalIcall));
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "FloatArrayIcall", reinterpret_cast<void*>(&FloatArrayIcall));
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "NativeInstanceIcall", reinterpret_cast<void*>(&NativeInstanceIcall));
 }
@@ -566,6 +565,7 @@ int main(int argc, char** argv)
 	instance1.InvokeMethod("TestMe");
 	instance2.InvokeMethod("TestMe");
 
+	instance.Destroy();
 	instance1.Destroy();
 	instance2.Destroy();
 
@@ -591,9 +591,14 @@ int main(int argc, char** argv)
 
 	auto& testsType2 = newAssembly.GetType("Testing.Managed.Tests");
 
+	auto& instanceTestType2 = newAssembly.GetType("Testing.Managed.InstanceTest");
+	instance = instanceTestType2.CreateInstance();
+	instance.SetFieldValue("X", 500.0f);
+
 	Coral::ManagedObject testsInstance2 = testsType2.CreateInstance();
 	testsInstance2.InvokeMethod("RunManagedTests");
 	testsInstance2.Destroy();
+	instance.Destroy();
 	std::cin.get();
 
 	return 0;
