@@ -160,6 +160,13 @@ public static class Marshalling
 			}
 		}
 
+		if (InType.IsClass)
+		{
+			var handlePtr = Marshal.ReadIntPtr(InValue);
+			var handle = GCHandle.FromIntPtr(handlePtr);
+			return handle.Target;
+		}
+
 		return Marshal.PtrToStructure(InValue, InType);	
 	}
 	public static T? MarshalPointer<T>(IntPtr InValue) => Marshal.PtrToStructure<T>(InValue);

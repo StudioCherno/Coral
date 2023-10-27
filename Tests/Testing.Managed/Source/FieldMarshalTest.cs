@@ -4,6 +4,16 @@ using System;
 
 namespace Testing.Managed;
 
+public class DummyClass
+{
+	public float X;
+}
+
+public struct DummyStruct
+{
+	public float X;
+}
+
 public class FieldMarshalTest
 {
 
@@ -19,6 +29,8 @@ public class FieldMarshalTest
 	public double DoubleFieldTest = 10.0;
 	public bool BoolFieldTest = false;
 	public string StringFieldTest = "Hello";
+	public DummyClass DummyClassTest;
+	public DummyStruct DummyStructTest;
 
 	public sbyte SBytePropertyTest { get; set; } = 10;
 	public byte BytePropertyTest { get; set; } = 10;
@@ -46,6 +58,12 @@ public class FieldMarshalTest
 	public float[] ArrayReturnTest()
 	{
 		return new float[]{ 10.0f, 20.0f, 30.0f, 40.0f, 50.0f };
+	}
+
+	public void TestClassAndStruct()
+	{
+		Console.WriteLine(DummyClassTest.X);
+		Console.WriteLine(DummyStructTest.X);
 	}
 
 	[Dummy(SomeValue = 1000.0f)]

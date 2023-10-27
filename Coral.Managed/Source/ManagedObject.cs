@@ -320,21 +320,7 @@ internal static class ManagedObject
 				throw new MissingFieldException($"Failed to find field named {InFieldName} in {targetType}");
 			}
 
-			object? value;
-
-			if (fieldInfo.FieldType.IsPointer || fieldInfo.FieldType == typeof(IntPtr))
-			{
-				value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), fieldInfo.FieldType);
-			}
-			else if (fieldInfo.FieldType.IsSZArray)
-			{
-				value = Marshalling.MarshalArray(InValue, fieldInfo.FieldType.GetElementType());
-			}
-			else
-			{
-				value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
-			}
-
+			object? value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
 			fieldInfo.SetValue(target, value);
 		}
 		catch (Exception ex)
@@ -396,21 +382,7 @@ internal static class ManagedObject
 				throw new InvalidOperationException($"Attempting to set value of property {InPropertyName} with no setter.");
 			}
 
-			object? value;
-		
-			if (propertyInfo.PropertyType.IsPointer || propertyInfo.PropertyType == typeof(IntPtr))
-			{
-				value = Marshalling.MarshalPointer(Marshal.ReadIntPtr(InValue), propertyInfo.PropertyType);
-			}
-			else if (propertyInfo.PropertyType.IsSZArray)
-			{
-				value = Marshalling.MarshalArray(InValue, propertyInfo.PropertyType.GetElementType());
-			}
-			else
-			{
-				value = Marshalling.MarshalPointer(InValue, propertyInfo.PropertyType);
-			}
-		
+			object? value = Marshalling.MarshalPointer(InValue, propertyInfo.PropertyType);
 			propertyInfo.SetValue(target, value);
 		}
 		catch (Exception ex)

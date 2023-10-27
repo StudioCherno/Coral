@@ -481,6 +481,19 @@ int main(int argc, char** argv)
 
 	auto fieldTestObject = fieldTestType.CreateInstance();
 
+	auto dummyClassInstance = assembly.GetType("Testing.Managed.DummyClass").CreateInstance();
+	dummyClassInstance.SetFieldValue("X", 500.0f);
+
+	struct DummyStruct
+	{
+		float X;
+	} ds;
+	ds.X = 50.0f;
+	fieldTestObject.SetFieldValue("DummyClassTest", dummyClassInstance);
+	fieldTestObject.SetFieldValue("DummyStructTest", ds);
+	fieldTestObject.InvokeMethod("TestClassAndStruct");
+	dummyClassInstance.Destroy();
+
 	for (auto fieldInfo : fieldTestType.GetFields())
 	{
 		auto& type = fieldInfo.GetType();
