@@ -16,10 +16,33 @@ namespace Coral {
 		m_String = std::exchange(InOther.m_String, nullptr);
 	}
 
+	NativeString::NativeString(std::string_view InString)
+	{
+		Assign(InString);
+	}
+
+	NativeString::NativeString(const std::string& InString)
+	{
+		Assign(InString);
+	}
+
+	NativeString::NativeString(const char* InString)
+	{
+		Assign(InString);
+	}
+
 	NativeString::~NativeString()
 	{
 		if (m_String != nullptr)
 			Memory::FreeCoTaskMem(m_String);
+	}
+
+	void NativeString::Assign(std::string_view InString)
+	{
+		if (m_String != nullptr)
+			Memory::FreeCoTaskMem(m_String);
+
+		m_String = Memory::StringToCoTaskMemAuto(StringHelper::ConvertUtf8ToWide(InString));
 	}
 
 	NativeString& NativeString::operator=(const NativeString& InOther)
@@ -36,23 +59,9 @@ namespace Coral {
 		return *this;
 	}
 
-	NativeString NativeString::FromUTF8(std::string_view InString)
+	NativeString::operator std::string() const
 	{
-		NativeString result;
-
-#if defined(CORAL_WIDE_CHARS)
-		auto str = StringHelper::ConvertUtf8ToWide(InString);
-		result.m_String = Memory::StringToCoTaskMemAuto(str);
-#else
-		result.m_String = Memory::StringToCoTaskMemAuto(InString);
-#endif
-
-		return result;
-	}
-
-	std::string NativeString::ToUTF8(NativeString InString)
-	{
-		StringView string(InString.m_String);
+		StringView string(m_String);
 
 #if defined(CORAL_WIDE_CHARS)
 		return StringHelper::ConvertWideToUtf8(string);
@@ -60,8 +69,6 @@ namespace Coral {
 		return std::string(string);
 #endif
 	}
-
-	std::string NativeString::ToString() const { return ToUTF8(*this); }
 
 	bool NativeString::operator==(const NativeString& InOther) const
 	{

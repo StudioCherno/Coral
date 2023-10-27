@@ -8,6 +8,10 @@ namespace Coral {
 	{
 	public:
 		NativeString() = default;
+		NativeString(std::string_view InString);
+		NativeString(const std::string& InString);
+		NativeString(const char* InString);
+
 		NativeString(const NativeString& InOther);
 		NativeString(NativeString&& InOther) noexcept;
 		~NativeString();
@@ -15,10 +19,9 @@ namespace Coral {
 		NativeString& operator=(const NativeString& InOther);
 		NativeString& operator=(NativeString&& InOther) noexcept;
 
-		static NativeString FromUTF8(std::string_view InString);
-		static std::string ToUTF8(NativeString InString);
+		void Assign(std::string_view InString);
 
-		std::string ToString() const;
+		operator std::string() const;
 
 		bool operator==(const NativeString& InOther) const;
 

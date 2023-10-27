@@ -21,8 +21,7 @@ namespace Coral {
 
 	void Attribute::GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const
 	{
-		auto fieldName = NativeString::FromUTF8(InFieldName);
-		s_ManagedFunctions.GetAttributeFieldValueFptr(&m_Handle, fieldName, OutValue);
+		s_ManagedFunctions.GetAttributeFieldValueFptr(&m_Handle, InFieldName, OutValue);
 	}
 
 }

@@ -9,7 +9,7 @@
 
 namespace Coral {
 
-	using ExceptionCallbackFn = std::function<void(std::string_view)>;
+	using ExceptionCallbackFn = std::function<void(std::string)>;
 
 	struct HostSettings
 	{

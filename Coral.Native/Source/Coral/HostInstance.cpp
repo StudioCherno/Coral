@@ -38,7 +38,7 @@ namespace Coral {
 			break;
 		}
 
-		std::cout << "[Coral](" << level << "): " << InMessage.ToString() << std::endl;
+		std::cout << "[Coral](" << level << "): " << std::string(InMessage) << std::endl;
 	}
 
 	bool HostInstance::Initialize(HostSettings InSettings)
@@ -58,14 +58,14 @@ namespace Coral {
 		s_CoreCLRFunctions.SetHostFXRErrorWriter([](const CharType* InMessage)
 		{
 			auto message = StringHelper::ConvertWideToUtf8(InMessage);
-			MessageCallback(NativeString::FromUTF8(message), MessageLevel::Error);
+			MessageCallback(message, MessageLevel::Error);
 		});
 
 		m_CoralManagedAssemblyPath = std::filesystem::path(m_Settings.CoralDirectory) / "Coral.Managed.dll";
 
 		if (!std::filesystem::exists(m_CoralManagedAssemblyPath))
 		{
-			MessageCallback(NativeString::FromUTF8("Failed to find Coral.Managed.dll"), MessageLevel::Error);
+			MessageCallback("Failed to find Coral.Managed.dll", MessageLevel::Error);
 			return false;
 		}
 
@@ -81,9 +81,8 @@ namespace Coral {
 	
 	AssemblyLoadContext HostInstance::CreateAssemblyLoadContext(std::string_view InName)
 	{
-		auto name = Coral::NativeString::FromUTF8(InName);
 		AssemblyLoadContext alc;
-		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(name);
+		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(InName);
 		alc.m_Host = this;
 		return alc;
 	}
@@ -154,7 +153,7 @@ namespace Coral {
 
 			if (!std::filesystem::exists(runtimeConfigPath))
 			{
-				MessageCallback(NativeString::FromUTF8("Failed to find Coral.Managed.runtimeconfig.json"), MessageLevel::Error);
+				MessageCallback("Failed to find Coral.Managed.runtimeconfig.json", MessageLevel::Error);
 				return false;
 			}
 
@@ -185,7 +184,7 @@ namespace Coral {
 				return;
 			}
 
-			ExceptionCallback(InMessage.ToString());
+			ExceptionCallback(InMessage);
 		});
 
 		ExceptionCallback = m_Settings.ExceptionCallback;

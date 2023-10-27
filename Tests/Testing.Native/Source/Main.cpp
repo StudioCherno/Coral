@@ -38,7 +38,7 @@ Coral::NativeString StringMarshalIcall(Coral::NativeString InStr)
 }
 void StringMarshalIcall2(Coral::NativeString InStr)
 {
-	std::cout << InStr.ToString() << std::endl;
+	std::cout << std::string(InStr) << std::endl;
 }
 Coral::TypeId TypeMarshalIcall(Coral::TypeId InTypeId)
 {
@@ -130,8 +130,8 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	RegisterTest("IntPtrTest", [InObject]() mutable{ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
 	RegisterTest("StringTest", [InObject, &InHost]() mutable
 	{
-		auto str = InObject.InvokeMethod<Coral::NativeString, Coral::NativeString>("StringTest", Coral::NativeString::FromUTF8("Hello"));
-		return Coral::NativeString::ToUTF8(str) == "Hello, World!";
+		auto str = InObject.InvokeMethod<Coral::NativeString, Coral::NativeString>("StringTest", "Hello");
+		return str == "Hello, World!";
 	});
 	
 	RegisterTest("DummyStructTest", [InObject]() mutable
@@ -282,11 +282,11 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	RegisterTest("StringFieldTest", [InObject]() mutable
 	{
 		auto value = InObject.GetFieldValue<Coral::NativeString>("StringFieldTest");
-		if (value.ToString() != "Hello")
+		if (value != "Hello")
 			return false;
-		InObject.SetFieldValue("StringFieldTest", Coral::NativeString::FromUTF8("Hello, World!"));
+		InObject.SetFieldValue("StringFieldTest", "Hello, World!");
 		value = InObject.GetFieldValue<Coral::NativeString>("StringFieldTest");
-		return value.ToString() == "Hello, World!";
+		return value == "Hello, World!";
 	});
 
 	///// PROPERTIES ////
@@ -403,11 +403,11 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	RegisterTest("StringPropertyTest", [InObject]() mutable
 	{
 		auto value = InObject.GetPropertyValue<Coral::NativeString>("StringPropertyTest");
-		if (value.ToString() != "Hello")
+		if (value != "Hello")
 			return false;
-		InObject.SetPropertyValue("StringPropertyTest", Coral::NativeString::FromUTF8("Hello, World!"));
+		InObject.SetPropertyValue("StringPropertyTest", "Hello, World!");
 		value = InObject.GetPropertyValue<Coral::NativeString>("StringPropertyTest");
-		return value.ToString() == "Hello, World!";
+		return value == "Hello, World!";
 	});
 }
 

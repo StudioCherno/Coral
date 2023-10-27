@@ -8,7 +8,7 @@ namespace Coral {
 
 	std::string PropertyInfo::GetName() const
 	{
-		return s_ManagedFunctions.GetPropertyInfoNameFptr(&m_Handle).ToString();
+		return s_ManagedFunctions.GetPropertyInfoNameFptr(&m_Handle);
 	}
 
 	Type& PropertyInfo::GetType()

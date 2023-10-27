@@ -15,7 +15,7 @@ namespace Coral {
 
 	std::string Type::GetAssemblyQualifiedName() const
 	{
-		return s_ManagedFunctions.GetAssemblyQualifiedNameFptr(&m_TypePtr).ToString();
+		return s_ManagedFunctions.GetAssemblyQualifiedNameFptr(&m_TypePtr);
 	}
 
 	Type& Type::GetBaseType()
@@ -117,7 +117,7 @@ namespace Coral {
 		if (m_TypePtr == nullptr)
 			return;
 
-		auto fullName = s_ManagedFunctions.GetFullTypeNameFptr(&m_TypePtr).ToString();
+		std::string fullName = s_ManagedFunctions.GetFullTypeNameFptr(&m_TypePtr);
 		size_t namespaceEnd = fullName.find_last_of('.');
 
 		if (namespaceEnd == std::string::npos)
@@ -133,7 +133,7 @@ namespace Coral {
 
 	ManagedObject Type::CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength)
 	{
-		auto name = NativeString::FromUTF8(GetAssemblyQualifiedName());
+		auto name = GetAssemblyQualifiedName();
 		auto result = s_ManagedFunctions.CreateObjectFptr(name, false, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 		result.m_Type = this;
 		return result;
@@ -141,14 +141,12 @@ namespace Coral {
 
 	void Type::InvokeStaticMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
 	{
-		auto methodName = NativeString::FromUTF8(InMethodName);
-		s_ManagedFunctions.InvokeStaticMethodFptr(&m_TypePtr, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		s_ManagedFunctions.InvokeStaticMethodFptr(&m_TypePtr, InMethodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 	}
 
 	void Type::InvokeStaticMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
 	{
-		auto methodName = NativeString::FromUTF8(InMethodName);
-		s_ManagedFunctions.InvokeStaticMethodRetFptr(&m_TypePtr, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
+		s_ManagedFunctions.InvokeStaticMethodRetFptr(&m_TypePtr, InMethodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
 	}
 
 

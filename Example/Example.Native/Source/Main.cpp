@@ -33,7 +33,7 @@ void VectorAddIcall(MyVec3* InVec0, const MyVec3* InVec1)
 
 void PrintStringIcall(Coral::NativeString InString)
 {
-	std::cout << InString.ToString() << std::endl;
+	std::cout << std::string(InString) << std::endl;
 }
 
 void NativeArrayIcall(Coral::NativeArray<float> InValues)
