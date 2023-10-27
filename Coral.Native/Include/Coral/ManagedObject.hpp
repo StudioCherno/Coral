@@ -55,30 +55,35 @@ namespace Coral {
 		template<typename TValue>
 		void SetFieldValue(std::string_view InFieldName, TValue InValue)
 		{
-			SetFieldValueInternal(InFieldName, &InValue);
+			SetFieldValueRaw(InFieldName, &InValue);
 		}
 
 		template<typename TReturn>
 		TReturn GetFieldValue(std::string_view InFieldName)
 		{
 			TReturn result;
-			GetFieldValueInternal(InFieldName, &result);
+			GetFieldValueRaw(InFieldName, &result);
 			return result;
 		}
 
 		template<typename TValue>
 		void SetPropertyValue(std::string_view InPropertyName, TValue InValue)
 		{
-			SetPropertyValueInternal(InPropertyName, &InValue);
+			SetPropertyValueRaw(InPropertyName, &InValue);
 		}
 
 		template<typename TReturn>
 		TReturn GetPropertyValue(std::string_view InPropertyName)
 		{
 			TReturn result;
-			GetPropertyValueInternal(InPropertyName, &result);
+			GetPropertyValueRaw(InPropertyName, &result);
 			return result;
 		}
+
+		void SetFieldValueRaw(std::string_view InFieldName, void* InValue) const;
+		void GetFieldValueRaw(std::string_view InFieldName, void* OutValue) const;
+		void SetPropertyValueRaw(std::string_view InPropertyName, void* InValue) const;
+		void GetPropertyValueRaw(std::string_view InPropertyName, void* OutValue) const;
 
 		const Type& GetType() const;
 		
@@ -87,10 +92,6 @@ namespace Coral {
 	private:
 		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
 		void InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
-		void SetFieldValueInternal(std::string_view InFieldName, void* InValue) const;
-		void GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const;
-		void SetPropertyValueInternal(std::string_view InPropertyName, void* InValue) const;
-		void GetPropertyValueInternal(std::string_view InPropertyName, void* OutValue) const;
 
 	private:
 		void* m_Handle = nullptr;

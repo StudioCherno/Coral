@@ -16,22 +16,22 @@ namespace Coral {
 		s_ManagedFunctions.InvokeMethodRetFptr(m_Handle, InMethodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
 	}
 
-	void ManagedObject::SetFieldValueInternal(std::string_view InFieldName, void* InValue) const
+	void ManagedObject::SetFieldValueRaw(std::string_view InFieldName, void* InValue) const
 	{
 		s_ManagedFunctions.SetFieldValueFptr(m_Handle, InFieldName, InValue);
 	}
 
-	void ManagedObject::GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const
+	void ManagedObject::GetFieldValueRaw(std::string_view InFieldName, void* OutValue) const
 	{
 		s_ManagedFunctions.GetFieldValueFptr(m_Handle, InFieldName, OutValue);
 	}
 
-	void ManagedObject::SetPropertyValueInternal(std::string_view InPropertyName, void* InValue) const
+	void ManagedObject::SetPropertyValueRaw(std::string_view InPropertyName, void* InValue) const
 	{
 		s_ManagedFunctions.SetPropertyValueFptr(m_Handle, InPropertyName, InValue);
 	}
 	
-	void ManagedObject::GetPropertyValueInternal(std::string_view InPropertyName, void* OutValue) const
+	void ManagedObject::GetPropertyValueRaw(std::string_view InPropertyName, void* OutValue) const
 	{
 		s_ManagedFunctions.GetPropertyValueFptr(m_Handle, InPropertyName, OutValue);
 	}
