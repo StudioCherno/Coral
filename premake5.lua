@@ -1,3 +1,5 @@
+premake.api.addAllowed("debuggertype", "NativeWithManagedCore")
+
 workspace "Coral"
     configurations { "Debug", "Release" }
 

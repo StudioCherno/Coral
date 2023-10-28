@@ -453,12 +453,6 @@ int main(int argc, char** argv)
 
 	auto assemblyPath = exeDir / "Testing.Managed.dll";
 	auto& assembly = loadContext.LoadAssembly(assemblyPath.string());
-	auto& assembly2 = loadContext.LoadAssembly("F:/Coral/Tests/Dummy/bin/Debug/net7.0/Dummy.dll");
-
-	auto& dummyClass = assembly2.GetType("Dummy.DummyClass");
-	auto dummyInstance = dummyClass.CreateInstance();
-	dummyInstance.InvokeMethod("Test");
-	dummyInstance.Destroy();
 
 	RegisterTestInternalCalls(assembly);
 	assembly.UploadInternalCalls();
@@ -578,11 +572,6 @@ int main(int argc, char** argv)
 	loadContext = hostInstance.CreateAssemblyLoadContext("ALC2");
 	auto& newAssembly = loadContext.LoadAssembly(assemblyPath.string());
 	auto& newAssembly2 = loadContext.LoadAssembly("F:/Coral/Tests/Dummy/bin/Debug/net7.0/Dummy.dll");
-
-	auto& dummyClass2 = assembly2.GetType("Dummy.DummyClass");
-	auto dummyInstance2 = dummyClass2.CreateInstance();
-	dummyInstance2.InvokeMethod("Test");
-	dummyInstance2.Destroy();
 
 	auto ls = newAssembly.GetLoadStatus();
 
