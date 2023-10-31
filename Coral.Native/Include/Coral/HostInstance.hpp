@@ -16,7 +16,7 @@ namespace Coral {
 		/// <summary>
 		/// The file path to Coral.runtimeconfig.json (e.g C:\Dev\MyProject\ThirdParty\Coral)
 		/// </summary>
-		std::string_view CoralDirectory;
+		std::string CoralDirectory;
 		
 		MessageCallbackFn MessageCallback = nullptr;
 		MessageLevel MessageFilter = MessageLevel::All;
