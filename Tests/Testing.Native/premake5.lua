@@ -20,25 +20,39 @@ project "Testing.Native"
 
     externalincludedirs { "../../Coral.Native/Include/" }
 
-    libdirs { "%{wks.location}/NetCore/7.0.7/" }
+	filter { "system:windows" }
+	    libdirs { "%{wks.location}/NetCore/7.0.7/" }
 
-    links {
-        "Coral.Native",
+		postbuildcommands {
+			'{ECHO} Copying "%{wks.location}/NetCore/7.0.7/nethost.dll" to "%{cfg.targetdir}"',
+			'{COPYFILE} "%{wks.location}/NetCore/7.0.7/nethost.dll" "%{cfg.targetdir}"',
+			'{COPYFILE} "%{wks.location}/Coral.Managed/Coral.Managed.runtimeconfig.json" "%{cfg.targetdir}"',
+		}
+	filter {}
 
-        "nethost",
-        "libnethost",
-    }
+	filter { "system:linux" }
+		libdirs { "%{wks.location}/NetCore/7.0.7/Linux/" }
+	
+		postbuildcommands {
+			'{ECHO} Copying "%{wks.location}/NetCore/7.0.7/Linux/libnethost.so" to "%{cfg.targetdir}"',
+			'{COPYFILE} "%{wks.location}/NetCore/7.0.7/Linux/libnethost.so" "%{cfg.targetdir}"',
+			'{COPYFILE} "%{wks.location}/Coral.Managed/Coral.Managed.runtimeconfig.json" "%{cfg.targetdir}"',
+		}
+	filter {}
 
-    postbuildcommands {
-        '{ECHO} Copying "%{wks.location}/NetCore/7.0.7/nethost.dll" to "%{cfg.targetdir}"',
-        '{COPYFILE} "%{wks.location}/NetCore/7.0.7/nethost.dll" "%{cfg.targetdir}"',
-        '{COPYFILE} "%{wks.location}/Coral.Managed/Coral.Managed.runtimeconfig.json" "%{cfg.targetdir}"',
-    }
+	links {
+		"Coral.Native",
+
+		"nethost",
+	}
 
     filter { "configurations:Debug" }
         runtime "Debug"
+		symbols "On"
         defines { "CORAL_TESTING_DEBUG" }
+	filter {}
 
     filter { "configurations:Release" }
         runtime "Release"
         defines { "CORAL_TESTING_RELEASE" }
+	filter {}

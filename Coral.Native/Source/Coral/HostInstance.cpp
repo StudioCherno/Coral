@@ -5,6 +5,10 @@
 #include "StringHelper.hpp"
 #include "TypeCache.hpp"
 
+#ifndef _WIN32
+	#include <dlfcn.h>
+#endif
+
 namespace Coral {
 
 	struct CoreCLRFunctions
@@ -133,7 +137,7 @@ namespace Coral {
 		libraryHandle = LoadLibraryA(pathBuffer.data());
 	#endif
 #else
-		libraryHandle = dlopen(pathBuffer.data());
+		libraryHandle = dlopen(pathBuffer.data(), RTLD_NOW | RTLD_GLOBAL);
 #endif
 
 		CORAL_VERIFY(libraryHandle != nullptr);
