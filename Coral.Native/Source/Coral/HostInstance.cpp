@@ -126,9 +126,9 @@ namespace Coral {
 		// Find the Program Files folder
 		TCHAR pf[MAX_PATH];
 		SHGetSpecialFolderPath(
-		0,
-		pf, 
-		CSIDL_PROGRAM_FILES, 
+		nullptr,
+		pf,
+		CSIDL_PROGRAM_FILES,
 		FALSE);
 
 		basePath = pf;
@@ -165,9 +165,9 @@ namespace Coral {
 
 #ifdef CORAL_WINDOWS
 	#ifdef CORAL_WIDE_CHARS
-		libraryHandle = LoadLibraryW(hostfxrPath.string().data());
+		libraryHandle = LoadLibraryW(hostfxrPath.c_str());
 	#else
-		libraryHandle = LoadLibraryA(hostfxrPath.string().data());
+		libraryHandle = LoadLibraryA(hostfxrPath.string().c_str());
 	#endif
 #else
 		libraryHandle = dlopen(hostfxrPath.string().data(), RTLD_NOW | RTLD_GLOBAL);
