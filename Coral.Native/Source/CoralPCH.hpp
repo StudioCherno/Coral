@@ -24,6 +24,6 @@
 #include <utility>
 
 // HostFXR / CoreCLR
-#include <nethost.h>
+//#include <nethost.h>
 #include <coreclr_delegates.h>
 #include <hostfxr.h>

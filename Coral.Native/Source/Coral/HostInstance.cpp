@@ -5,7 +5,9 @@
 #include "StringHelper.hpp"
 #include "TypeCache.hpp"
 
-#ifndef _WIN32
+#if defined(CORAL_WINDOWS)
+	#include <ShlObj_core.h>
+#else
 	#include <dlfcn.h>
 #endif
 
@@ -116,28 +118,59 @@ namespace Coral {
 	}
 #endif
 
+	std::filesystem::path GetHostFXRPath()
+	{
+		std::filesystem::path basePath = "";
+
+#if defined(CORAL_WINDOWS)
+		// Find the Program Files folder
+		TCHAR pf[MAX_PATH];
+		SHGetSpecialFolderPath(
+		0,
+		pf, 
+		CSIDL_PROGRAM_FILES, 
+		FALSE);
+
+		basePath = pf;
+		basePath /= "dotnet/host/fxr/";
+#elif defined(CORAL_LINUX)
+		basePath = "/usr/lib/dotnet/host/fxr/";
+#endif
+
+		for (auto dir : std::filesystem::recursive_directory_iterator(basePath))
+		{
+			if (!dir.is_directory())
+				continue;
+
+			auto dirPath = dir.path().string();
+
+			if (dirPath.find(CORAL_DOTNET_TARGET_VERSION_MAJOR_STR) == std::string::npos)
+				continue;
+
+			auto res = dir / std::filesystem::path(CORAL_HOSTFXR_NAME);
+			CORAL_VERIFY(std::filesystem::exists(res));
+			return res;
+		}
+
+		return "";
+	}
+
 	void HostInstance::LoadHostFXR() const
 	{
 		// Retrieve the file path to the CoreCLR library
-		size_t pathBufferSize = 0;
-		int status = get_hostfxr_path(nullptr, &pathBufferSize, nullptr);
-		CORAL_VERIFY(status == StatusCode::HostApiBufferTooSmall);
-		std::vector<CharType> pathBuffer;
-		pathBuffer.resize(pathBufferSize);
-		status = get_hostfxr_path(pathBuffer.data(), &pathBufferSize, nullptr);
-		CORAL_VERIFY(status == StatusCode::Success);
+		auto hostfxrPath = GetHostFXRPath();
 
 		// Load the CoreCLR library
 		void* libraryHandle = nullptr;
 
-#ifdef _WIN32
-	#ifdef _WCHAR_T_DEFINED
-		libraryHandle = LoadLibraryW(pathBuffer.data());
+#ifdef CORAL_WINDOWS
+	#ifdef CORAL_WIDE_CHARS
+		libraryHandle = LoadLibraryW(hostfxrPath.string().data());
 	#else
-		libraryHandle = LoadLibraryA(pathBuffer.data());
+		libraryHandle = LoadLibraryA(hostfxrPath.string().data());
 	#endif
 #else
-		libraryHandle = dlopen(pathBuffer.data(), RTLD_NOW | RTLD_GLOBAL);
+		libraryHandle = dlopen(hostfxrPath.string().data(), RTLD_NOW | RTLD_GLOBAL);
 #endif
 
 		CORAL_VERIFY(libraryHandle != nullptr);
