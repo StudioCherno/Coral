@@ -210,17 +210,17 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void InvokeStaticMethod(Type* InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
+	private static unsafe void InvokeStaticMethod(long InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
 	{
 		try
 		{
-			if (InType == null)
+			if (!TypeInterface.s_CachedTypes.TryGetValue(InType, out var type))
 			{
 				LogMessage($"Cannot invoke method {InMethodName} on a null type.", MessageLevel.Error);
 				return;
 			}
 
-			var methodInfo = TryGetMethodInfo(*InType, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			var methodInfo = TryGetMethodInfo(type, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
 
 			methodInfo.Invoke(null, parameters);
@@ -232,17 +232,17 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void InvokeStaticMethodRet(Type* InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
+	private static unsafe void InvokeStaticMethodRet(long InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
 	{
 		try
 		{
-			if (InType == null)
+			if (!TypeInterface.s_CachedTypes.TryGetValue(InType, out var type))
 			{
 				LogMessage($"Cannot invoke method {InMethodName} on a null type.", MessageLevel.Error);
 				return;
 			}
 
-			var methodInfo = TryGetMethodInfo(*InType, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			var methodInfo = TryGetMethodInfo(type, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 			var methodParameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
 
 			object? value = methodInfo.Invoke(null, methodParameters);

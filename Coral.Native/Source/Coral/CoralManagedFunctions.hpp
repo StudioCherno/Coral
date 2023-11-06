@@ -23,51 +23,51 @@ namespace Coral {
 
 	using GetAssemblyTypesFn = void(*)(int32_t, TypeId*, int32_t*);
 	using GetTypeIdFn = void(*)(NativeString, TypeId*);
-	using GetFullTypeNameFn = NativeString(*)(const TypeId*);
-	using GetAssemblyQualifiedNameFn = NativeString(*)(const TypeId*);
-	using GetBaseTypeFn = void(*)(const TypeId*, TypeId*);
-	using IsTypeSubclassOfFn = Bool32(*)(TypeId*, const TypeId*);
-	using IsTypeAssignableToFn = Bool32(*)(TypeId*, const TypeId*);
-	using IsTypeAssignableFromFn = Bool32(*)(TypeId*, const TypeId*);
-	using GetTypeMethodsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
-	using GetTypeFieldsFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
-	using GetTypePropertiesFn = void(*)(const TypeId*, ManagedHandle*, int32_t*);
-	using GetTypeAttributesFn = void (*)(const ManagedHandle*, TypeId*, int32_t*);
-	using GetTypeManagedTypeFn = ManagedType(*)(const TypeId*);
+	using GetFullTypeNameFn = NativeString(*)(TypeId);
+	using GetAssemblyQualifiedNameFn = NativeString(*)(TypeId);
+	using GetBaseTypeFn = void(*)(TypeId, TypeId*);
+	using IsTypeSubclassOfFn = Bool32(*)(TypeId, TypeId);
+	using IsTypeAssignableToFn = Bool32(*)(TypeId, TypeId);
+	using IsTypeAssignableFromFn = Bool32(*)(TypeId, TypeId);
+	using GetTypeMethodsFn = void(*)(TypeId, ManagedHandle*, int32_t*);
+	using GetTypeFieldsFn = void(*)(TypeId, ManagedHandle*, int32_t*);
+	using GetTypePropertiesFn = void(*)(TypeId, ManagedHandle*, int32_t*);
+	using GetTypeAttributesFn = void (*)(ManagedHandle, TypeId*, int32_t*);
+	using GetTypeManagedTypeFn = ManagedType(*)(TypeId);
 
 #pragma endregion
 
 #pragma region MethodInfo
-	using GetMethodInfoNameFn = NativeString(*)(const ManagedHandle*);
-	using GetMethodInfoReturnTypeFn = void(*)(const ManagedHandle*, TypeId*);
-	using GetMethodInfoParameterTypesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
-	using GetMethodInfoAccessibilityFn = TypeAccessibility(*)(const ManagedHandle*);
-	using GetMethodInfoAttributesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
+	using GetMethodInfoNameFn = NativeString(*)(ManagedHandle);
+	using GetMethodInfoReturnTypeFn = void(*)(ManagedHandle, TypeId*);
+	using GetMethodInfoParameterTypesFn = void(*)(ManagedHandle, TypeId*, int32_t*);
+	using GetMethodInfoAccessibilityFn = TypeAccessibility(*)(ManagedHandle);
+	using GetMethodInfoAttributesFn = void(*)(ManagedHandle, TypeId*, int32_t*);
 #pragma endregion
 
 #pragma region FieldInfo
-	using GetFieldInfoNameFn = NativeString(*)(const ManagedHandle*);
-	using GetFieldInfoTypeFn = void(*)(const ManagedHandle*, TypeId*);
-	using GetFieldInfoAccessibilityFn = TypeAccessibility(*)(const ManagedHandle*);
-	using GetFieldInfoAttributesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
+	using GetFieldInfoNameFn = NativeString(*)(ManagedHandle);
+	using GetFieldInfoTypeFn = void(*)(ManagedHandle, TypeId*);
+	using GetFieldInfoAccessibilityFn = TypeAccessibility(*)(ManagedHandle);
+	using GetFieldInfoAttributesFn = void(*)(ManagedHandle, TypeId*, int32_t*);
 #pragma endregion
 
 #pragma region PropertyInfo
-	using GetPropertyInfoNameFn = NativeString(*)(const ManagedHandle*);
-	using GetPropertyInfoTypeFn = void(*)(const ManagedHandle*, TypeId*);
-	using GetPropertyInfoAttributesFn = void(*)(const ManagedHandle*, TypeId*, int32_t*);
+	using GetPropertyInfoNameFn = NativeString(*)(ManagedHandle);
+	using GetPropertyInfoTypeFn = void(*)(ManagedHandle, TypeId*);
+	using GetPropertyInfoAttributesFn = void(*)(ManagedHandle, TypeId*, int32_t*);
 #pragma endregion
 
 #pragma region Attribute
-	using GetAttributeFieldValueFn = void(*)(const ManagedHandle*, NativeString, void*);
-	using GetAttributeTypeFn = void(*)(const ManagedHandle*, TypeId*);
+	using GetAttributeFieldValueFn = void(*)(ManagedHandle, NativeString, void*);
+	using GetAttributeTypeFn = void(*)(ManagedHandle, TypeId*);
 #pragma endregion
 
 	using CreateObjectFn = ManagedObject(*)(NativeString, Bool32, const void**, const ManagedType*, int32_t);
 	using InvokeMethodFn = void(*)(void*, NativeString, const void**, const ManagedType*, int32_t);
 	using InvokeMethodRetFn = void(*)(void*, NativeString, const void**, const ManagedType*, int32_t, void*);
-	using InvokeStaticMethodFn = void (*)(const TypeId*, NativeString, const void**, const ManagedType*, int32_t);
-	using InvokeStaticMethodRetFn = void (*)(const TypeId*, NativeString, const void**, const ManagedType*, int32_t, void*);
+	using InvokeStaticMethodFn = void (*)(TypeId, NativeString, const void**, const ManagedType*, int32_t);
+	using InvokeStaticMethodRetFn = void (*)(TypeId, NativeString, const void**, const ManagedType*, int32_t, void*);
 	using SetFieldValueFn = void(*)(void*, NativeString, void*);
 	using GetFieldValueFn = void(*)(void*, NativeString, void*);
 	using SetPropertyValueFn = void(*)(void*, NativeString, void*);

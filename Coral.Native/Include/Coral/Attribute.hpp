@@ -23,7 +23,7 @@ namespace Coral {
 		void GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const;
 
 	private:
-		ManagedHandle m_Handle = nullptr;
+		ManagedHandle m_Handle = -1;
 		Type* m_Type = nullptr;
 
 		friend class Type;

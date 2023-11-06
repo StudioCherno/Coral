@@ -20,7 +20,7 @@ namespace Coral {
 		std::vector<Attribute> GetAttributes() const;
 
 	private:
-		ManagedHandle m_Handle = nullptr;
+		ManagedHandle m_Handle = -1;
 		Type* m_ReturnType = nullptr;
 		std::vector<Type*> m_ParameterTypes;
 

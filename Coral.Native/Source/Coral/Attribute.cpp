@@ -11,7 +11,7 @@ namespace Coral {
 		if (!m_Type)
 		{
 			Type type;
-			s_ManagedFunctions.GetAttributeTypeFptr(&m_Handle, &type.m_TypePtr);
+			s_ManagedFunctions.GetAttributeTypeFptr(m_Handle, &type.m_TypePtr);
 			type.RetrieveName();
 			m_Type = TypeCache::Get().CacheType(std::move(type));
 		}
@@ -21,7 +21,7 @@ namespace Coral {
 
 	void Attribute::GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const
 	{
-		s_ManagedFunctions.GetAttributeFieldValueFptr(&m_Handle, InFieldName, OutValue);
+		s_ManagedFunctions.GetAttributeFieldValueFptr(m_Handle, InFieldName, OutValue);
 	}
 
 }

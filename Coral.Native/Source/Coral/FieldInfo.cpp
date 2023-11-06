@@ -8,7 +8,7 @@ namespace Coral {
 
 	std::string FieldInfo::GetName() const
 	{
-		return s_ManagedFunctions.GetFieldInfoNameFptr(&m_Handle);
+		return s_ManagedFunctions.GetFieldInfoNameFptr(m_Handle);
 	}
 
 	Type& FieldInfo::GetType()
@@ -16,7 +16,7 @@ namespace Coral {
 		if (!m_Type)
 		{
 			Type fieldType;
-			s_ManagedFunctions.GetFieldInfoTypeFptr(&m_Handle, &fieldType.m_TypePtr);
+			s_ManagedFunctions.GetFieldInfoTypeFptr(m_Handle, &fieldType.m_TypePtr);
 			fieldType.RetrieveName();
 			m_Type = TypeCache::Get().CacheType(std::move(fieldType));
 		}
@@ -26,15 +26,15 @@ namespace Coral {
 
 	TypeAccessibility FieldInfo::GetAccessibility() const
 	{
-		return s_ManagedFunctions.GetFieldInfoAccessibilityFptr(&m_Handle);
+		return s_ManagedFunctions.GetFieldInfoAccessibilityFptr(m_Handle);
 	}
 
 	std::vector<Attribute> FieldInfo::GetAttributes() const
 	{
 		int32_t attributeCount;
-		s_ManagedFunctions.GetFieldInfoAttributesFptr(&m_Handle, nullptr, &attributeCount);
+		s_ManagedFunctions.GetFieldInfoAttributesFptr(m_Handle, nullptr, &attributeCount);
 		std::vector<ManagedHandle> attributeHandles(attributeCount);
-		s_ManagedFunctions.GetFieldInfoAttributesFptr(&m_Handle, attributeHandles.data(), &attributeCount);
+		s_ManagedFunctions.GetFieldInfoAttributesFptr(m_Handle, attributeHandles.data(), &attributeCount);
 
 		std::vector<Attribute> result(attributeHandles.size());
 		for (size_t i = 0; i < attributeHandles.size(); i++)

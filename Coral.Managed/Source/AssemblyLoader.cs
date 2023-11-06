@@ -151,6 +151,12 @@ public static class AssemblyLoader
 
 		ManagedObject.s_CachedMethods.Clear();
 
+		TypeInterface.s_CachedTypes.Clear();
+		TypeInterface.s_CachedMethods.Clear();
+		TypeInterface.s_CachedFields.Clear();
+		TypeInterface.s_CachedProperties.Clear();
+		TypeInterface.s_CachedAttributes.Clear();
+
 		s_AssemblyContexts.Remove(InContextId);
 		alc.Unload();
 	}
