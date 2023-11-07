@@ -428,7 +428,7 @@ void RunTests()
 			std::cerr << "[" << i + 1 << " / " << tests.size() << " (" << test.Name << "): Failed\n"; 
 		}
 	}
-	std::cout << "[NativeTest]: Done. " << passedTests << " passed, " << tests.size() - passedTests  << " failed.";
+	std::cout << "[NativeTest]: Done. " << passedTests << " passed, " << tests.size() - passedTests  << " failed.\n";
 }
 
 int main(int argc, char** argv)
@@ -491,7 +491,6 @@ int main(int argc, char** argv)
 	{
 		auto& type = fieldInfo.GetType();
 		auto accessibility = fieldInfo.GetAccessibility();
-		std::cout << fieldInfo.GetName() << " is " << type.GetFullName() << std::endl;
 
 		auto attributes = fieldInfo.GetAttributes();
 		for (auto attrib : attributes)
@@ -506,7 +505,6 @@ int main(int argc, char** argv)
 	for (auto propertyInfo : fieldTestType.GetProperties())
 	{
 		auto& type = propertyInfo.GetType();
-		std::cout << propertyInfo.GetName() << " is " << type.GetFullName() << std::endl;
 
 		auto attributes = propertyInfo.GetAttributes();
 		for (auto attrib : attributes)
@@ -571,7 +569,6 @@ int main(int argc, char** argv)
 
 	loadContext = hostInstance.CreateAssemblyLoadContext("ALC2");
 	auto& newAssembly = loadContext.LoadAssembly(assemblyPath.string());
-	auto& newAssembly2 = loadContext.LoadAssembly("F:/Coral/Tests/Dummy/bin/Debug/net7.0/Dummy.dll");
 
 	auto ls = newAssembly.GetLoadStatus();
 

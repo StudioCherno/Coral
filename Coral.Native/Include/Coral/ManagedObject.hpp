@@ -55,7 +55,15 @@ namespace Coral {
 		template<typename TValue>
 		void SetFieldValue(std::string_view InFieldName, TValue InValue)
 		{
-			SetFieldValueRaw(InFieldName, &InValue);
+			if constexpr (std::constructible_from<NativeString, TValue>)
+			{
+				NativeString string(InValue);
+				SetFieldValueRaw(InFieldName, &string);
+			}
+			else
+			{
+				SetFieldValueRaw(InFieldName, &InValue);
+			}
 		}
 
 		template<typename TReturn>
@@ -80,14 +88,33 @@ namespace Coral {
 		template<typename TValue>
 		void SetPropertyValue(std::string_view InPropertyName, TValue InValue)
 		{
-			SetPropertyValueRaw(InPropertyName, &InValue);
+			if constexpr (std::constructible_from<NativeString, TValue>)
+			{
+				NativeString string(InValue);
+				SetPropertyValueRaw(InPropertyName, &string);
+			}
+			else
+			{
+				SetPropertyValueRaw(InPropertyName, &InValue);
+			}
 		}
 
 		template<typename TReturn>
 		TReturn GetPropertyValue(std::string_view InPropertyName)
 		{
 			TReturn result;
-			GetPropertyValueRaw(InPropertyName, &result);
+
+			if constexpr (std::same_as<TReturn, NativeString>)
+			{
+				StringData stringData;
+				GetPropertyValueRaw(InPropertyName, &stringData);
+				result = TReturn(stringData);
+			}
+			else
+			{
+				GetPropertyValueRaw(InPropertyName, &result);
+			}
+
 			return result;
 		}
 
