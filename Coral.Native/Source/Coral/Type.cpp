@@ -3,6 +3,8 @@
 #include "TypeCache.hpp"
 #include "Attribute.hpp"
 
+#include <iostream>
+
 namespace Coral {
 
 	std::string Type::GetFullName() const
@@ -130,8 +132,8 @@ namespace Coral {
 
 	ManagedObject Type::CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength)
 	{
-		auto name = GetAssemblyQualifiedName();
-		auto result = s_ManagedFunctions.CreateObjectFptr(name.m_Data, false, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		ManagedObject result;
+		result.m_Handle = s_ManagedFunctions.CreateObjectFptr(m_TypePtr, false, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 		result.m_Type = this;
 		return result;
 	}

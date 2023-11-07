@@ -63,7 +63,7 @@ namespace Coral {
 	using GetAttributeTypeFn = void(*)(ManagedHandle, TypeId*);
 #pragma endregion
 
-	using CreateObjectFn = ManagedObject(*)(StringData, Bool32, const void**, const ManagedType*, int32_t);
+	using CreateObjectFn = void*(*)(TypeId, Bool32, const void**, const ManagedType*, int32_t);
 	using InvokeMethodFn = void(*)(void*, StringData, const void**, const ManagedType*, int32_t);
 	using InvokeMethodRetFn = void(*)(void*, StringData, const void**, const ManagedType*, int32_t, void*);
 	using InvokeStaticMethodFn = void (*)(TypeId, StringData, const void**, const ManagedType*, int32_t);

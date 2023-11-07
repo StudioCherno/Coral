@@ -86,22 +86,15 @@ internal static class ManagedObject
 
 	internal static Dictionary<MethodKey, MethodInfo> s_CachedMethods = new Dictionary<MethodKey, MethodInfo>();
 
-	private struct ObjectData
-	{
-		public IntPtr Handle;
-		public NativeString FullName;
-	}
-
 	[UnmanagedCallersOnly]
-	private static unsafe ObjectData CreateObject(NativeString InTypeName, Bool32 InWeakRef, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
+	private static unsafe IntPtr CreateObject(long InTypeID, Bool32 InWeakRef, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
 	{
 		try
 		{
-			var type = TypeInterface.FindType(InTypeName);
-
-			if (type == null)
+			if (!TypeInterface.s_CachedTypes.TryGetValue(InTypeID, out var type))
 			{
-				LogMessage($"Failed to find type with name '{InTypeName}'.", MessageLevel.Error);
+				LogMessage($"Failed to find type with id '{InTypeID}'.", MessageLevel.Error);
+				return IntPtr.Zero;
 			}
 
 			ConstructorInfo? constructor = null;
@@ -121,8 +114,8 @@ internal static class ManagedObject
 
 			if (constructor == null)
 			{
-				LogMessage($"Failed to find constructor for type {InTypeName} with {InParameterCount} parameters.", MessageLevel.Error);
-				return default;
+				LogMessage($"Failed to find constructor for type {type.FullName} with {InParameterCount} parameters.", MessageLevel.Error);
+				return IntPtr.Zero;
 			}
 
 			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, constructor);
@@ -143,21 +136,17 @@ internal static class ManagedObject
 
 			if (result == null)
 			{
-				LogMessage($"Failed to instantiate type {InTypeName}.", MessageLevel.Error);
+				LogMessage($"Failed to instantiate type {type.FullName}.", MessageLevel.Error);
 			}
 
 			var handle = GCHandle.Alloc(result, InWeakRef ? GCHandleType.Weak : GCHandleType.Normal);
 			AssemblyLoader.RegisterHandle(type.Assembly, handle);
-			return new()
-			{
-				Handle = GCHandle.ToIntPtr(handle),
-				FullName = type.FullName
-			};
+			return GCHandle.ToIntPtr(handle);
 		}
 		catch (Exception ex)
 		{
 			HandleException(ex);
-			return new() { Handle = IntPtr.Zero, FullName = "" };
+			return IntPtr.Zero;
 		}
 	}
 

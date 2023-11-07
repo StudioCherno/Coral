@@ -202,26 +202,26 @@ namespace Coral {
 			CORAL_VERIFY(status == StatusCode::Success);
 		}
 
-		using InitializeFn = void(*)(void(*)(NativeString, MessageLevel), void(*)(NativeString));
+		using InitializeFn = void(*)(void(*)(StringData, MessageLevel), void(*)(StringData));
 		InitializeFn coralManagedEntryPoint = nullptr;
 		coralManagedEntryPoint = LoadCoralManagedFunctionPtr<InitializeFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("Initialize"));
 
 		LoadCoralFunctions();
 
-		coralManagedEntryPoint([](NativeString InMessage, MessageLevel InLevel)
+		coralManagedEntryPoint([](StringData InMessage, MessageLevel InLevel)
 		{
 			if (MessageFilter & InLevel)
-				MessageCallback(InMessage, InLevel);
+				MessageCallback(NativeString(InMessage), InLevel);
 		},
-		[](NativeString InMessage)
+		[](StringData InMessage)
 		{
 			if (!ExceptionCallback)
 			{
-				MessageCallback(InMessage, MessageLevel::Error);
+				MessageCallback(NativeString(InMessage), MessageLevel::Error);
 				return;
 			}
-
-			ExceptionCallback(InMessage);
+			
+			ExceptionCallback(NativeString(InMessage));
 		});
 
 		ExceptionCallback = m_Settings.ExceptionCallback;
