@@ -43,16 +43,16 @@ namespace Coral {
 		return m_Types;
 	}
 
-	ManagedAssembly& AssemblyLoadContext::LoadAssembly(std::string_view InFilePath)
+	ManagedAssembly& AssemblyLoadContext::LoadAssembly(NativeString InFilePath)
 	{
 		auto[idx, result] = m_LoadedAssemblies.EmplaceBack();
 		result.m_Host = m_Host;
-		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(m_ContextId, InFilePath);
+		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(m_ContextId, InFilePath.m_Data);
 		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
 
 		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
 		{
-			result.m_Name = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
+			result.m_Name = NativeString(s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID));
 
 			int32_t typeCount = 0;
 			s_ManagedFunctions.GetAssemblyTypes(result.m_AssemblyID, nullptr, &typeCount);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.hpp"
+#include "NativeString.hpp"
 
 namespace Coral {
 
@@ -56,25 +57,33 @@ namespace Coral {
 			return ManagedType::Unknown;
 	}
 
-	template<typename TArg, size_t TIndex>
-	inline void AddToArrayI(const void** InArgumentsArr, ManagedType* InParameterTypes, TArg&& InArg)
+	class Utility
 	{
-		InParameterTypes[TIndex] = GetManagedType<TArg>();
-
-		if constexpr (std::is_pointer_v<std::remove_reference_t<TArg>>)
+	public:
+		template <typename TArg, size_t TIndex>
+		static void AddToArrayI(const void** InArgumentsArr, ManagedType* InParameterTypes, TArg&& InArg)
 		{
-			InArgumentsArr[TIndex] = reinterpret_cast<const void*>(InArg);
-		}
-		else
-		{
-			InArgumentsArr[TIndex] = reinterpret_cast<const void*>(&InArg);
-		}
-	}
+			InParameterTypes[TIndex] = GetManagedType<TArg>();
 
-	template<typename... TArgs, size_t... TIndices>
-	inline void AddToArray(const void** InArgumentsArr, ManagedType* InParameterTypes, TArgs&&... InArgs, const std::index_sequence<TIndices...>&)
-	{
-		(AddToArrayI<TArgs, TIndices>(InArgumentsArr, InParameterTypes, std::forward<TArgs>(InArgs)), ...);
-	}
+			if constexpr (std::is_pointer_v<std::remove_reference_t<TArg>>)
+			{
+				InArgumentsArr[TIndex] = reinterpret_cast<const void*>(InArg);
+			}
+			else if constexpr (std::same_as<TArg, NativeString>)
+			{
+				InArgumentsArr[TIndex] = &InArg.m_Data;
+			}
+			else
+			{
+				InArgumentsArr[TIndex] = reinterpret_cast<const void*>(&InArg);
+			}
+		}
+
+		template <typename... TArgs, size_t... TIndices>
+		static void AddToArray(const void** InArgumentsArr, ManagedType* InParameterTypes, TArgs&&... InArgs, const std::index_sequence<TIndices...>&)
+		{
+			(AddToArrayI<TArgs, TIndices>(InArgumentsArr, InParameterTypes, std::forward<TArgs>(InArgs)), ...);
+		}
+	};
 
 }

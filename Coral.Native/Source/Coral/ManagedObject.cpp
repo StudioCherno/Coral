@@ -6,34 +6,34 @@
 
 namespace Coral {
 
-	void ManagedObject::InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
+	void ManagedObject::InvokeMethodInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
 	{
-		s_ManagedFunctions.InvokeMethodFptr(m_Handle, InMethodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		s_ManagedFunctions.InvokeMethodFptr(m_Handle, InMethodName.m_Data, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 	}
 
-	void ManagedObject::InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
+	void ManagedObject::InvokeMethodRetInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
 	{
-		s_ManagedFunctions.InvokeMethodRetFptr(m_Handle, InMethodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
+		s_ManagedFunctions.InvokeMethodRetFptr(m_Handle, InMethodName.m_Data, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
 	}
 
-	void ManagedObject::SetFieldValueRaw(std::string_view InFieldName, void* InValue) const
+	void ManagedObject::SetFieldValueRaw(NativeString InFieldName, void* InValue) const
 	{
-		s_ManagedFunctions.SetFieldValueFptr(m_Handle, InFieldName, InValue);
+		s_ManagedFunctions.SetFieldValueFptr(m_Handle, InFieldName.m_Data, InValue);
 	}
 
-	void ManagedObject::GetFieldValueRaw(std::string_view InFieldName, void* OutValue) const
+	void ManagedObject::GetFieldValueRaw(NativeString InFieldName, void* OutValue) const
 	{
-		s_ManagedFunctions.GetFieldValueFptr(m_Handle, InFieldName, OutValue);
+		s_ManagedFunctions.GetFieldValueFptr(m_Handle, InFieldName.m_Data, OutValue);
 	}
 
-	void ManagedObject::SetPropertyValueRaw(std::string_view InPropertyName, void* InValue) const
+	void ManagedObject::SetPropertyValueRaw(NativeString InPropertyName, void* InValue) const
 	{
-		s_ManagedFunctions.SetPropertyValueFptr(m_Handle, InPropertyName, InValue);
+		s_ManagedFunctions.SetPropertyValueFptr(m_Handle, InPropertyName.m_Data, InValue);
 	}
 	
-	void ManagedObject::GetPropertyValueRaw(std::string_view InPropertyName, void* OutValue) const
+	void ManagedObject::GetPropertyValueRaw(NativeString InPropertyName, void* OutValue) const
 	{
-		s_ManagedFunctions.GetPropertyValueFptr(m_Handle, InPropertyName, OutValue);
+		s_ManagedFunctions.GetPropertyValueFptr(m_Handle, InPropertyName.m_Data, OutValue);
 	}
 
 	const Type& ManagedObject::GetType() const

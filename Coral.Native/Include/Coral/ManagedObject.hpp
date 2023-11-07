@@ -23,7 +23,7 @@ namespace Coral {
 			{
 				const void* parameterValues[parameterCount];
 				ManagedType parameterTypes[parameterCount];
-				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
+				Utility::AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
 				InvokeMethodRetInternal(InMethodName, parameterValues, parameterTypes, parameterCount, &result);
 			}
 			else
@@ -43,7 +43,7 @@ namespace Coral {
 			{
 				const void* parameterValues[parameterCount];
 				ManagedType parameterTypes[parameterCount];
-				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
+				Utility::AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
 				InvokeMethodInternal(InMethodName, parameterValues, parameterTypes, parameterCount);
 			}
 			else
@@ -62,7 +62,18 @@ namespace Coral {
 		TReturn GetFieldValue(std::string_view InFieldName)
 		{
 			TReturn result;
-			GetFieldValueRaw(InFieldName, &result);
+			
+			if constexpr (std::same_as<TReturn, NativeString>)
+			{
+				StringData stringData;
+				GetFieldValueRaw(InFieldName, &stringData);
+				result = TReturn(stringData);
+			}
+			else
+			{
+				GetFieldValueRaw(InFieldName, &result);
+			}
+
 			return result;
 		}
 
@@ -80,18 +91,18 @@ namespace Coral {
 			return result;
 		}
 
-		void SetFieldValueRaw(std::string_view InFieldName, void* InValue) const;
-		void GetFieldValueRaw(std::string_view InFieldName, void* OutValue) const;
-		void SetPropertyValueRaw(std::string_view InPropertyName, void* InValue) const;
-		void GetPropertyValueRaw(std::string_view InPropertyName, void* OutValue) const;
+		void SetFieldValueRaw(NativeString InFieldName, void* InValue) const;
+		void GetFieldValueRaw(NativeString InFieldName, void* OutValue) const;
+		void SetPropertyValueRaw(NativeString InPropertyName, void* InValue) const;
+		void GetPropertyValueRaw(NativeString InPropertyName, void* OutValue) const;
 
 		const Type& GetType() const;
 		
 		void Destroy();
 
 	private:
-		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
-		void InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
+		void InvokeMethodInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
+		void InvokeMethodRetInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
 
 	private:
 		void* m_Handle = nullptr;

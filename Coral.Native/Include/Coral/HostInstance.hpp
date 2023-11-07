@@ -30,7 +30,7 @@ namespace Coral {
 		bool Initialize(HostSettings InSettings);
 		void Shutdown();
 
-		AssemblyLoadContext CreateAssemblyLoadContext(std::string_view InName);
+		AssemblyLoadContext CreateAssemblyLoadContext(NativeString InName);
 		void UnloadAssemblyLoadContext(AssemblyLoadContext& InLoadContext);
 
 	private:

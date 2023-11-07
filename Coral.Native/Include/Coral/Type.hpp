@@ -15,7 +15,7 @@ namespace Coral {
 		std::string_view GetName() const { return m_Name; }
 		std::string_view GetNamespace() const { return m_Namespace; }
 		std::string GetFullName() const;
-		std::string GetAssemblyQualifiedName() const;
+		NativeString GetAssemblyQualifiedName() const;
 
 		Type& GetBaseType();
 
@@ -49,7 +49,7 @@ namespace Coral {
 			{
 				const void* argumentsArr[argumentCount];
 				ManagedType argumentTypes[argumentCount];
-				AddToArray<TArgs...>(argumentsArr, argumentTypes, std::forward<TArgs>(InArguments)..., std::make_index_sequence<argumentCount> {});
+				Utility::AddToArray<TArgs...>(argumentsArr, argumentTypes, std::forward<TArgs>(InArguments)..., std::make_index_sequence<argumentCount> {});
 				result = CreateInstanceInternal(argumentsArr, argumentTypes, argumentCount);
 			}
 			else
@@ -71,7 +71,7 @@ namespace Coral {
 			{
 				const void* parameterValues[parameterCount];
 				ManagedType parameterTypes[parameterCount];
-				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
+				Utility::AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
 				InvokeStaticMethodRetInternal(InMethodName, parameterValues, parameterTypes, parameterCount, &result);
 			}
 			else
@@ -91,7 +91,7 @@ namespace Coral {
 			{
 				const void* parameterValues[parameterCount];
 				ManagedType parameterTypes[parameterCount];
-				AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
+				Utility::AddToArray<TArgs...>(parameterValues, parameterTypes, std::forward<TArgs>(InParameters)..., std::make_index_sequence<parameterCount> {});
 				InvokeStaticMethodInternal(InMethodName, parameterValues, parameterTypes, parameterCount);
 			}
 			else
@@ -104,8 +104,8 @@ namespace Coral {
 		void RetrieveName();
 
 		ManagedObject CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength);
-		void InvokeStaticMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
-		void InvokeStaticMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
+		void InvokeStaticMethodInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
+		void InvokeStaticMethodRetInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
 
 	private:
 		TypeId m_TypePtr = -1;

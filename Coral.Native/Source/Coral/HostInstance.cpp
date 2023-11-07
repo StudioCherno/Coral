@@ -85,10 +85,10 @@ namespace Coral {
 		s_CoreCLRFunctions.CloseHostFXR(m_HostFXRContext);
 	}
 	
-	AssemblyLoadContext HostInstance::CreateAssemblyLoadContext(std::string_view InName)
+	AssemblyLoadContext HostInstance::CreateAssemblyLoadContext(NativeString InName)
 	{
 		AssemblyLoadContext alc;
-		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(InName);
+		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(InName.m_Data);
 		alc.m_Host = this;
 		return alc;
 	}

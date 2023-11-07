@@ -8,7 +8,7 @@ namespace Coral {
 
 	std::string FieldInfo::GetName() const
 	{
-		return s_ManagedFunctions.GetFieldInfoNameFptr(m_Handle);
+		return NativeString(s_ManagedFunctions.GetFieldInfoNameFptr(m_Handle));
 	}
 
 	Type& FieldInfo::GetType()

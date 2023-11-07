@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Core.hpp"
+#include "NativeString.hpp"
 
 namespace Coral {
 

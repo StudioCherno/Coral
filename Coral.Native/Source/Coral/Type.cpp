@@ -13,7 +13,7 @@ namespace Coral {
 		return m_Namespace + "." + m_Name;
 	}
 
-	std::string Type::GetAssemblyQualifiedName() const
+	NativeString Type::GetAssemblyQualifiedName() const
 	{
 		return s_ManagedFunctions.GetAssemblyQualifiedNameFptr(m_TypePtr);
 	}
@@ -114,7 +114,7 @@ namespace Coral {
 
 	void Type::RetrieveName()
 	{
-		std::string fullName = s_ManagedFunctions.GetFullTypeNameFptr(m_TypePtr);
+		std::string fullName = NativeString(s_ManagedFunctions.GetFullTypeNameFptr(m_TypePtr));
 		size_t namespaceEnd = fullName.find_last_of('.');
 
 		if (namespaceEnd == std::string::npos)
@@ -131,19 +131,19 @@ namespace Coral {
 	ManagedObject Type::CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength)
 	{
 		auto name = GetAssemblyQualifiedName();
-		auto result = s_ManagedFunctions.CreateObjectFptr(name, false, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		auto result = s_ManagedFunctions.CreateObjectFptr(name.m_Data, false, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 		result.m_Type = this;
 		return result;
 	}
 
-	void Type::InvokeStaticMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
+	void Type::InvokeStaticMethodInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
 	{
-		s_ManagedFunctions.InvokeStaticMethodFptr(m_TypePtr, InMethodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		s_ManagedFunctions.InvokeStaticMethodFptr(m_TypePtr, InMethodName.m_Data, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 	}
 
-	void Type::InvokeStaticMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
+	void Type::InvokeStaticMethodRetInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
 	{
-		s_ManagedFunctions.InvokeStaticMethodRetFptr(m_TypePtr, InMethodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
+		s_ManagedFunctions.InvokeStaticMethodRetFptr(m_TypePtr, InMethodName.m_Data, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
 	}
 
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.hpp"
+#include "NativeString.hpp"
 
 namespace Coral {
 
@@ -20,7 +21,7 @@ namespace Coral {
 		}
 
 	private:
-		void GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const;
+		void GetFieldValueInternal(NativeString InFieldName, void* OutValue) const;
 
 	private:
 		ManagedHandle m_Handle = -1;

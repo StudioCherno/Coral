@@ -1,5 +1,4 @@
 #include "Attribute.hpp"
-#include "NativeString.hpp"
 #include "Type.hpp"
 #include "CoralManagedFunctions.hpp"
 #include "TypeCache.hpp"
@@ -19,9 +18,9 @@ namespace Coral {
 		return *m_Type;
 	}
 
-	void Attribute::GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const
+	void Attribute::GetFieldValueInternal(NativeString InFieldName, void* OutValue) const
 	{
-		s_ManagedFunctions.GetAttributeFieldValueFptr(m_Handle, InFieldName, OutValue);
+		s_ManagedFunctions.GetAttributeFieldValueFptr(m_Handle, InFieldName.m_Data, OutValue);
 	}
 
 }

@@ -8,7 +8,7 @@ namespace Coral {
 
 	std::string MethodInfo::GetName() const
 	{
-		return s_ManagedFunctions.GetMethodInfoNameFptr(m_Handle);
+		return NativeString(s_ManagedFunctions.GetMethodInfoNameFptr(m_Handle));
 	}
 
 	Type& MethodInfo::GetReturnType()
