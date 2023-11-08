@@ -122,9 +122,9 @@ namespace Coral {
 
 	std::filesystem::path GetHostFXRPath()
 	{
-		std::filesystem::path basePath = "";
-
 #if defined(CORAL_WINDOWS)
+		std::filesystem::path basePath = "";
+		
 		// Find the Program Files folder
 		TCHAR pf[MAX_PATH];
 		SHGetSpecialFolderPath(
@@ -135,23 +135,39 @@ namespace Coral {
 
 		basePath = pf;
 		basePath /= "dotnet/host/fxr/";
+
+		auto searchPaths = std::array
+		{
+			basePath
+		};
+
 #elif defined(CORAL_LINUX)
-		basePath = "/usr/lib/dotnet/host/fxr/";
+		auto searchPaths = std::array
+		{
+			std::filesystem::path("/usr/lib/dotnet/host/fxr/"),
+			std::filesystem::path("/usr/share/dotnet/host/fxr/"),
+		};
 #endif
 
-		for (auto dir : std::filesystem::recursive_directory_iterator(basePath))
+		for (const auto& path : searchPaths)
 		{
-			if (!dir.is_directory())
+			if (!std::filesystem::exists(path))
 				continue;
 
-			auto dirPath = dir.path().string();
+			for (auto dir : std::filesystem::recursive_directory_iterator(path))
+			{
+				if (!dir.is_directory())
+					continue;
 
-			if (dirPath.find(CORAL_DOTNET_TARGET_VERSION_MAJOR_STR) == std::string::npos)
-				continue;
+				auto dirPath = dir.path().string();
 
-			auto res = dir / std::filesystem::path(CORAL_HOSTFXR_NAME);
-			CORAL_VERIFY(std::filesystem::exists(res));
-			return res;
+				if (dirPath.find(CORAL_DOTNET_TARGET_VERSION_MAJOR_STR) == std::string::npos)
+					continue;
+
+				auto res = dir / std::filesystem::path(CORAL_HOSTFXR_NAME);
+				CORAL_VERIFY(std::filesystem::exists(res));
+				return res;
+			}
 		}
 
 		return "";
