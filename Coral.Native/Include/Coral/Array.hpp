@@ -41,67 +41,6 @@ namespace Coral {
 			InArray.m_Length = 0;
 		}
 
-		/*NativeArray() = default;
-
-		NativeArray(int32_t InLength)
-		{
-			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InLength * sizeof(TValue)));
-			m_Length = InLength;
-		}
-
-		NativeArray(const std::vector<TValue>& InValues)
-		{
-			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
-			m_Length = static_cast<int32_t>(InValues.size());
-			memcpy(m_Ptr, InValues.data(), InValues.size() * sizeof(TValue));
-		}
-
-		NativeArray(std::initializer_list<TValue> InValues)
-		{
-			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
-			m_Length = static_cast<int32_t>(InValues.size());
-			memcpy(m_Ptr, InValues.begin(), InValues.size() * sizeof(TValue));
-		}
-
-		NativeArray(const NativeArray& InOther)
-		{
-			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InOther.m_Length * sizeof(TValue)));
-			m_Length = InOther.m_Length;
-			memcpy(m_Ptr, InOther.m_Ptr, InOther.m_Length * sizeof(TValue));
-		}
-
-		NativeArray(NativeArray&& InOther) noexcept
-		{
-			m_Ptr = InOther.m_Ptr;
-			m_Length = InOther.m_Length;
-			InOther.m_Ptr = nullptr;
-			InOther.m_Length = 0;
-		}
-
-		~NativeArray()
-		{
-			Memory::FreeHGlobal(m_Ptr);
-		}
-
-		NativeArray& operator=(const NativeArray& InOther)
-		{
-			Memory::FreeHGlobal(m_Ptr);
-
-			m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InOther.m_Length * sizeof(TValue)));
-			m_Length = InOther.m_Length;
-			memcpy(m_Ptr, InOther.m_Ptr, InOther.m_Length * sizeof(TValue));
-		}
-		
-		NativeArray& operator=(NativeArray&& InOther) noexcept
-		{
-			Memory::FreeHGlobal(m_Ptr);
-
-			m_Ptr = InOther.m_Ptr;
-			m_Length = InOther.m_Length;
-			InOther.m_Ptr = nullptr;
-			InOther.m_Length = 0;
-		}*/
-
 		bool IsEmpty() const { return m_Length == 0 || m_Ptr == nullptr; }
 
 		TValue& operator[](size_t InIndex) { return m_Ptr[InIndex]; }
