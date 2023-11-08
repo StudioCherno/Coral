@@ -5,10 +5,10 @@
 
 namespace Coral {
 
-	String String::New(const CharType* InString)
+	String String::New(const char* InString)
 	{
 		String result;
-		result.m_String = Memory::StringToCoTaskMemAuto(InString);
+		result.Assign(InString);
 		return result;
 	}
 

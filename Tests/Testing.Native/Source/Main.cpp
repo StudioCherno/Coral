@@ -130,10 +130,8 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	RegisterTest("IntPtrTest", [InObject]() mutable{ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
 	RegisterTest("StringTest", [InObject, &InHost]() mutable
 	{
-		auto str = InObject.InvokeMethod<Coral::String, Coral::String>("StringTest", Coral::String::New("Hello"));
-		bool result = str == "Hello, World!";
-		Coral::String::Free(str);
-		return result;
+		Coral::ScopedString str = InObject.InvokeMethod<Coral::String, Coral::String>("StringTest", Coral::String::New("Hello"));
+		return str == "Hello, World!";
 	});
 	
 	RegisterTest("DummyStructTest", [InObject]() mutable
@@ -283,19 +281,13 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	});
 	RegisterTest("StringFieldTest", [InObject]() mutable
 	{
-		auto value = InObject.GetFieldValue<Coral::String>("StringFieldTest");
+		Coral::ScopedString value = InObject.GetFieldValue<Coral::String>("StringFieldTest");
 		if (value != "Hello")
-		{
-			Coral::String::Free(value);
 			return false;
-		}
-		Coral::String::Free(value);
 
-		InObject.SetFieldValue("StringFieldTest", "Hello, World!");
+		InObject.SetFieldValue("StringFieldTest", Coral::String::New("Hello, World!"));
 		value = InObject.GetFieldValue<Coral::String>("StringFieldTest");
-		bool result = value == "Hello, World!";
-		Coral::String::Free(value);
-		return result;
+		return value == "Hello, World!";
 	});
 
 	///// PROPERTIES ////
@@ -411,18 +403,12 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	});
 	RegisterTest("StringPropertyTest", [InObject]() mutable
 	{
-		auto value = InObject.GetPropertyValue<Coral::String>("StringPropertyTest");
+		Coral::ScopedString value = InObject.GetPropertyValue<Coral::String>("StringPropertyTest");
 		if (value != "Hello")
-		{
-			Coral::String::Free(value);
 			return false;
-		}
-		Coral::String::Free(value);
-		InObject.SetPropertyValue("StringPropertyTest", "Hello, World!");
+		InObject.SetPropertyValue("StringPropertyTest", Coral::String::New("Hello, World!"));
 		value = InObject.GetPropertyValue<Coral::String>("StringPropertyTest");
-		bool result = value == "Hello, World!";
-		Coral::String::Free(value);
-		return result;
+		return value == "Hello, World!";
 	});
 }
 
