@@ -5,10 +5,43 @@
 namespace Coral {
 
 	template<typename TValue>
-	class NativeArray
+	class Array
 	{
 	public:
-		NativeArray() = default;
+		static Array New(int32_t InLength)
+		{
+			Array<TValue> result;
+			result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InLength * sizeof(TValue)));
+			result.m_Length = InLength;
+			return result;
+		}
+
+		static Array New(const std::vector<TValue>& InValues)
+		{
+			Array<TValue> result;
+			result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
+			result.m_Length = static_cast<int32_t>(InValues.size());
+			memcpy(result.m_Ptr, InValues.data(), InValues.size() * sizeof(TValue));
+			return result;
+		}
+
+		static Array New(std::initializer_list<TValue> InValues)
+		{
+			Array result;
+			result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
+			result.m_Length = static_cast<int32_t>(InValues.size());
+			memcpy(result.m_Ptr, InValues.begin(), InValues.size() * sizeof(TValue));
+			return result;
+		}
+
+		static void Free(Array InArray)
+		{
+			Memory::FreeHGlobal(InArray.m_Ptr);
+			InArray.m_Ptr = nullptr;
+			InArray.m_Length = 0;
+		}
+
+		/*NativeArray() = default;
 
 		NativeArray(int32_t InLength)
 		{
@@ -67,7 +100,7 @@ namespace Coral {
 			m_Length = InOther.m_Length;
 			InOther.m_Ptr = nullptr;
 			InOther.m_Length = 0;
-		}
+		}*/
 
 		bool IsEmpty() const { return m_Length == 0 || m_Ptr == nullptr; }
 

@@ -23,7 +23,7 @@ namespace Coral {
 
 	private:
 		CharType* m_String = nullptr;
-		Bool32 m_IsDisposed = false; // TODO(Peter): Try getting rid of this and simply aligning this m_String to 12 bytes
+		Bool32 m_IsDisposed = false; // NOTE(Peter): Required for the layout to match the C# NativeString struct, unused in C++
 	};
 
 	struct ScopedString

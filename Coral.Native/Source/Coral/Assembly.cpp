@@ -3,7 +3,6 @@
 #include "CoralManagedFunctions.hpp"
 #include "Verify.hpp"
 #include "StringHelper.hpp"
-#include "NativeArray.hpp"
 #include "TypeCache.hpp"
 
 namespace Coral {

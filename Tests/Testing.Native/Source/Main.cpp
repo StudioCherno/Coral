@@ -8,7 +8,7 @@
 
 #include <Coral/HostInstance.hpp>
 #include <Coral/GC.hpp>
-#include <Coral/NativeArray.hpp>
+#include <Coral/Array.hpp>
 #include <Coral/Attribute.hpp>
 
 void ExceptionCallback(std::string_view InMessage)
@@ -67,10 +67,10 @@ DummyStruct* DummyStructPtrMarshalIcall(DummyStruct* InStruct)
 	return InStruct;
 }
 
-Coral::NativeArray<float> FloatArrayIcall()
+Coral::Array<float> FloatArrayIcall()
 {
 	std::vector<float> floats = { 5.0f, 10.0f, 15.0f, 50.0f };
-	return Coral::NativeArray(floats);
+	return Coral::Array<float>::New(floats);
 }
 
 Coral::ManagedObject instance;
