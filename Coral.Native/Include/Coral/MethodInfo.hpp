@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.hpp"
+#include "String.hpp"
 
 namespace Coral {
 
@@ -10,7 +11,7 @@ namespace Coral {
 	class MethodInfo
 	{
 	public:
-		std::string GetName() const;
+		String GetName() const;
 
 		Type& GetReturnType();
 		const std::vector<Type*>& GetParameterTypes();

@@ -43,16 +43,20 @@ namespace Coral {
 		return m_Types;
 	}
 
-	ManagedAssembly& AssemblyLoadContext::LoadAssembly(NativeString InFilePath)
+	ManagedAssembly& AssemblyLoadContext::LoadAssembly(std::string_view InFilePath)
 	{
+		auto filepath = String::New(InFilePath);
+
 		auto[idx, result] = m_LoadedAssemblies.EmplaceBack();
 		result.m_Host = m_Host;
-		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(m_ContextId, InFilePath.m_Data);
+		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(m_ContextId, filepath);
 		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
 
 		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
 		{
-			result.m_Name = NativeString(s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID));
+			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
+			result.m_Name = assemblyName;
+			String::Free(assemblyName);
 
 			int32_t typeCount = 0;
 			s_ManagedFunctions.GetAssemblyTypes(result.m_AssemblyID, nullptr, &typeCount);
@@ -63,10 +67,11 @@ namespace Coral {
 			{
 				Type type;
 				type.m_TypePtr = typeId;
-				type.RetrieveName();
 				result.m_Types.push_back(TypeCache::Get().CacheType(std::move(type)));
 			}
 		}
+
+		String::Free(filepath);
 
 		return result;
 	}

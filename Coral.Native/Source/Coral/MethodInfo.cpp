@@ -6,9 +6,9 @@
 
 namespace Coral {
 
-	std::string MethodInfo::GetName() const
+	String MethodInfo::GetName() const
 	{
-		return NativeString(s_ManagedFunctions.GetMethodInfoNameFptr(m_Handle));
+		return s_ManagedFunctions.GetMethodInfoNameFptr(m_Handle);
 	}
 
 	Type& MethodInfo::GetReturnType()
@@ -17,7 +17,6 @@ namespace Coral {
 		{
 			Type returnType;
 			s_ManagedFunctions.GetMethodInfoReturnTypeFptr(m_Handle, &returnType.m_TypePtr);
-			returnType.RetrieveName();
 			m_ReturnType = TypeCache::Get().CacheType(std::move(returnType));
 		}
 
@@ -39,7 +38,6 @@ namespace Coral {
 			{
 				Type type;
 				type.m_TypePtr = parameterTypes[i];
-				type.RetrieveName();
 				m_ParameterTypes[i] = TypeCache::Get().CacheType(std::move(type));
 			}
 		}

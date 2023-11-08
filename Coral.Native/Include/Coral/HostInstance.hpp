@@ -9,7 +9,7 @@
 
 namespace Coral {
 
-	using ExceptionCallbackFn = std::function<void(std::string)>;
+	using ExceptionCallbackFn = std::function<void(std::string_view)>;
 
 	struct HostSettings
 	{
@@ -30,7 +30,7 @@ namespace Coral {
 		bool Initialize(HostSettings InSettings);
 		void Shutdown();
 
-		AssemblyLoadContext CreateAssemblyLoadContext(NativeString InName);
+		AssemblyLoadContext CreateAssemblyLoadContext(std::string_view InName);
 		void UnloadAssemblyLoadContext(AssemblyLoadContext& InLoadContext);
 
 	private:

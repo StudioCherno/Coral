@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NativeString.hpp"
+#include "String.hpp"
 
 namespace Coral {
 
@@ -35,6 +35,6 @@ namespace Coral {
 		return (InLHS = (InLHS | InRHS));
 	}
 
-	using MessageCallbackFn = std::function<void(NativeString, MessageLevel)>;
+	using MessageCallbackFn = std::function<void(std::string_view, MessageLevel)>;
 
 }

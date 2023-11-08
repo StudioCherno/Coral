@@ -31,7 +31,7 @@ void VectorAddIcall(MyVec3* InVec0, const MyVec3* InVec1)
 	InVec0->Z += InVec1->Z;
 }
 
-void PrintStringIcall(Coral::NativeString InString)
+void PrintStringIcall(Coral::String InString)
 {
 	std::cout << std::string(InString) << std::endl;
 }

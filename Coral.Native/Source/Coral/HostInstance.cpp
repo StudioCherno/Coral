@@ -27,7 +27,7 @@ namespace Coral {
 	MessageLevel MessageFilter;
 	ExceptionCallbackFn ExceptionCallback = nullptr;
 
-	void DefaultMessageCallback(NativeString InMessage, MessageLevel InLevel)
+	void DefaultMessageCallback(std::string_view InMessage, MessageLevel InLevel)
 	{
 		const char* level = "";
 
@@ -44,7 +44,7 @@ namespace Coral {
 			break;
 		}
 
-		std::cout << "[Coral](" << level << "): " << std::string(InMessage) << std::endl;
+		std::cout << "[Coral](" << level << "): " << InMessage << std::endl;
 	}
 
 	bool HostInstance::Initialize(HostSettings InSettings)
@@ -85,11 +85,13 @@ namespace Coral {
 		s_CoreCLRFunctions.CloseHostFXR(m_HostFXRContext);
 	}
 	
-	AssemblyLoadContext HostInstance::CreateAssemblyLoadContext(NativeString InName)
+	AssemblyLoadContext HostInstance::CreateAssemblyLoadContext(std::string_view InName)
 	{
+		auto name = String::New(InName);
 		AssemblyLoadContext alc;
-		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(InName.m_Data);
+		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(name);
 		alc.m_Host = this;
+		String::Free(name);
 		return alc;
 	}
 
@@ -202,26 +204,30 @@ namespace Coral {
 			CORAL_VERIFY(status == StatusCode::Success);
 		}
 
-		using InitializeFn = void(*)(void(*)(StringData, MessageLevel), void(*)(StringData));
+		using InitializeFn = void(*)(void(*)(String, MessageLevel), void(*)(String));
 		InitializeFn coralManagedEntryPoint = nullptr;
 		coralManagedEntryPoint = LoadCoralManagedFunctionPtr<InitializeFn>(CORAL_STR("Coral.Managed.ManagedHost, Coral.Managed"), CORAL_STR("Initialize"));
 
 		LoadCoralFunctions();
 
-		coralManagedEntryPoint([](StringData InMessage, MessageLevel InLevel)
+		coralManagedEntryPoint([](String InMessage, MessageLevel InLevel)
 		{
 			if (MessageFilter & InLevel)
-				MessageCallback(NativeString(InMessage), InLevel);
+			{
+				std::string message = InMessage;
+				MessageCallback(message, InLevel);
+			}
 		},
-		[](StringData InMessage)
+		[](String InMessage)
 		{
+			std::string message = InMessage;
 			if (!ExceptionCallback)
 			{
-				MessageCallback(NativeString(InMessage), MessageLevel::Error);
+				MessageCallback(message, MessageLevel::Error);
 				return;
 			}
 			
-			ExceptionCallback(NativeString(InMessage));
+			ExceptionCallback(message);
 		});
 
 		ExceptionCallback = m_Settings.ExceptionCallback;

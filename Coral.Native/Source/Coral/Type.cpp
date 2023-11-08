@@ -3,19 +3,14 @@
 #include "TypeCache.hpp"
 #include "Attribute.hpp"
 
-#include <iostream>
-
 namespace Coral {
 
-	std::string Type::GetFullName() const
+	String Type::GetFullName() const
 	{
-		if (m_Namespace.empty())
-			return m_Name;
-
-		return m_Namespace + "." + m_Name;
+		return s_ManagedFunctions.GetFullTypeNameFptr(m_TypePtr);
 	}
 
-	NativeString Type::GetAssemblyQualifiedName() const
+	String Type::GetAssemblyQualifiedName() const
 	{
 		return s_ManagedFunctions.GetAssemblyQualifiedNameFptr(m_TypePtr);
 	}
@@ -26,7 +21,6 @@ namespace Coral {
 		{
 			Type baseType;
 			s_ManagedFunctions.GetBaseTypeFptr(m_TypePtr, &baseType.m_TypePtr);
-			baseType.RetrieveName();
 			m_BaseType = TypeCache::Get().CacheType(std::move(baseType));
 		}
 
@@ -114,22 +108,6 @@ namespace Coral {
 		return m_TypePtr == InOther.m_TypePtr;
 	}
 
-	void Type::RetrieveName()
-	{
-		std::string fullName = NativeString(s_ManagedFunctions.GetFullTypeNameFptr(m_TypePtr));
-		size_t namespaceEnd = fullName.find_last_of('.');
-
-		if (namespaceEnd == std::string::npos)
-		{
-			m_Name = fullName;
-			m_Namespace = "";
-			return;
-		}
-
-		m_Name = fullName.substr(namespaceEnd + 1);
-		m_Namespace = fullName.substr(0, namespaceEnd);
-	}
-
 	ManagedObject Type::CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength)
 	{
 		ManagedObject result;
@@ -138,14 +116,18 @@ namespace Coral {
 		return result;
 	}
 
-	void Type::InvokeStaticMethodInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
+	void Type::InvokeStaticMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
 	{
-		s_ManagedFunctions.InvokeStaticMethodFptr(m_TypePtr, InMethodName.m_Data, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		auto methodName = String::New(InMethodName);
+		s_ManagedFunctions.InvokeStaticMethodFptr(m_TypePtr, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		String::Free(methodName);
 	}
 
-	void Type::InvokeStaticMethodRetInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
+	void Type::InvokeStaticMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
 	{
-		s_ManagedFunctions.InvokeStaticMethodRetFptr(m_TypePtr, InMethodName.m_Data, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
+		auto methodName = String::New(InMethodName);
+		s_ManagedFunctions.InvokeStaticMethodRetFptr(m_TypePtr, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
+		String::Free(methodName);
 	}
 
 

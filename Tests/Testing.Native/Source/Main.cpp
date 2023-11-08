@@ -32,11 +32,11 @@ int32_t* IntPtrMarshalIcall(int32_t* InValue)
 	*InValue *= 2;
 	return InValue;
 }
-Coral::NativeString StringMarshalIcall(Coral::NativeString InStr)
+Coral::String StringMarshalIcall(Coral::String InStr)
 {
 	return InStr;
 }
-void StringMarshalIcall2(Coral::NativeString InStr)
+void StringMarshalIcall2(Coral::String InStr)
 {
 	std::cout << std::string(InStr) << std::endl;
 }
@@ -130,8 +130,10 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	RegisterTest("IntPtrTest", [InObject]() mutable{ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
 	RegisterTest("StringTest", [InObject, &InHost]() mutable
 	{
-		auto str = InObject.InvokeMethod<Coral::NativeString, Coral::NativeString>("StringTest", "Hello");
-		return str == "Hello, World!";
+		auto str = InObject.InvokeMethod<Coral::String, Coral::String>("StringTest", Coral::String::New("Hello"));
+		bool result = str == "Hello, World!";
+		Coral::String::Free(str);
+		return result;
 	});
 	
 	RegisterTest("DummyStructTest", [InObject]() mutable
@@ -281,12 +283,19 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	});
 	RegisterTest("StringFieldTest", [InObject]() mutable
 	{
-		auto value = InObject.GetFieldValue<Coral::NativeString>("StringFieldTest");
+		auto value = InObject.GetFieldValue<Coral::String>("StringFieldTest");
 		if (value != "Hello")
+		{
+			Coral::String::Free(value);
 			return false;
+		}
+		Coral::String::Free(value);
+
 		InObject.SetFieldValue("StringFieldTest", "Hello, World!");
-		value = InObject.GetFieldValue<Coral::NativeString>("StringFieldTest");
-		return value == "Hello, World!";
+		value = InObject.GetFieldValue<Coral::String>("StringFieldTest");
+		bool result = value == "Hello, World!";
+		Coral::String::Free(value);
+		return result;
 	});
 
 	///// PROPERTIES ////
@@ -402,12 +411,18 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	});
 	RegisterTest("StringPropertyTest", [InObject]() mutable
 	{
-		auto value = InObject.GetPropertyValue<Coral::NativeString>("StringPropertyTest");
+		auto value = InObject.GetPropertyValue<Coral::String>("StringPropertyTest");
 		if (value != "Hello")
+		{
+			Coral::String::Free(value);
 			return false;
+		}
+		Coral::String::Free(value);
 		InObject.SetPropertyValue("StringPropertyTest", "Hello, World!");
-		value = InObject.GetPropertyValue<Coral::NativeString>("StringPropertyTest");
-		return value == "Hello, World!";
+		value = InObject.GetPropertyValue<Coral::String>("StringPropertyTest");
+		bool result = value == "Hello, World!";
+		Coral::String::Free(value);
+		return result;
 	});
 }
 
@@ -518,26 +533,26 @@ int main(int argc, char** argv)
 	
 	auto& memberMethodTestType = assembly.GetType("Testing.Managed.MemberMethodTest");
 
-	for (auto methodInfo : memberMethodTestType.GetMethods())
-	{
-		auto& type = methodInfo.GetReturnType();
-		auto accessibility = methodInfo.GetAccessibility();
-		std::cout << methodInfo.GetName() << ", Returns: " << type.GetFullName() << std::endl;
-		const auto& parameterTypes = methodInfo.GetParameterTypes();
-		for (const auto& paramType : parameterTypes)
-		{
-			std::cout << "\t" << paramType->GetFullName() << std::endl;
-		}
+	// for (auto methodInfo : memberMethodTestType.GetMethods())
+	// {
+	// 	auto& type = methodInfo.GetReturnType();
+	// 	auto accessibility = methodInfo.GetAccessibility();
+	// 	std::cout << methodInfo.GetName() << ", Returns: " << type.GetFullName() << std::endl;
+	// 	const auto& parameterTypes = methodInfo.GetParameterTypes();
+	// 	for (const auto& paramType : parameterTypes)
+	// 	{
+	// 		std::cout << "\t" << paramType->GetFullName() << std::endl;
+	// 	}
 
-		auto attributes = methodInfo.GetAttributes();
-		for (auto attrib : attributes)
-		{
-			auto& attribType = attrib.GetType();
+	// 	auto attributes = methodInfo.GetAttributes();
+	// 	for (auto attrib : attributes)
+	// 	{
+	// 		auto& attribType = attrib.GetType();
 
-			if (attribType.GetFullName() == "Testing.Managed.DummyAttribute")
-				std::cout << attrib.GetFieldValue<float>("SomeValue") << std::endl;
-		}
-	}
+	// 		if (attribType.GetFullName() == "Testing.Managed.DummyAttribute")
+	// 			std::cout << attrib.GetFieldValue<float>("SomeValue") << std::endl;
+	// 	}
+	// }
 
 	auto memberMethodTest = memberMethodTestType.CreateInstance();
 

@@ -1,39 +1,52 @@
 ﻿#include "ManagedObject.hpp"
 #include "Assembly.hpp"
 #include "CoralManagedFunctions.hpp"
+#include "String.hpp"
 #include "StringHelper.hpp"
 #include "Type.hpp"
 
 namespace Coral {
 
-	void ManagedObject::InvokeMethodInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
+	void ManagedObject::InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
 	{
-		s_ManagedFunctions.InvokeMethodFptr(m_Handle, InMethodName.m_Data, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		auto methodName = String::New(InMethodName);
+		s_ManagedFunctions.InvokeMethodFptr(m_Handle, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		String::Free(methodName);
 	}
 
-	void ManagedObject::InvokeMethodRetInternal(NativeString InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
+	void ManagedObject::InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
 	{
-		s_ManagedFunctions.InvokeMethodRetFptr(m_Handle, InMethodName.m_Data, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
+		auto methodName = String::New(InMethodName);
+		s_ManagedFunctions.InvokeMethodRetFptr(m_Handle, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
+		String::Free(methodName);
 	}
 
-	void ManagedObject::SetFieldValueRaw(NativeString InFieldName, void* InValue) const
+	void ManagedObject::SetFieldValueRaw(std::string_view InFieldName, void* InValue) const
 	{
-		s_ManagedFunctions.SetFieldValueFptr(m_Handle, InFieldName.m_Data, InValue);
+		auto fieldName = String::New(InFieldName);
+		s_ManagedFunctions.SetFieldValueFptr(m_Handle, fieldName, InValue);
+		String::Free(fieldName);
 	}
 
-	void ManagedObject::GetFieldValueRaw(NativeString InFieldName, void* OutValue) const
+	void ManagedObject::GetFieldValueRaw(std::string_view InFieldName, void* OutValue) const
 	{
-		s_ManagedFunctions.GetFieldValueFptr(m_Handle, InFieldName.m_Data, OutValue);
+		auto fieldName = String::New(InFieldName);
+		s_ManagedFunctions.GetFieldValueFptr(m_Handle, fieldName, OutValue);
+		String::Free(fieldName);
 	}
 
-	void ManagedObject::SetPropertyValueRaw(NativeString InPropertyName, void* InValue) const
+	void ManagedObject::SetPropertyValueRaw(std::string_view InPropertyName, void* InValue) const
 	{
-		s_ManagedFunctions.SetPropertyValueFptr(m_Handle, InPropertyName.m_Data, InValue);
+		auto propertyName = String::New(InPropertyName);
+		s_ManagedFunctions.SetPropertyValueFptr(m_Handle, propertyName, InValue);
+		String::Free(propertyName);
 	}
 	
-	void ManagedObject::GetPropertyValueRaw(NativeString InPropertyName, void* OutValue) const
+	void ManagedObject::GetPropertyValueRaw(std::string_view InPropertyName, void* OutValue) const
 	{
-		s_ManagedFunctions.GetPropertyValueFptr(m_Handle, InPropertyName.m_Data, OutValue);
+		auto propertyName = String::New(InPropertyName);
+		s_ManagedFunctions.GetPropertyValueFptr(m_Handle, propertyName, OutValue);
+		String::Free(propertyName);
 	}
 
 	const Type& ManagedObject::GetType() const

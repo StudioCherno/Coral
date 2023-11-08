@@ -6,9 +6,9 @@
 
 namespace Coral {
 
-	std::string PropertyInfo::GetName() const
+	String PropertyInfo::GetName() const
 	{
-		return NativeString(s_ManagedFunctions.GetPropertyInfoNameFptr(m_Handle));
+		return s_ManagedFunctions.GetPropertyInfoNameFptr(m_Handle);
 	}
 
 	Type& PropertyInfo::GetType()
@@ -17,7 +17,6 @@ namespace Coral {
 		{
 			Type propertyType;
 			s_ManagedFunctions.GetPropertyInfoTypeFptr(m_Handle, &propertyType.m_TypePtr);
-			propertyType.RetrieveName();
 			m_Type = TypeCache::Get().CacheType(std::move(propertyType));
 		}
 

@@ -54,7 +54,7 @@ namespace Coral {
 	class AssemblyLoadContext
 	{
 	public:
-		ManagedAssembly& LoadAssembly(NativeString InFilePath);
+		ManagedAssembly& LoadAssembly(std::string_view InFilePath);
 		const StableVector<ManagedAssembly>& GetLoadedAssemblies() const { return m_LoadedAssemblies; }
 
 	private:
