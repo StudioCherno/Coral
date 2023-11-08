@@ -16,7 +16,7 @@ namespace Coral {
 		if (!m_Type)
 		{
 			Type propertyType;
-			s_ManagedFunctions.GetPropertyInfoTypeFptr(m_Handle, &propertyType.m_TypePtr);
+			s_ManagedFunctions.GetPropertyInfoTypeFptr(m_Handle, &propertyType.m_Id);
 			m_Type = TypeCache::Get().CacheType(std::move(propertyType));
 		}
 

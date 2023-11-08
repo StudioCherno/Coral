@@ -16,7 +16,7 @@ namespace Coral {
 		if (!m_ReturnType)
 		{
 			Type returnType;
-			s_ManagedFunctions.GetMethodInfoReturnTypeFptr(m_Handle, &returnType.m_TypePtr);
+			s_ManagedFunctions.GetMethodInfoReturnTypeFptr(m_Handle, &returnType.m_Id);
 			m_ReturnType = TypeCache::Get().CacheType(std::move(returnType));
 		}
 
@@ -37,7 +37,7 @@ namespace Coral {
 			for (size_t i = 0; i < parameterTypes.size(); i++)
 			{
 				Type type;
-				type.m_TypePtr = parameterTypes[i];
+				type.m_Id = parameterTypes[i];
 				m_ParameterTypes[i] = TypeCache::Get().CacheType(std::move(type));
 			}
 		}

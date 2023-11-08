@@ -31,9 +31,9 @@ namespace Coral {
 
 		bool operator==(const Type& InOther) const;
 
-		operator bool() const { return m_TypePtr != -1; }
+		operator bool() const { return m_Id != -1; }
 
-		TypeId GetTypeId() const { return m_TypePtr; }
+		TypeId GetTypeId() const { return m_Id; }
 
 	public:
 		template<typename... TArgs>
@@ -104,7 +104,7 @@ namespace Coral {
 		void InvokeStaticMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
 
 	private:
-		TypeId m_TypePtr = -1;
+		TypeId m_Id = -1;
 		Type* m_BaseType = nullptr;
 
 		friend class HostInstance;

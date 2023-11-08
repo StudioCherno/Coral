@@ -16,7 +16,7 @@ namespace Coral {
 		if (!m_Type)
 		{
 			Type fieldType;
-			s_ManagedFunctions.GetFieldInfoTypeFptr(m_Handle, &fieldType.m_TypePtr);
+			s_ManagedFunctions.GetFieldInfoTypeFptr(m_Handle, &fieldType.m_Id);
 			m_Type = TypeCache::Get().CacheType(std::move(fieldType));
 		}
 

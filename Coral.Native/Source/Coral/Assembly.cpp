@@ -65,7 +65,7 @@ namespace Coral {
 			for (auto typeId : typeIds)
 			{
 				Type type;
-				type.m_TypePtr = typeId;
+				type.m_Id = typeId;
 				result.m_Types.push_back(TypeCache::Get().CacheType(std::move(type)));
 			}
 		}
