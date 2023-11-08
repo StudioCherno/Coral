@@ -11,31 +11,47 @@ namespace Coral {
 		static Array New(int32_t InLength)
 		{
 			Array<TValue> result;
-			result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InLength * sizeof(TValue)));
-			result.m_Length = InLength;
+			if (InLength > 0)
+			{
+				result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InLength * sizeof(TValue)));
+				result.m_Length = InLength;
+			}
 			return result;
 		}
 
 		static Array New(const std::vector<TValue>& InValues)
 		{
 			Array<TValue> result;
-			result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
-			result.m_Length = static_cast<int32_t>(InValues.size());
-			memcpy(result.m_Ptr, InValues.data(), InValues.size() * sizeof(TValue));
+
+			if (!InValues.empty())
+			{
+				result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
+				result.m_Length = static_cast<int32_t>(InValues.size());
+				memcpy(result.m_Ptr, InValues.data(), InValues.size() * sizeof(TValue));
+			}
+
 			return result;
 		}
 
 		static Array New(std::initializer_list<TValue> InValues)
 		{
 			Array result;
-			result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
-			result.m_Length = static_cast<int32_t>(InValues.size());
-			memcpy(result.m_Ptr, InValues.begin(), InValues.size() * sizeof(TValue));
+			
+			if (InValues.size() > 0)
+			{
+				result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
+				result.m_Length = static_cast<int32_t>(InValues.size());
+				memcpy(result.m_Ptr, InValues.begin(), InValues.size() * sizeof(TValue));
+			}
+
 			return result;
 		}
 
 		static void Free(Array InArray)
 		{
+			if (!InArray.m_Ptr || InArray.m_Length == 0)
+				return;
+
 			Memory::FreeHGlobal(InArray.m_Ptr);
 			InArray.m_Ptr = nullptr;
 			InArray.m_Length = 0;

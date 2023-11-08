@@ -35,6 +35,7 @@ namespace Testing.Managed {
 		internal static unsafe delegate*<NativeString, void> StringMarshalIcall2;
 		internal static unsafe delegate*<Type, Type> TypeMarshalIcall;
 		internal static unsafe delegate*<NativeArray<float>> FloatArrayIcall;
+		internal static unsafe delegate*<NativeArray<int>> EmptyArrayIcall;
 		internal static unsafe delegate*<NativeInstance<InstanceTest>> NativeInstanceIcall;
 
 		internal struct DummyStruct
@@ -123,6 +124,21 @@ namespace Testing.Managed {
 		}
 
 		[Test]
+		public bool EmptyArrayTest()
+		{
+			unsafe
+			{
+				using var arr = EmptyArrayIcall();
+				foreach (var item in arr)
+				{
+					Console.WriteLine(item);
+				}
+			}
+
+			return true;
+		}
+
+		[Test]
 		public bool FloatArrayTest()
 		{
 			float[] requiredValues = new[]{ 5.0f, 10.0f, 15.0f, 50.0f };
@@ -150,7 +166,7 @@ namespace Testing.Managed {
 			Marshal.FreeCoTaskMem(data);
 			return success;
 		}
-		
+
 		[Test]
 		public bool StringMarshalTest()
 		{

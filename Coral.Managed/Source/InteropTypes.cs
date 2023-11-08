@@ -75,8 +75,13 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 
 	public T[] ToArray()
 	{
-		Span<T> data;
-		unsafe { data = new Span<T>(m_NativeArray.ToPointer(), m_NativeLength); }
+		Span<T> data = Span<T>.Empty;
+
+		if (m_NativeArray != IntPtr.Zero && m_NativeLength > 0)
+		{
+			unsafe { data = new Span<T>(m_NativeArray.ToPointer(), m_NativeLength); }
+		}
+
 		return data.ToArray();
 	}
 
