@@ -24,7 +24,8 @@ internal static class ManagedHost
 	{
 		unsafe
 		{
-			s_MessageCallback(InMessage, InLevel);
+			using NativeString message = InMessage;
+			s_MessageCallback(message, InLevel);
 		}
 	}
 
@@ -35,8 +36,7 @@ internal static class ManagedHost
 			if (s_ExceptionCallback == null)
 				return;
 
-			// NOTE(Peter): message will be cleaned up by C++ code
-			NativeString message = InException.ToString();
+			using NativeString message = InException.ToString();
 			s_ExceptionCallback(message);
 		}
 	}

@@ -87,11 +87,10 @@ namespace Coral {
 	
 	AssemblyLoadContext HostInstance::CreateAssemblyLoadContext(std::string_view InName)
 	{
-		auto name = String::New(InName);
+		ScopedString name = String::New(InName);
 		AssemblyLoadContext alc;
 		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(name);
 		alc.m_Host = this;
-		String::Free(name);
 		return alc;
 	}
 
@@ -154,7 +153,7 @@ namespace Coral {
 			if (!std::filesystem::exists(path))
 				continue;
 
-			for (auto dir : std::filesystem::recursive_directory_iterator(path))
+			for (const auto& dir : std::filesystem::recursive_directory_iterator(path))
 			{
 				if (!dir.is_directory())
 					continue;
