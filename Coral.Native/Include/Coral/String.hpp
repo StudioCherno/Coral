@@ -50,6 +50,7 @@ namespace Coral {
 			String::Free(m_String);
 		}
 
+		operator std::string() const { return m_String; }
 		operator String() const { return m_String; }
 
 		bool operator==(const ScopedString& InOther) const
