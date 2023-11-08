@@ -111,7 +111,7 @@ std::vector<Test> tests;
 
 void RegisterTest(std::string_view InName, std::function<bool()> InFunc)
 {
-	tests.emplace_back(std::string(InName), std::move(InFunc));
+	tests.push_back(Test{ std::string(InName), std::move(InFunc) });
 }
 
 void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject InObject)
