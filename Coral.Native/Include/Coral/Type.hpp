@@ -114,6 +114,16 @@ namespace Coral {
 		friend class FieldInfo;
 		friend class PropertyInfo;
 		friend class Attribute;
+		friend class ReflectionType;
+	};
+
+	class ReflectionType
+	{
+	public:
+		operator Type&() const;
+
+	private:
+		TypeId m_TypeID;
 	};
 
 }

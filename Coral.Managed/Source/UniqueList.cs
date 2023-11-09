@@ -21,8 +21,13 @@ namespace Coral.Managed
 			return m_Objects.ContainsKey(id);
 		}
 
-		public long Add(T obj)
+		public long Add(T? obj)
 		{
+			if (obj == null)
+			{
+				throw new ArgumentNullException(nameof(obj));
+			}
+
 			long id = m_IdGenerator.GetId(obj, out var newId);
 
 			if (!newId)

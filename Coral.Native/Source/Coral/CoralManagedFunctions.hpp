@@ -22,7 +22,7 @@ namespace Coral {
 #pragma region TypeInterface
 
 	using GetAssemblyTypesFn = void(*)(int32_t, TypeId*, int32_t*);
-	using GetTypeIdFn = void(*)(String, TypeId*);
+	using GetTypeIdFn = void (*)(String, TypeId*);
 	using GetFullTypeNameFn = String(*)(TypeId);
 	using GetAssemblyQualifiedNameFn = String(*)(TypeId);
 	using GetBaseTypeFn = void(*)(TypeId, TypeId*);
@@ -87,7 +87,7 @@ namespace Coral {
 
 #pragma region TypeInterface
 
-		GetAssemblyTypesFn GetAssemblyTypes = nullptr;
+		GetAssemblyTypesFn GetAssemblyTypesFptr = nullptr;
 		GetTypeIdFn GetTypeIdFptr = nullptr;
 		GetFullTypeNameFn GetFullTypeNameFptr = nullptr;
 		GetAssemblyQualifiedNameFn GetAssemblyQualifiedNameFptr = nullptr;

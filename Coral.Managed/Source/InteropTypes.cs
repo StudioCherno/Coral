@@ -179,3 +179,17 @@ public struct Bool32
 	public static implicit operator Bool32(bool InValue) => new() { Value = InValue ? 1u : 0u };
 	public static implicit operator bool(Bool32 InBool32) => InBool32.Value > 0;
 }
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ReflectionType
+{
+	private readonly long m_TypeId;
+
+	public ReflectionType(long InTypeID)
+	{
+		m_TypeId = InTypeID;
+	}
+
+	public static implicit operator ReflectionType(Type? InType) => new(TypeInterface.s_CachedTypes.Add(InType));
+
+}

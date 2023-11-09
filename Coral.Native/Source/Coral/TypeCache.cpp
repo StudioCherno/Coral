@@ -13,6 +13,7 @@ namespace Coral {
 	{
 		Type* type = &m_Types.Insert(std::move(InType)).second;
 		m_NameCache[type->GetFullName()] = type;
+		m_IDCache[type->GetTypeId()] = type;
 		return type;
 	}
 
@@ -20,6 +21,11 @@ namespace Coral {
 	{
 		auto name = std::string(InName);
 		return m_NameCache.contains(name) ? m_NameCache.at(name) : nullptr;
+	}
+
+	Type* TypeCache::GetTypeByID(TypeId InTypeID) const
+	{
+		return m_IDCache.contains(InTypeID) ? m_IDCache.at(InTypeID) : nullptr;
 	}
 
 }

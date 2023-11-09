@@ -131,4 +131,20 @@ namespace Coral {
 	}
 
 
+	ReflectionType::operator Type&() const
+	{
+		static Type s_NullType;
+
+		auto* result = TypeCache::Get().GetTypeByID(m_TypeID);
+
+		if (result == nullptr)
+		{
+			Type type;
+			type.m_Id = m_TypeID;
+			result = TypeCache::Get().CacheType(std::move(type));
+		}
+
+		return result != nullptr ? *result : s_NullType;
+	}
+
 }
