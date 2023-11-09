@@ -11,6 +11,8 @@
 #include <Coral/Array.hpp>
 #include <Coral/Attribute.hpp>
 
+Coral::Type g_TestsType;
+
 void ExceptionCallback(std::string_view InMessage)
 {
 	std::cout << "Unhandled native exception: " << InMessage << std::endl;
@@ -40,9 +42,10 @@ void StringMarshalIcall2(Coral::String InStr)
 {
 	std::cout << std::string(InStr) << std::endl;
 }
-Coral::TypeId TypeMarshalIcall(Coral::TypeId InTypeId)
+bool TypeMarshalIcall(Coral::ReflectionType InReflectionType)
 {
-	return InTypeId;
+	Coral::Type& type = InReflectionType;
+	return type == g_TestsType;
 }
 
 struct DummyStruct
@@ -466,6 +469,7 @@ int main(int argc, char** argv)
 	assembly.UploadInternalCalls();
 
 	auto& testsType = assembly.GetType("Testing.Managed.Tests");
+	g_TestsType = testsType;
 	testsType.InvokeStaticMethod("StaticMethodTest", 50.0f);
 	testsType.InvokeStaticMethod("StaticMethodTest", 1000);
 
