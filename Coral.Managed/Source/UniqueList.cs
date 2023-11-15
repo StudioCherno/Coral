@@ -7,6 +7,7 @@ namespace Coral.Managed
 {
 	public class UniqueList<T>
 	{
+		// TODO(Peter): Implement custom object ID generator since the System provided one is now obsolete
 		private ObjectIDGenerator m_IdGenerator;
 		private readonly Dictionary<long, T?> m_Objects;
 

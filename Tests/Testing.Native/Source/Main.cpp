@@ -28,7 +28,11 @@ int64_t LongMarshalIcall(int64_t InValue) { return InValue * 2; }
 uint64_t ULongMarshalIcall(uint64_t InValue) { return InValue * 2; }
 float FloatMarshalIcall(float InValue) { return InValue * 2.0f; }
 double DoubleMarshalIcall(double InValue) { return InValue * 2.0; }
-bool BoolMarshalIcall(bool InValue) { return !InValue; }
+bool BoolMarshalIcall(bool InValue)
+{
+	std::cout << "C++: " << (uint32_t)InValue << std::endl;
+	return !InValue;
+}
 int32_t* IntPtrMarshalIcall(int32_t* InValue)
 {
 	*InValue *= 2;

@@ -29,7 +29,7 @@ project "Coral.Native"
     }
 
     includedirs { "Source/", "Include/Coral/" }
-    externalincludedirs { "../NetCore/7.0.7/" }
+    externalincludedirs { "../NetCore/" }
 
     filter { "configurations:Debug" }
         runtime "Debug"

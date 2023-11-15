@@ -58,8 +58,7 @@ internal static class InternalCallsManager
 					continue;
 				}
 
-				// TODO(Peter): Changed to !field.FieldType.IsFunctionPointer when .NET 8 is out
-				if (field.FieldType != typeof(IntPtr))
+				if (!field.FieldType.IsFunctionPointer)
 				{
 					LogMessage($"Field '{name}' is not a function pointer type!", MessageLevel.Error);
 					continue;
