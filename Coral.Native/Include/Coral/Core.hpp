@@ -46,8 +46,8 @@ namespace Coral {
 		PrivateProtected
 	};
 
-	using TypeId = int64_t;
-	using ManagedHandle = int64_t;
+	using TypeId = int32_t;
+	using ManagedHandle = int32_t;
 
 	struct InternalCall
 	{

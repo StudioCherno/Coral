@@ -87,7 +87,7 @@ internal static class ManagedObject
 	internal static Dictionary<MethodKey, MethodInfo> s_CachedMethods = new Dictionary<MethodKey, MethodInfo>();
 
 	[UnmanagedCallersOnly]
-	private static unsafe IntPtr CreateObject(long InTypeID, Bool32 InWeakRef, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
+	private static unsafe IntPtr CreateObject(int InTypeID, Bool32 InWeakRef, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
 	{
 		try
 		{
@@ -199,7 +199,7 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void InvokeStaticMethod(long InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
+	private static unsafe void InvokeStaticMethod(int InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
 	{
 		try
 		{
@@ -221,7 +221,7 @@ internal static class ManagedObject
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void InvokeStaticMethodRet(long InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
+	private static unsafe void InvokeStaticMethodRet(int InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
 	{
 		try
 		{

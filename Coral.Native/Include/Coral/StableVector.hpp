@@ -81,7 +81,7 @@ namespace Coral {
 					if (pageIndex >= m_PageCount)
 					{
 						auto oldPages = m_PageCount;
-						m_PageCount = std::max(uint64_t(16), m_PageCount * 2);
+						m_PageCount = (std::max)(uint64_t(16), m_PageCount * 2);
 						auto newPageTable = std::make_unique<Page*[]>(m_PageCount);
 						std::memcpy(newPageTable.get(), m_PageTable.load(), oldPages * sizeof(void*));
 						m_PageTable.exchange(newPageTable.get());
@@ -114,7 +114,7 @@ namespace Coral {
 					if (pageIndex >= m_PageCount)
 					{
 						auto oldPages = m_PageCount;
-						m_PageCount = std::max(uint64_t(16), m_PageCount * 2);
+						m_PageCount = (std::max)(uint64_t(16), m_PageCount * 2);
 						auto newPageTable = std::make_unique<Page*[]>(m_PageCount);
 						std::memcpy(newPageTable.get(), m_PageTable.load(), oldPages * sizeof(void*));
 						m_PageTable.exchange(newPageTable.get());
@@ -143,7 +143,7 @@ namespace Coral {
 				if (pageIndex >= m_PageCount)
 				{
 					auto oldPages = m_PageCount;
-					m_PageCount = std::max(uint64_t(16), m_PageCount * 2);
+					m_PageCount = (std::max)(uint64_t(16), m_PageCount * 2);
 					auto newPageTable = std::make_unique<Page*[]>(m_PageCount);
 					std::memcpy(newPageTable.get(), m_PageTable.load(), oldPages * sizeof(void*));
 					m_PageTable.exchange(newPageTable.get());
@@ -170,7 +170,7 @@ namespace Coral {
 				if (pageIndex >= m_PageCount)
 				{
 					auto oldPages = m_PageCount;
-					m_PageCount = std::max(uint64_t(16), m_PageCount * 2);
+					m_PageCount = (std::max)(uint64_t(16), m_PageCount * 2);
 					auto newPageTable = std::make_unique<Page*[]>(m_PageCount);
 					std::memcpy(newPageTable.get(), m_PageTable.load(), oldPages * sizeof(void*));
 					m_PageTable.exchange(newPageTable.get());
