@@ -57,12 +57,21 @@ namespace Coral {
 			InArray.m_Length = 0;
 		}
 
+		void Assign(const Array& InOther)
+		{
+			memcpy(m_Ptr, InOther.m_Ptr, InOther.m_Length * sizeof(TValue));
+		}
+
 		bool IsEmpty() const { return m_Length == 0 || m_Ptr == nullptr; }
 
 		TValue& operator[](size_t InIndex) { return m_Ptr[InIndex]; }
 		const TValue& operator[](size_t InIndex) const { return m_Ptr[InIndex]; }
 
 		size_t Length() const { return m_Length; }
+		size_t ByteLength() const { return m_Length * sizeof(TValue); }
+
+		TValue* Data() { return m_Ptr; }
+		const TValue* Data() const { return m_Ptr; }
 
 		TValue* begin() { return m_Ptr; }
 		TValue* end() { return m_Ptr + m_Length; }

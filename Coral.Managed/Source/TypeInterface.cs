@@ -135,9 +135,7 @@ internal static class TypeInterface
 
 			for (int i = 0; i < assemblyTypes.Length; i++)
 			{
-				var id = s_CachedTypes.Add(assemblyTypes[i]);
-				Console.WriteLine($"TypeID: {id}, Type: {assemblyTypes[i]}");
-				OutTypes[i] = id;
+				OutTypes[i] = s_CachedTypes.Add(assemblyTypes[i]);
 			}
 		}
 		catch (Exception ex)
@@ -224,6 +222,23 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
+	private static int GetTypeSize(int InType)
+	{
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InType, out var type))
+				return -1;
+
+			return Marshal.SizeOf(type);
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
+			return -1;
+		}
+	}
+
+	[UnmanagedCallersOnly]
 	private static unsafe Bool32 IsTypeSubclassOf(int InType0, int InType1)
 	{
 		try
@@ -271,6 +286,44 @@ internal static class TypeInterface
 		{
 			HandleException(e);
 			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe Bool32 IsTypeSZArray(int InTypeID)
+	{
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InTypeID, out var type))
+				return false;
+
+			return type.IsSZArray;
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void GetElementType(int InTypeID, int* OutElementTypeID)
+	{
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InTypeID, out var type))
+				return;
+
+			var elementType = type.GetElementType();
+
+			if (elementType == null)
+				*OutElementTypeID = 0;
+
+			*OutElementTypeID = s_CachedTypes.Add(elementType);
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
 		}
 	}
 
@@ -371,10 +424,25 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
+	private static unsafe Bool32 HasTypeAttribute(int InType, int InAttributeType)
+	{
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InType, out var type) || !s_CachedTypes.TryGetValue(InAttributeType, out var attributeType))
+				return false;
+
+			return type.GetCustomAttribute(attributeType) != null;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
 	private static unsafe void GetTypeAttributes(int InType, int* OutAttributes, int* OutAttributesCount)
 	{
-		// TODO(Peter): Replace Type* with something that doesn't get moved in memory
-
 		try
 		{
 			if (!s_CachedTypes.TryGetValue(InType, out var type))

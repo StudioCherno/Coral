@@ -264,12 +264,16 @@ namespace Coral {
 		s_ManagedFunctions.GetFullTypeNameFptr = LoadCoralManagedFunctionPtr<GetFullTypeNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFullTypeName"));
 		s_ManagedFunctions.GetAssemblyQualifiedNameFptr = LoadCoralManagedFunctionPtr<GetAssemblyQualifiedNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetAssemblyQualifiedName"));
 		s_ManagedFunctions.GetBaseTypeFptr = LoadCoralManagedFunctionPtr<GetBaseTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetBaseType"));
+		s_ManagedFunctions.GetTypeSizeFptr = LoadCoralManagedFunctionPtr<GetTypeSizeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeSize"));
 		s_ManagedFunctions.IsTypeSubclassOfFptr = LoadCoralManagedFunctionPtr<IsTypeSubclassOfFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("IsTypeSubclassOf"));
 		s_ManagedFunctions.IsTypeAssignableToFptr = LoadCoralManagedFunctionPtr<IsTypeAssignableToFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("IsTypeAssignableTo"));
 		s_ManagedFunctions.IsTypeAssignableFromFptr = LoadCoralManagedFunctionPtr<IsTypeAssignableFromFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("IsTypeAssignableFrom"));
+		s_ManagedFunctions.IsTypeSZArrayFptr = LoadCoralManagedFunctionPtr<IsTypeSZArrayFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("IsTypeSZArray"));
+		s_ManagedFunctions.GetElementTypeFptr = LoadCoralManagedFunctionPtr<GetElementTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetElementType"));
 		s_ManagedFunctions.GetTypeMethodsFptr = LoadCoralManagedFunctionPtr<GetTypeMethodsFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeMethods"));
 		s_ManagedFunctions.GetTypeFieldsFptr = LoadCoralManagedFunctionPtr<GetTypeFieldsFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeFields"));
 		s_ManagedFunctions.GetTypePropertiesFptr = LoadCoralManagedFunctionPtr<GetTypePropertiesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeProperties"));
+		s_ManagedFunctions.HasTypeAttributeFptr = LoadCoralManagedFunctionPtr<HasTypeAttributeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("HasTypeAttribute"));
 		s_ManagedFunctions.GetTypeAttributesFptr = LoadCoralManagedFunctionPtr<GetTypeAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeAttributes"));
 		s_ManagedFunctions.GetTypeManagedTypeFptr = LoadCoralManagedFunctionPtr<GetTypeManagedTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeManagedType"));
 		s_ManagedFunctions.InvokeStaticMethodFptr = LoadCoralManagedFunctionPtr<InvokeStaticMethodFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("InvokeStaticMethod"));

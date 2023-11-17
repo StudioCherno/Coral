@@ -592,6 +592,7 @@ int main(int argc, char** argv)
 	newAssembly.UploadInternalCalls();
 
 	auto& testsType2 = newAssembly.GetType("Testing.Managed.Tests");
+	g_TestsType = testsType2;
 
 	auto& instanceTestType2 = newAssembly.GetType("Testing.Managed.InstanceTest");
 	instance = instanceTestType2.CreateInstance();
