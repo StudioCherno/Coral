@@ -64,6 +64,12 @@ public static class Marshalling
 		}
 	}
 
+	private struct ArrayObject
+	{
+		public IntPtr Handle;
+		public IntPtr Padding;
+	}
+
 	public static object? MarshalArray(IntPtr InArray, Type? InElementType)
 	{
 		if (InElementType == null)
@@ -71,14 +77,31 @@ public static class Marshalling
 
 		var arrayContainer = MarshalPointer<ArrayContainer>(InArray);
 		var elements = Array.CreateInstance(InElementType, arrayContainer.Length);
-		int elementSize = Marshal.SizeOf(InElementType);
 
-		unsafe
+		if (InElementType.IsValueType)
 		{
-			for (int i = 0; i < arrayContainer.Length; i++)
+			int elementSize = Marshal.SizeOf(InElementType);
+
+			unsafe
 			{
-				IntPtr source = (IntPtr)(((byte*)arrayContainer.Data.ToPointer()) + (i * elementSize));
-				elements.SetValue(Marshal.PtrToStructure(source, InElementType), i);
+				for (int i = 0; i < arrayContainer.Length; i++)
+				{
+					IntPtr source = (IntPtr)(((byte*)arrayContainer.Data.ToPointer()) + (i * elementSize));
+					elements.SetValue(Marshal.PtrToStructure(source, InElementType), i);
+				}
+			}
+		}
+		else
+		{
+			unsafe
+			{
+				for (int i = 0; i < arrayContainer.Length; i++)
+				{
+					IntPtr source = (IntPtr)(((byte*)arrayContainer.Data.ToPointer()) + (i * Marshal.SizeOf<ArrayObject>()));
+					var managedObject = MarshalPointer<ArrayObject>(source);
+					var target = GCHandle.FromIntPtr(managedObject.Handle).Target;
+					elements.SetValue(target, i);
+				}
 			}
 		}
 

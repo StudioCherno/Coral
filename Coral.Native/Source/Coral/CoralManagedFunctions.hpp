@@ -26,12 +26,16 @@ namespace Coral {
 	using GetFullTypeNameFn = String(*)(TypeId);
 	using GetAssemblyQualifiedNameFn = String(*)(TypeId);
 	using GetBaseTypeFn = void(*)(TypeId, TypeId*);
+	using GetTypeSizeFn = int32_t(*)(TypeId);
 	using IsTypeSubclassOfFn = Bool32(*)(TypeId, TypeId);
 	using IsTypeAssignableToFn = Bool32(*)(TypeId, TypeId);
 	using IsTypeAssignableFromFn = Bool32(*)(TypeId, TypeId);
+	using IsTypeSZArrayFn = Bool32 (*)(TypeId);
+	using GetElementTypeFn = void(*)(TypeId, TypeId*);
 	using GetTypeMethodsFn = void(*)(TypeId, ManagedHandle*, int32_t*);
 	using GetTypeFieldsFn = void(*)(TypeId, ManagedHandle*, int32_t*);
 	using GetTypePropertiesFn = void(*)(TypeId, ManagedHandle*, int32_t*);
+	using HasTypeAttributeFn = Bool32(*)(TypeId, TypeId);
 	using GetTypeAttributesFn = void (*)(ManagedHandle, TypeId*, int32_t*);
 	using GetTypeManagedTypeFn = ManagedType(*)(TypeId);
 
@@ -92,12 +96,16 @@ namespace Coral {
 		GetFullTypeNameFn GetFullTypeNameFptr = nullptr;
 		GetAssemblyQualifiedNameFn GetAssemblyQualifiedNameFptr = nullptr;
 		GetBaseTypeFn GetBaseTypeFptr = nullptr;
+		GetTypeSizeFn GetTypeSizeFptr = nullptr;
 		IsTypeSubclassOfFn IsTypeSubclassOfFptr = nullptr;
 		IsTypeAssignableToFn IsTypeAssignableToFptr = nullptr;
 		IsTypeAssignableFromFn IsTypeAssignableFromFptr = nullptr;
+		IsTypeSZArrayFn IsTypeSZArrayFptr = nullptr;
+		GetElementTypeFn GetElementTypeFptr = nullptr;
 		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
 		GetTypeFieldsFn GetTypeFieldsFptr = nullptr;
 		GetTypePropertiesFn GetTypePropertiesFptr = nullptr;
+		HasTypeAttributeFn HasTypeAttributeFptr = nullptr;
 		GetTypeAttributesFn GetTypeAttributesFptr = nullptr;
 		GetTypeManagedTypeFn GetTypeManagedTypeFptr = nullptr;
 

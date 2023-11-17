@@ -17,17 +17,23 @@ namespace Coral {
 
 		Type& GetBaseType();
 
-		bool IsSubclassOf(const Type& InOther);
-		bool IsAssignableTo(const Type& InOther);
-		bool IsAssignableFrom(const Type& InOther);
+		int32_t GetSize() const;
+
+		bool IsSubclassOf(const Type& InOther) const;
+		bool IsAssignableTo(const Type& InOther) const;
+		bool IsAssignableFrom(const Type& InOther) const;
 
 		std::vector<MethodInfo> GetMethods() const;
 		std::vector<FieldInfo> GetFields() const;
 		std::vector<PropertyInfo> GetProperties() const;
 
+		bool HasAttribute(const Type& InAttributeType) const;
 		std::vector<Attribute> GetAttributes() const;
 
 		ManagedType GetManagedType() const;
+
+		bool IsSZArray() const;
+		Type& GetElementType();
 
 		bool operator==(const Type& InOther) const;
 
@@ -106,6 +112,7 @@ namespace Coral {
 	private:
 		TypeId m_Id = -1;
 		Type* m_BaseType = nullptr;
+		Type* m_ElementType = nullptr;
 
 		friend class HostInstance;
 		friend class ManagedAssembly;

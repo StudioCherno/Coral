@@ -27,17 +27,22 @@ namespace Coral {
 		return *m_BaseType;
 	}
 
-	bool Type::IsSubclassOf(const Type& InOther)
+	int32_t Type::GetSize() const
+	{
+		return s_ManagedFunctions.GetTypeSizeFptr(m_Id);
+	}
+
+	bool Type::IsSubclassOf(const Type& InOther) const
 	{
 		return s_ManagedFunctions.IsTypeSubclassOfFptr(m_Id, InOther.m_Id);
 	}
 
-	bool Type::IsAssignableTo(const Type& InOther)
+	bool Type::IsAssignableTo(const Type& InOther) const
 	{
 		return s_ManagedFunctions.IsTypeAssignableToFptr(m_Id, InOther.m_Id);
 	}
 
-	bool Type::IsAssignableFrom(const Type& InOther)
+	bool Type::IsAssignableFrom(const Type& InOther) const
 	{
 		return s_ManagedFunctions.IsTypeAssignableFromFptr(m_Id, InOther.m_Id);
 	}
@@ -84,6 +89,11 @@ namespace Coral {
 		return properties;
 	}
 
+	bool Type::HasAttribute(const Type& InAttributeType) const
+	{
+		return s_ManagedFunctions.HasTypeAttributeFptr(m_Id, InAttributeType.m_Id);
+	}
+
 	std::vector<Attribute> Type::GetAttributes() const
 	{
 		int32_t attributeCount;
@@ -101,6 +111,23 @@ namespace Coral {
 	ManagedType Type::GetManagedType() const
 	{
 		return s_ManagedFunctions.GetTypeManagedTypeFptr(m_Id);
+	}
+
+	bool Type::IsSZArray() const
+	{
+		return s_ManagedFunctions.IsTypeSZArrayFptr(m_Id);
+	}
+
+	Type& Type::GetElementType()
+	{
+		if (!m_ElementType)
+		{
+			Type elementType;
+			s_ManagedFunctions.GetElementTypeFptr(m_Id, &elementType.m_Id);
+			m_ElementType = TypeCache::Get().CacheType(std::move(elementType));
+		}
+
+		return *m_ElementType;
 	}
 
 	bool Type::operator==(const Type& InOther) const

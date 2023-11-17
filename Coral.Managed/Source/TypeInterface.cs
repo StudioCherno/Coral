@@ -222,6 +222,23 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
+	private static int GetTypeSize(long InType)
+	{
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InType, out var type))
+				return -1;
+
+			return Marshal.SizeOf(type);
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
+			return -1;
+		}
+	}
+
+	[UnmanagedCallersOnly]
 	private static unsafe Bool32 IsTypeSubclassOf(long InType0, long InType1)
 	{
 		try
@@ -269,6 +286,44 @@ internal static class TypeInterface
 		{
 			HandleException(e);
 			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe Bool32 IsTypeSZArray(long InTypeID)
+	{
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InTypeID, out var type))
+				return false;
+
+			return type.IsSZArray;
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static unsafe void GetElementType(long InTypeID, long* OutElementTypeID)
+	{
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InTypeID, out var type))
+				return;
+
+			var elementType = type.GetElementType();
+
+			if (elementType == null)
+				*OutElementTypeID = 0;
+
+			*OutElementTypeID = s_CachedTypes.Add(elementType);
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
 		}
 	}
 
@@ -369,10 +424,28 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
+	private static unsafe Bool32 HasTypeAttribute(long InType, long InAttributeType)
+	{
+		Console.WriteLine("Hello");
+
+		try
+		{
+			Console.WriteLine("Hello2");
+			if (!s_CachedTypes.TryGetValue(InType, out var type) || !s_CachedTypes.TryGetValue(InAttributeType, out var attributeType))
+				return false;
+			Console.WriteLine("Hello3");
+			return type.GetCustomAttribute(attributeType) != null;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
 	private static unsafe void GetTypeAttributes(long InType, long* OutAttributes, int* OutAttributesCount)
 	{
-		// TODO(Peter): Replace Type* with something that doesn't get moved in memory
-
 		try
 		{
 			if (!s_CachedTypes.TryGetValue(InType, out var type))
