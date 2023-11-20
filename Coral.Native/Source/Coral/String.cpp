@@ -49,6 +49,12 @@ namespace Coral {
 
 	bool String::operator==(const String& InOther) const
 	{
+		if (m_String == InOther.m_String)
+			return true;
+
+		if (m_String == nullptr || InOther.m_String == nullptr)
+			return false;
+
 #if defined(CORAL_WIDE_CHARS)
 		return wcscmp(m_String, InOther.m_String) == 0;
 #else

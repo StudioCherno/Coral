@@ -165,8 +165,6 @@ internal static class ManagedObject
 
 	private static unsafe MethodInfo? TryGetMethodInfo(Type InType, string InMethodName, ManagedType* InParameterTypes, int InParameterCount, BindingFlags InBindingFlags)
 	{
-		ReadOnlySpan<MethodInfo> methods = InType.GetMethods(InBindingFlags);
-
 		MethodInfo? methodInfo = null;
 
 		var parameterTypes = new ManagedType[InParameterCount];
@@ -184,7 +182,16 @@ internal static class ManagedObject
 
 		if (!s_CachedMethods.TryGetValue(methodKey, out methodInfo))
 		{
-			methodInfo = TypeInterface.FindSuitableMethod(InMethodName, InParameterTypes, InParameterCount, methods);
+			List<MethodInfo> methods = new(InType.GetMethods(InBindingFlags));
+
+			Type? baseType = InType.BaseType;
+			while (baseType != null)
+			{
+				methods.AddRange(baseType.GetMethods(InBindingFlags));
+				baseType = baseType.BaseType;
+			}
+
+			methodInfo = TypeInterface.FindSuitableMethod<MethodInfo>(InMethodName, InParameterTypes, InParameterCount, CollectionsMarshal.AsSpan(methods));
 
 			if (methodInfo == null)
 			{
@@ -272,7 +279,7 @@ internal static class ManagedObject
 			HandleException(ex);
 		}
 	}
-	
+
 	[UnmanagedCallersOnly]
 	private static unsafe void InvokeMethodRet(IntPtr InObjectHandle, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
 	{
