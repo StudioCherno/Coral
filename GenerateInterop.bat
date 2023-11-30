@@ -1,0 +1,1 @@
+.\Build\Debug\Coral.Generator.exe .\Build\Debug\Coral.Managed.dll --cs-source-dir .\Coral.Managed\Source --cpp-source-dir .\Coral.Native\Source\Coral

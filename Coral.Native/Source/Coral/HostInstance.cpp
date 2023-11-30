@@ -1,9 +1,10 @@
 #include "HostInstance.hpp"
 #include "Verify.hpp"
 #include "HostFXRErrorCodes.hpp"
-#include "CoralManagedFunctions.hpp"
 #include "StringHelper.hpp"
 #include "TypeCache.hpp"
+
+#include "NativeCallables.generated.hpp"
 
 #if defined(CORAL_WINDOWS)
 	#include <ShlObj_core.h>
@@ -89,14 +90,14 @@ namespace Coral {
 	{
 		ScopedString name = String::New(InName);
 		AssemblyLoadContext alc;
-		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(name);
+		alc.m_ContextId = s_NativeCallables.CreateAssemblyLoadContextFptr(name);
 		alc.m_Host = this;
 		return alc;
 	}
 
 	void HostInstance::UnloadAssemblyLoadContext(AssemblyLoadContext& InLoadContext)
 	{
-		s_ManagedFunctions.UnloadAssemblyLoadContextFptr(InLoadContext.m_ContextId);
+		s_NativeCallables.UnloadAssemblyLoadContextFptr(InLoadContext.m_ContextId);
 		InLoadContext.m_ContextId = -1;
 		InLoadContext.m_LoadedAssemblies.Clear();
 	}
@@ -252,62 +253,7 @@ namespace Coral {
 
 	void HostInstance::LoadCoralFunctions()
 	{
-		s_ManagedFunctions.CreateAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<CreateAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("CreateAssemblyLoadContext"));
-		s_ManagedFunctions.UnloadAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<UnloadAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("UnloadAssemblyLoadContext"));
-		s_ManagedFunctions.LoadManagedAssemblyFptr = LoadCoralManagedFunctionPtr<LoadManagedAssemblyFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssembly"));
-		s_ManagedFunctions.UnloadAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<UnloadAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("UnloadAssemblyLoadContext"));
-		s_ManagedFunctions.GetLastLoadStatusFptr = LoadCoralManagedFunctionPtr<GetLastLoadStatusFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("GetLastLoadStatus"));
-		s_ManagedFunctions.GetAssemblyNameFptr = LoadCoralManagedFunctionPtr<GetAssemblyNameFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("GetAssemblyName"));
-
-		s_ManagedFunctions.GetAssemblyTypesFptr = LoadCoralManagedFunctionPtr<GetAssemblyTypesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetAssemblyTypes"));
-		s_ManagedFunctions.GetTypeIdFptr = LoadCoralManagedFunctionPtr<GetTypeIdFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeId"));
-		s_ManagedFunctions.GetFullTypeNameFptr = LoadCoralManagedFunctionPtr<GetFullTypeNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFullTypeName"));
-		s_ManagedFunctions.GetAssemblyQualifiedNameFptr = LoadCoralManagedFunctionPtr<GetAssemblyQualifiedNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetAssemblyQualifiedName"));
-		s_ManagedFunctions.GetBaseTypeFptr = LoadCoralManagedFunctionPtr<GetBaseTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetBaseType"));
-		s_ManagedFunctions.GetTypeSizeFptr = LoadCoralManagedFunctionPtr<GetTypeSizeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeSize"));
-		s_ManagedFunctions.IsTypeSubclassOfFptr = LoadCoralManagedFunctionPtr<IsTypeSubclassOfFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("IsTypeSubclassOf"));
-		s_ManagedFunctions.IsTypeAssignableToFptr = LoadCoralManagedFunctionPtr<IsTypeAssignableToFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("IsTypeAssignableTo"));
-		s_ManagedFunctions.IsTypeAssignableFromFptr = LoadCoralManagedFunctionPtr<IsTypeAssignableFromFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("IsTypeAssignableFrom"));
-		s_ManagedFunctions.IsTypeSZArrayFptr = LoadCoralManagedFunctionPtr<IsTypeSZArrayFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("IsTypeSZArray"));
-		s_ManagedFunctions.GetElementTypeFptr = LoadCoralManagedFunctionPtr<GetElementTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetElementType"));
-		s_ManagedFunctions.GetTypeMethodsFptr = LoadCoralManagedFunctionPtr<GetTypeMethodsFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeMethods"));
-		s_ManagedFunctions.GetTypeFieldsFptr = LoadCoralManagedFunctionPtr<GetTypeFieldsFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeFields"));
-		s_ManagedFunctions.GetTypePropertiesFptr = LoadCoralManagedFunctionPtr<GetTypePropertiesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeProperties"));
-		s_ManagedFunctions.HasTypeAttributeFptr = LoadCoralManagedFunctionPtr<HasTypeAttributeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("HasTypeAttribute"));
-		s_ManagedFunctions.GetTypeAttributesFptr = LoadCoralManagedFunctionPtr<GetTypeAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeAttributes"));
-		s_ManagedFunctions.GetTypeManagedTypeFptr = LoadCoralManagedFunctionPtr<GetTypeManagedTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeManagedType"));
-		s_ManagedFunctions.InvokeStaticMethodFptr = LoadCoralManagedFunctionPtr<InvokeStaticMethodFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("InvokeStaticMethod"));
-		s_ManagedFunctions.InvokeStaticMethodRetFptr = LoadCoralManagedFunctionPtr<InvokeStaticMethodRetFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("InvokeStaticMethodRet"));
-
-		s_ManagedFunctions.GetMethodInfoNameFptr = LoadCoralManagedFunctionPtr<GetMethodInfoNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetMethodInfoName"));
-		s_ManagedFunctions.GetMethodInfoReturnTypeFptr = LoadCoralManagedFunctionPtr<GetMethodInfoReturnTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetMethodInfoReturnType"));
-		s_ManagedFunctions.GetMethodInfoParameterTypesFptr = LoadCoralManagedFunctionPtr<GetMethodInfoParameterTypesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetMethodInfoParameterTypes"));
-		s_ManagedFunctions.GetMethodInfoAccessibilityFptr = LoadCoralManagedFunctionPtr<GetMethodInfoAccessibilityFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetMethodInfoAccessibility"));
-		s_ManagedFunctions.GetMethodInfoAttributesFptr = LoadCoralManagedFunctionPtr<GetMethodInfoAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetMethodInfoAttributes"));
-
-		s_ManagedFunctions.GetFieldInfoNameFptr = LoadCoralManagedFunctionPtr<GetFieldInfoNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoName"));
-		s_ManagedFunctions.GetFieldInfoTypeFptr = LoadCoralManagedFunctionPtr<GetFieldInfoTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoType"));
-		s_ManagedFunctions.GetFieldInfoAccessibilityFptr = LoadCoralManagedFunctionPtr<GetFieldInfoAccessibilityFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoAccessibility"));
-		s_ManagedFunctions.GetFieldInfoAttributesFptr = LoadCoralManagedFunctionPtr<GetFieldInfoAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoAttributes"));
-
-		s_ManagedFunctions.GetPropertyInfoNameFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoName"));
-		s_ManagedFunctions.GetPropertyInfoTypeFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoType"));
-		s_ManagedFunctions.GetPropertyInfoAttributesFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoAttributes"));
-
-		s_ManagedFunctions.GetAttributeFieldValueFptr = LoadCoralManagedFunctionPtr<GetAttributeFieldValueFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetAttributeFieldValue"));
-		s_ManagedFunctions.GetAttributeTypeFptr = LoadCoralManagedFunctionPtr<GetAttributeTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetAttributeType"));
-
-		s_ManagedFunctions.SetInternalCallsFptr = LoadCoralManagedFunctionPtr<SetInternalCallsFn>(CORAL_STR("Coral.Managed.Interop.InternalCallsManager, Coral.Managed"), CORAL_STR("SetInternalCalls"));
-		s_ManagedFunctions.CreateObjectFptr = LoadCoralManagedFunctionPtr<CreateObjectFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("CreateObject"));
-		s_ManagedFunctions.InvokeMethodFptr = LoadCoralManagedFunctionPtr<InvokeMethodFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("InvokeMethod"));
-		s_ManagedFunctions.InvokeMethodRetFptr = LoadCoralManagedFunctionPtr<InvokeMethodRetFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("InvokeMethodRet"));
-		s_ManagedFunctions.SetFieldValueFptr = LoadCoralManagedFunctionPtr<SetFieldValueFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("SetFieldValue"));
-		s_ManagedFunctions.GetFieldValueFptr = LoadCoralManagedFunctionPtr<GetFieldValueFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("GetFieldValue"));
-		s_ManagedFunctions.SetPropertyValueFptr = LoadCoralManagedFunctionPtr<SetFieldValueFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("SetPropertyValue"));
-		s_ManagedFunctions.GetPropertyValueFptr = LoadCoralManagedFunctionPtr<GetFieldValueFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("GetPropertyValue"));
-		s_ManagedFunctions.DestroyObjectFptr = LoadCoralManagedFunctionPtr<DestroyObjectFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("DestroyObject"));
-		s_ManagedFunctions.CollectGarbageFptr = LoadCoralManagedFunctionPtr<CollectGarbageFn>(CORAL_STR("Coral.Managed.GarbageCollector, Coral.Managed"), CORAL_STR("CollectGarbage"));
-		s_ManagedFunctions.WaitForPendingFinalizersFptr = LoadCoralManagedFunctionPtr<WaitForPendingFinalizersFn>(CORAL_STR("Coral.Managed.GarbageCollector, Coral.Managed"), CORAL_STR("WaitForPendingFinalizers"));
+		s_NativeCallables = LoadCoralManagedFunctionPtr<NativeCallables(*)()>(CORAL_STR("Coral.Managed.NativeCallables, Coral.Managed"), CORAL_STR("Get"))();
 	}
 
 	void* HostInstance::LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName, const CharType* InDelegateType) const

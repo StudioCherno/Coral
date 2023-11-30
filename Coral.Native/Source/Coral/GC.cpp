@@ -1,5 +1,5 @@
 ﻿#include "GC.hpp"
-#include "CoralManagedFunctions.hpp"
+#include "NativeCallables.generated.hpp"
 
 namespace Coral {
 
@@ -10,12 +10,12 @@ namespace Coral {
 	
 	void GC::Collect(int32_t InGeneration, GCCollectionMode InCollectionMode, bool InBlocking, bool InCompacting)
 	{
-		s_ManagedFunctions.CollectGarbageFptr(InGeneration, InCollectionMode, InBlocking, InCompacting);
+		s_NativeCallables.CollectGarbageFptr(InGeneration, InCollectionMode, InBlocking, InCompacting);
 	}
 
 	void GC::WaitForPendingFinalizers()
 	{
-		s_ManagedFunctions.WaitForPendingFinalizersFptr();
+		s_NativeCallables.WaitForPendingFinalizersFptr();
 	}
 	
 }

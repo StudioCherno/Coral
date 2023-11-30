@@ -1,14 +1,14 @@
 #include "PropertyInfo.hpp"
 #include "Type.hpp"
 #include "Attribute.hpp"
-#include "CoralManagedFunctions.hpp"
+#include "NativeCallables.generated.hpp"
 #include "TypeCache.hpp"
 
 namespace Coral {
 
 	String PropertyInfo::GetName() const
 	{
-		return s_ManagedFunctions.GetPropertyInfoNameFptr(m_Handle);
+		return s_NativeCallables.GetPropertyInfoNameFptr(m_Handle);
 	}
 
 	Type& PropertyInfo::GetType()
@@ -16,7 +16,7 @@ namespace Coral {
 		if (!m_Type)
 		{
 			Type propertyType;
-			s_ManagedFunctions.GetPropertyInfoTypeFptr(m_Handle, &propertyType.m_Id);
+			s_NativeCallables.GetPropertyInfoTypeFptr(m_Handle, &propertyType.m_Id);
 			m_Type = TypeCache::Get().CacheType(std::move(propertyType));
 		}
 
@@ -26,9 +26,9 @@ namespace Coral {
 	std::vector<Attribute> PropertyInfo::GetAttributes() const
 	{
 		int32_t attributeCount;
-		s_ManagedFunctions.GetPropertyInfoAttributesFptr(m_Handle, nullptr, &attributeCount);
+		s_NativeCallables.GetPropertyInfoAttributesFptr(m_Handle, nullptr, &attributeCount);
 		std::vector<ManagedHandle> attributeHandles(attributeCount);
-		s_ManagedFunctions.GetPropertyInfoAttributesFptr(m_Handle, attributeHandles.data(), &attributeCount);
+		s_NativeCallables.GetPropertyInfoAttributesFptr(m_Handle, attributeHandles.data(), &attributeCount);
 
 		std::vector<Attribute> result(attributeHandles.size());
 		for (size_t i = 0; i < attributeHandles.size(); i++)

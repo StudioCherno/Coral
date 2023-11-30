@@ -5,6 +5,7 @@ workspace "CoralManaged"
 	objdir "%{wks.location}/Intermediates/%{cfg.buildcfg}"
 
 include "Coral.Managed"
+include "Coral.Generator"
 
 group "Tests"
 	include "Tests/Testing.Managed"

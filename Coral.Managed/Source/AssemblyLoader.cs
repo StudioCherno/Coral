@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
@@ -13,6 +12,7 @@ namespace Coral.Managed;
 
 using static ManagedHost;
 
+[NativeType("Coral::AssemblyLoadStatus")]
 public enum AssemblyLoadStatus
 {
 	Success, FileNotFound, FileLoadFailure, InvalidFilePath, InvalidAssembly, UnknownError
@@ -87,8 +87,8 @@ public static class AssemblyLoader
 		return null;
 	}
 
-	[UnmanagedCallersOnly]
-	private static int CreateAssemblyLoadContext(NativeString InName)
+	[NativeCallable]
+	internal static int CreateAssemblyLoadContext(NativeString InName)
 	{
 		string? name = InName;
 
@@ -112,8 +112,8 @@ public static class AssemblyLoader
 		return contextId;
 	}
 
-	[UnmanagedCallersOnly]
-	private static void UnloadAssemblyLoadContext(int InContextId)
+	[NativeCallable]
+	internal static void UnloadAssemblyLoadContext(int InContextId)
 	{
 		if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
 		{
@@ -161,8 +161,8 @@ public static class AssemblyLoader
 		alc.Unload();
 	}
 
-	[UnmanagedCallersOnly]
-	private static int LoadAssembly(int InContextId, NativeString InAssemblyFilePath)
+	[NativeCallable]
+	internal static int LoadAssembly(int InContextId, NativeString InAssemblyFilePath)
 	{
 		try
 		{
@@ -216,11 +216,11 @@ public static class AssemblyLoader
 		}
 	}
 
-	[UnmanagedCallersOnly]
-	private static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
+	[NativeCallable]
+	internal static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
 
-	[UnmanagedCallersOnly]
-	private static NativeString GetAssemblyName(int InAssemblyId)
+	[NativeCallable]
+	internal static NativeString GetAssemblyName(int InAssemblyId)
 	{
 		if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
 		{

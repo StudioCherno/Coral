@@ -18,10 +18,12 @@ public readonly struct InternalCall
 
 internal static class InternalCallsManager
 {
-	[UnmanagedCallersOnly]
-	private static void SetInternalCalls(IntPtr InInternalCalls, int InLength)
+	[NativeCallable]
+	internal static void SetInternalCalls(IntPtr InInternalCalls, int InLength)
 	{
 		var internalCalls = new NativeArray<InternalCall>(InInternalCalls, InLength);
+
+		Console.WriteLine("Here?");
 
 		try
 		{

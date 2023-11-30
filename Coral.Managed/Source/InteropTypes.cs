@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace Coral.Managed.Interop;
@@ -116,6 +117,39 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 
 }
 
+public static class ArrayStorage
+{
+	private static Dictionary<int, GCHandle> s_FieldArrays = new();
+
+	public static bool HasFieldArray(object? InTarget, MemberInfo? InArrayMemberInfo)
+	{
+		if (InArrayMemberInfo == null)
+			return false;
+
+		int arrayId = InArrayMemberInfo.GetHashCode();
+		arrayId += InTarget != null ? InTarget.GetHashCode() : 0;
+		return s_FieldArrays.ContainsKey(arrayId);
+	}
+
+	public static GCHandle? GetFieldArray(object? InTarget, object? InValue, MemberInfo? InArrayMemberInfo)
+	{
+		if (InArrayMemberInfo == null)
+			return null;
+
+		int arrayId = InArrayMemberInfo.GetHashCode();
+		arrayId += InTarget != null ? InTarget.GetHashCode() : 0;
+
+		if (!s_FieldArrays.TryGetValue(arrayId, out var arrayHandle))
+		{
+			var arrayObject = InValue as Array;
+			arrayHandle = GCHandle.Alloc(arrayObject, GCHandleType.Pinned);
+			s_FieldArrays.Add(arrayId, arrayHandle);
+		}
+
+		return arrayHandle;
+	}
+}
+
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct NativeInstance<T>
 {
@@ -141,6 +175,7 @@ public struct NativeInstance<T>
 	}
 }
 
+[NativeType("Coral::String")]
 [StructLayout(LayoutKind.Sequential)]
 public struct NativeString : IDisposable
 {
@@ -171,6 +206,7 @@ public struct NativeString : IDisposable
 	public static implicit operator string?(NativeString InString) => Marshal.PtrToStringAuto(InString.m_NativeString);
 }
 
+[NativeType("Coral::Internal::Bool32")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct Bool32
 {

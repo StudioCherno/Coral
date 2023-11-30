@@ -11,6 +11,7 @@ namespace Coral.Managed;
 
 using static ManagedHost;
 
+[NativeType("Coral::ManagedType")]
 internal enum ManagedType
 {
 	Unknown,
@@ -86,8 +87,8 @@ internal static class ManagedObject
 
 	internal static Dictionary<MethodKey, MethodInfo> s_CachedMethods = new Dictionary<MethodKey, MethodInfo>();
 
-	[UnmanagedCallersOnly]
-	private static unsafe IntPtr CreateObject(int InTypeID, Bool32 InWeakRef, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
+	[NativeCallable]
+	internal static unsafe IntPtr CreateObject(int InTypeID, Bool32 InWeakRef, [NativeConst] IntPtr InParameters, [NativeConst] ManagedType* InParameterTypes, int InParameterCount)
 	{
 		try
 		{
@@ -150,8 +151,8 @@ internal static class ManagedObject
 		}
 	}
 
-	[UnmanagedCallersOnly]
-	public static void DestroyObject(IntPtr InObjectHandle)
+	[NativeCallable]
+	internal static void DestroyObject(IntPtr InObjectHandle)
 	{
 		try
 		{
@@ -163,7 +164,7 @@ internal static class ManagedObject
 		}
 	}
 
-	private static unsafe MethodInfo? TryGetMethodInfo(Type InType, string InMethodName, ManagedType* InParameterTypes, int InParameterCount, BindingFlags InBindingFlags)
+	private static unsafe MethodInfo? TryGetMethodInfo(Type InType, string InMethodName, [NativeConst] ManagedType* InParameterTypes, int InParameterCount, BindingFlags InBindingFlags)
 	{
 		ReadOnlySpan<MethodInfo> methods = InType.GetMethods(InBindingFlags);
 
@@ -198,8 +199,8 @@ internal static class ManagedObject
 		return methodInfo;
 	}
 
-	[UnmanagedCallersOnly]
-	private static unsafe void InvokeStaticMethod(int InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
+	[NativeCallable]
+	internal static unsafe void InvokeStaticMethod(int InType, NativeString InMethodName, [NativeConst] IntPtr InParameters, [NativeConst] ManagedType* InParameterTypes, int InParameterCount)
 	{
 		try
 		{
@@ -220,8 +221,8 @@ internal static class ManagedObject
 		}
 	}
 
-	[UnmanagedCallersOnly]
-	private static unsafe void InvokeStaticMethodRet(int InType, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
+	[NativeCallable]
+	internal static unsafe void InvokeStaticMethodRet(int InType, NativeString InMethodName, [NativeConst] IntPtr InParameters, [NativeConst] ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
 	{
 		try
 		{
@@ -239,7 +240,7 @@ internal static class ManagedObject
 			if (value == null)
 				return;
 
-			Marshalling.MarshalReturnValue(value, methodInfo.ReturnType, InResultStorage);
+			Marshalling.MarshalReturnValue(null, value, methodInfo, InResultStorage);
 		}
 		catch (Exception ex)
 		{
@@ -247,8 +248,8 @@ internal static class ManagedObject
 		}
 	}
 
-	[UnmanagedCallersOnly]
-	private static unsafe void InvokeMethod(IntPtr InObjectHandle, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
+	[NativeCallable]
+	internal static unsafe void InvokeMethod(IntPtr InObjectHandle, NativeString InMethodName, [NativeConst] IntPtr InParameters, [NativeConst] ManagedType* InParameterTypes, int InParameterCount)
 	{
 		try
 		{
@@ -273,8 +274,8 @@ internal static class ManagedObject
 		}
 	}
 	
-	[UnmanagedCallersOnly]
-	private static unsafe void InvokeMethodRet(IntPtr InObjectHandle, NativeString InMethodName, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
+	[NativeCallable]
+	internal static unsafe void InvokeMethodRet(IntPtr InObjectHandle, NativeString InMethodName, [NativeConst] IntPtr InParameters, [NativeConst] ManagedType* InParameterTypes, int InParameterCount, IntPtr InResultStorage)
 	{
 		try
 		{
@@ -296,7 +297,7 @@ internal static class ManagedObject
 			if (value == null)
 				return;
 
-			Marshalling.MarshalReturnValue(value, methodInfo.ReturnType, InResultStorage);
+			Marshalling.MarshalReturnValue(target, value, methodInfo, InResultStorage);
 		}
 		catch (Exception ex)
 		{
@@ -304,8 +305,8 @@ internal static class ManagedObject
 		}
 	}
 
-	[UnmanagedCallersOnly]
-	private static void SetFieldValue(IntPtr InTarget, NativeString InFieldName, IntPtr InValue)
+	[NativeCallable]
+	internal static void SetFieldValue(IntPtr InTarget, NativeString InFieldName, IntPtr InValue)
 	{
 		try
 		{
@@ -335,8 +336,8 @@ internal static class ManagedObject
 		}
 	}
 
-	[UnmanagedCallersOnly]
-	private static void GetFieldValue(IntPtr InTarget, NativeString InFieldName, IntPtr OutValue)
+	[NativeCallable]
+	internal static void GetFieldValue(IntPtr InTarget, NativeString InFieldName, IntPtr OutValue)
 	{
 		try
 		{
@@ -357,7 +358,7 @@ internal static class ManagedObject
 				return;
 			}
 
-			Marshalling.MarshalReturnValue(fieldInfo.GetValue(target), fieldInfo.FieldType, OutValue);
+			Marshalling.MarshalReturnValue(target, fieldInfo.GetValue(target), fieldInfo, OutValue);
 		}
 		catch (Exception ex)
 		{
@@ -365,8 +366,8 @@ internal static class ManagedObject
 		}
 	}
 
-	[UnmanagedCallersOnly]
-	private static void SetPropertyValue(IntPtr InTarget, NativeString InPropertyName, IntPtr InValue)
+	[NativeCallable]
+	internal static void SetPropertyValue(IntPtr InTarget, NativeString InPropertyName, IntPtr InValue)
 	{
 		try
 		{
@@ -402,8 +403,8 @@ internal static class ManagedObject
 		}
 	}
 
-	[UnmanagedCallersOnly]
-	private static void GetPropertyValue(IntPtr InTarget, NativeString InPropertyName, IntPtr OutValue)
+	[NativeCallable]
+	internal static void GetPropertyValue(IntPtr InTarget, NativeString InPropertyName, IntPtr OutValue)
 	{
 		try
 		{
@@ -430,7 +431,7 @@ internal static class ManagedObject
 				return;
 			}
 
-			Marshalling.MarshalReturnValue(propertyInfo.GetValue(target), propertyInfo.PropertyType, OutValue);
+			Marshalling.MarshalReturnValue(target, propertyInfo.GetValue(target), propertyInfo, OutValue);
 		}
 		catch (Exception ex)
 		{

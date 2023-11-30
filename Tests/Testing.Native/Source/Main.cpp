@@ -15,7 +15,7 @@ Coral::Type g_TestsType;
 
 void ExceptionCallback(std::string_view InMessage)
 {
-	std::cout << "Unhandled native exception: " << InMessage << std::endl;
+	std::cout << "\033[1;31m " << "Unhandled native exception: " << InMessage << "\033[0m\n";
 }
 
 char8_t SByteMarshalIcall(char8_t InValue) { return InValue * 2; }
@@ -435,12 +435,12 @@ void RunTests()
 		bool result = test.Func();
 		if (result)
 		{
-			std::cout << "[" << i + 1 << " / " << tests.size() << " (" << test.Name << "): Passed\n";
+			std::cout << "\033[1;32m[" << i + 1 << " / " << tests.size() << " (" << test.Name << "): Passed\033[0m\n";
 			passedTests++;
 		}
 		else
 		{
-			std::cerr << "[" << i + 1 << " / " << tests.size() << " (" << test.Name << "): Failed\n"; 
+			std::cerr << "\033[1;31m[" << i + 1 << " / " << tests.size() << " (" << test.Name << "): Failed\033[0m\n"; 
 		}
 	}
 	std::cout << "[NativeTest]: Done. " << passedTests << " passed, " << tests.size() - passedTests  << " failed.\n";

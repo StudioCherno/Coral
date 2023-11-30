@@ -1,6 +1,6 @@
 #include "Assembly.hpp"
 #include "HostInstance.hpp"
-#include "CoralManagedFunctions.hpp"
+#include "NativeCallables.generated.hpp"
 #include "Verify.hpp"
 #include "StringHelper.hpp"
 #include "TypeCache.hpp"
@@ -27,7 +27,7 @@ namespace Coral {
 
 	void ManagedAssembly::UploadInternalCalls()
 	{
-		s_ManagedFunctions.SetInternalCallsFptr(m_InternalCalls.data(), static_cast<int32_t>(m_InternalCalls.size()));
+		s_NativeCallables.SetInternalCallsFptr(m_InternalCalls.data(), static_cast<int32_t>(m_InternalCalls.size()));
 	}
 
 	Type& ManagedAssembly::GetType(std::string_view InClassName) const
@@ -48,19 +48,19 @@ namespace Coral {
 
 		auto[idx, result] = m_LoadedAssemblies.EmplaceBack();
 		result.m_Host = m_Host;
-		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(m_ContextId, filepath);
-		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
+		result.m_AssemblyID = s_NativeCallables.LoadAssemblyFptr(m_ContextId, filepath);
+		result.m_LoadStatus = s_NativeCallables.GetLastLoadStatusFptr();
 
 		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
 		{
-			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
+			auto assemblyName = s_NativeCallables.GetAssemblyNameFptr(result.m_AssemblyID);
 			result.m_Name = assemblyName;
 			String::Free(assemblyName);
 
 			int32_t typeCount = 0;
-			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);
+			s_NativeCallables.GetAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);
 			std::vector<TypeId> typeIds(typeCount);
-			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, typeIds.data(), &typeCount);
+			s_NativeCallables.GetAssemblyTypesFptr(result.m_AssemblyID, typeIds.data(), &typeCount);
 
 			for (auto typeId : typeIds)
 			{

@@ -15,16 +15,38 @@ public static class Marshalling
 		public int Length;
 	};
 
-	public static void MarshalReturnValue(object? InValue, Type? InType, IntPtr OutValue)
+	public static void MarshalReturnValue(object? InTarget, object? InValue, MemberInfo? InMemberInfo, IntPtr OutValue)
 	{
-		if (InType == null)
+		if (InMemberInfo == null)
 			return;
 
-		if (InType.IsSZArray)
+		Type? type = null;
+
+		if (InMemberInfo is FieldInfo fieldInfo)
 		{
-			var array = InValue as Array;
-			var elementType = InType.GetElementType();
-			CopyArrayToBuffer(OutValue, array, elementType);
+			type = fieldInfo.FieldType;
+		}
+		else if (InMemberInfo is PropertyInfo propertyInfo)
+		{
+			type = propertyInfo.PropertyType;
+		}
+		else if (InMemberInfo is MethodInfo methodInfo)
+		{
+			type = methodInfo.ReturnType;
+		}
+
+		if (type.IsSZArray)
+		{
+			var fieldArray = ArrayStorage.GetFieldArray(InTarget, InValue, InMemberInfo);
+
+			if (fieldArray != null)
+			{
+				Marshal.WriteIntPtr(OutValue, fieldArray.Value.AddrOfPinnedObject());
+			}
+			else
+			{
+				Marshal.WriteIntPtr(OutValue, IntPtr.Zero);
+			}
 		}
 		else if (InValue is string str)
 		{
@@ -35,7 +57,7 @@ public static class Marshalling
 		{
 			Marshal.StructureToPtr(nativeString, OutValue, false);
 		}
-		else if (InType.IsPointer)
+		else if (type.IsPointer)
 		{
 			unsafe
 			{
@@ -52,7 +74,7 @@ public static class Marshalling
 		}
 		else
 		{
-			var valueSize = Marshal.SizeOf(InType);
+			var valueSize = Marshal.SizeOf(type);
 			var handle = GCHandle.Alloc(InValue, GCHandleType.Pinned);
 
 			unsafe
@@ -76,6 +98,17 @@ public static class Marshalling
 			return null;
 
 		var arrayContainer = MarshalPointer<ArrayContainer>(InArray);
+
+		if (ArrayStorage.HasFieldArray(null, null))
+		{
+			var fieldArray = ArrayStorage.GetFieldArray(null, null, null);
+
+			if (arrayContainer.Data == fieldArray!.Value.AddrOfPinnedObject())
+			{
+				return fieldArray.Value.Target;
+			}
+		}
+
 		var elements = Array.CreateInstance(InElementType, arrayContainer.Length);
 
 		if (InElementType.IsValueType)
@@ -105,17 +138,18 @@ public static class Marshalling
 			}
 		}
 
+
+
 		return elements;
 	}
 
-	public static void CopyArrayToBuffer(IntPtr InBuffer, Array? InArray, Type? InElementType)
+	/*public static void CopyArrayToBuffer(GCHandle InArrayHandle, Array? InArray, Type? InElementType)
 	{
 		if (InArray == null || InElementType == null)
 			return;
 
 		var elementSize = Marshal.SizeOf(InElementType);
 		int byteLength = InArray.Length * elementSize;
-		var mem = Marshal.AllocHGlobal(byteLength);
 
 		int offset = 0;
 
@@ -147,7 +181,7 @@ public static class Marshalling
 		}
 
 		handle.Free();
-	}
+	}*/
 
 	public static object? MarshalPointer(IntPtr InValue, Type InType)
 	{
@@ -199,7 +233,7 @@ public static class Marshalling
 		try
 		{
 			if (InNativeArray == IntPtr.Zero || InLength == 0)
-				return Array.Empty<IntPtr>();
+				return [];
 
 			IntPtr[] result = new IntPtr[InLength];
 
@@ -211,7 +245,7 @@ public static class Marshalling
 		catch (Exception ex)
 		{
 			ManagedHost.HandleException(ex);
-			return Array.Empty<IntPtr>();
+			return [];
 		}
 	}
 
@@ -228,7 +262,9 @@ public static class Marshalling
 		var result = new object?[parameterPointers.Length];
 
 		for (int i = 0; i < parameterPointers.Length; i++)
+		{
 			result[i] = MarshalPointer(parameterPointers[i], parameterInfos[i].ParameterType);
+		}
 
 		return result;
 	}
