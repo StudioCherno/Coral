@@ -1,4 +1,4 @@
-local CoralDotNetPath = os.getenv("CORAL_DOTNET_PATH")
+premake.api.addAllowed("debuggertype", "NativeWithManagedCore")
 
 project "Coral.Native"
     language "C++"
