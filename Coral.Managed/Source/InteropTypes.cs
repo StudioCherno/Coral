@@ -219,9 +219,11 @@ public struct Bool32
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct ReflectionType
 {
-	private readonly long m_TypeId;
+	private readonly int m_TypeId;
 
-	public ReflectionType(long InTypeID)
+	public int ID => m_TypeId;
+
+	public ReflectionType(int InTypeID)
 	{
 		m_TypeId = InTypeID;
 	}
