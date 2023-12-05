@@ -114,6 +114,7 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 	}
 
 	public static implicit operator T[](NativeArray<T> InArray) => InArray.ToArray();
+	public static implicit operator NativeArray<T>(T[] InArray) => new(InArray);
 
 }
 

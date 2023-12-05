@@ -12,7 +12,7 @@ namespace Coral {
 	{
 	public:
 		template<typename TReturn, typename... TArgs>
-		TReturn InvokeMethod(std::string_view InMethodName, TArgs&&... InParameters)
+		TReturn InvokeMethod(std::string_view InMethodName, TArgs&&... InParameters) const
 		{
 			constexpr size_t parameterCount = sizeof...(InParameters);
 
@@ -34,7 +34,7 @@ namespace Coral {
 		}
 
 		template<typename... TArgs>
-		void InvokeMethod(std::string_view InMethodName, TArgs&&... InParameters)
+		void InvokeMethod(std::string_view InMethodName, TArgs&&... InParameters) const
 		{
 			constexpr size_t parameterCount = sizeof...(InParameters);
 
@@ -52,13 +52,13 @@ namespace Coral {
 		}
 
 		template<typename TValue>
-		void SetFieldValue(std::string_view InFieldName, TValue InValue)
+		void SetFieldValue(std::string_view InFieldName, TValue InValue) const
 		{
 			SetFieldValueRaw(InFieldName, &InValue);
 		}
 
 		template<typename TReturn>
-		TReturn GetFieldValue(std::string_view InFieldName)
+		TReturn GetFieldValue(std::string_view InFieldName) const
 		{
 			TReturn result;
 			GetFieldValueRaw(InFieldName, &result);
@@ -66,13 +66,13 @@ namespace Coral {
 		}
 
 		template<typename TValue>
-		void SetPropertyValue(std::string_view InPropertyName, TValue InValue)
+		void SetPropertyValue(std::string_view InPropertyName, TValue InValue) const
 		{
 			SetPropertyValueRaw(InPropertyName, &InValue);
 		}
 
 		template<typename TReturn>
-		TReturn GetPropertyValue(std::string_view InPropertyName)
+		TReturn GetPropertyValue(std::string_view InPropertyName) const
 		{
 			TReturn result;
 			GetPropertyValueRaw(InPropertyName, &result);
@@ -88,13 +88,15 @@ namespace Coral {
 		
 		void Destroy();
 
+		bool IsValid() const { return m_Handle != nullptr && m_Type != nullptr; }
+
 	private:
 		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
 		void InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
 
 	private:
 		void* m_Handle = nullptr;
-		Type* m_Type;
+		const Type* m_Type;
 
 	private:
 		friend class ManagedAssembly;

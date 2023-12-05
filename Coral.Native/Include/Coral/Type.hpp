@@ -43,7 +43,7 @@ namespace Coral {
 
 	public:
 		template<typename... TArgs>
-		ManagedObject CreateInstance(TArgs&&... InArguments)
+		ManagedObject CreateInstance(TArgs&&... InArguments) const
 		{
 			constexpr size_t argumentCount = sizeof...(InArguments);
 
@@ -65,7 +65,7 @@ namespace Coral {
 		}
 
 		template <typename TReturn, typename... TArgs>
-		TReturn InvokeStaticMethod(std::string_view InMethodName, TArgs&&... InParameters)
+		TReturn InvokeStaticMethod(std::string_view InMethodName, TArgs&&... InParameters) const
 		{
 			constexpr size_t parameterCount = sizeof...(InParameters);
 
@@ -105,7 +105,7 @@ namespace Coral {
 		}
 
 	private:
-		ManagedObject CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength);
+		ManagedObject CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
 		void InvokeStaticMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
 		void InvokeStaticMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
 
