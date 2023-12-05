@@ -28,4 +28,11 @@ namespace Coral {
 		return m_IDCache.contains(InTypeID) ? m_IDCache.at(InTypeID) : nullptr;
 	}
 
+	void TypeCache::Clear()
+	{
+		m_Types.Clear();
+		m_NameCache.clear();
+		m_IDCache.clear();
+	}
+
 }
