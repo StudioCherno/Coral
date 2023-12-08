@@ -1,5 +1,5 @@
 #include "MethodInfo.hpp"
-#include "NativeCallables.generated.hpp"
+#include "CoralManagedFunctions.hpp"
 #include "Type.hpp"
 #include "Attribute.hpp"
 #include "TypeCache.hpp"
@@ -8,7 +8,7 @@ namespace Coral {
 
 	String MethodInfo::GetName() const
 	{
-		return s_NativeCallables.GetMethodInfoNameFptr(m_Handle);
+		return s_ManagedFunctions.GetMethodInfoNameFptr(m_Handle);
 	}
 
 	Type& MethodInfo::GetReturnType()
@@ -16,7 +16,7 @@ namespace Coral {
 		if (!m_ReturnType)
 		{
 			Type returnType;
-			s_NativeCallables.GetMethodInfoReturnTypeFptr(m_Handle, &returnType.m_Id);
+			s_ManagedFunctions.GetMethodInfoReturnTypeFptr(m_Handle, &returnType.m_Id);
 			m_ReturnType = TypeCache::Get().CacheType(std::move(returnType));
 		}
 
@@ -28,9 +28,9 @@ namespace Coral {
 		if (m_ParameterTypes.empty())
 		{
 			int32_t parameterCount;
-			s_NativeCallables.GetMethodInfoParameterTypesFptr(m_Handle, nullptr, &parameterCount);
+			s_ManagedFunctions.GetMethodInfoParameterTypesFptr(m_Handle, nullptr, &parameterCount);
 			std::vector<TypeId> parameterTypes(parameterCount);
-			s_NativeCallables.GetMethodInfoParameterTypesFptr(m_Handle, parameterTypes.data(), &parameterCount);
+			s_ManagedFunctions.GetMethodInfoParameterTypesFptr(m_Handle, parameterTypes.data(), &parameterCount);
 
 			m_ParameterTypes.resize(parameterTypes.size());
 
@@ -47,15 +47,15 @@ namespace Coral {
 
 	TypeAccessibility MethodInfo::GetAccessibility() const
 	{
-		return s_NativeCallables.GetMethodInfoAccessibilityFptr(m_Handle);
+		return s_ManagedFunctions.GetMethodInfoAccessibilityFptr(m_Handle);
 	}
 
 	std::vector<Attribute> MethodInfo::GetAttributes() const
 	{
 		int32_t attributeCount;
-		s_NativeCallables.GetMethodInfoAttributesFptr(m_Handle, nullptr, &attributeCount);
+		s_ManagedFunctions.GetMethodInfoAttributesFptr(m_Handle, nullptr, &attributeCount);
 		std::vector<ManagedHandle> attributeHandles(attributeCount);
-		s_NativeCallables.GetMethodInfoAttributesFptr(m_Handle, attributeHandles.data(), &attributeCount);
+		s_ManagedFunctions.GetMethodInfoAttributesFptr(m_Handle, attributeHandles.data(), &attributeCount);
 
 		std::vector<Attribute> result(attributeHandles.size());
 		for (size_t i = 0; i < attributeHandles.size(); i++)

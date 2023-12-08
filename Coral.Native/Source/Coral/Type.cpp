@@ -1,5 +1,5 @@
 #include "Type.hpp"
-#include "NativeCallables.generated.hpp"
+#include "CoralManagedFunctions.hpp"
 #include "TypeCache.hpp"
 #include "Attribute.hpp"
 
@@ -7,12 +7,12 @@ namespace Coral {
 
 	String Type::GetFullName() const
 	{
-		return s_NativeCallables.GetFullTypeNameFptr(m_Id);
+		return s_ManagedFunctions.GetFullTypeNameFptr(m_Id);
 	}
 
 	String Type::GetAssemblyQualifiedName() const
 	{
-		return s_NativeCallables.GetAssemblyQualifiedNameFptr(m_Id);
+		return s_ManagedFunctions.GetAssemblyQualifiedNameFptr(m_Id);
 	}
 
 	Type& Type::GetBaseType()
@@ -20,7 +20,7 @@ namespace Coral {
 		if (!m_BaseType)
 		{
 			Type baseType;
-			s_NativeCallables.GetBaseTypeFptr(m_Id, &baseType.m_Id);
+			s_ManagedFunctions.GetBaseTypeFptr(m_Id, &baseType.m_Id);
 			m_BaseType = TypeCache::Get().CacheType(std::move(baseType));
 		}
 
@@ -29,30 +29,30 @@ namespace Coral {
 
 	int32_t Type::GetSize() const
 	{
-		return s_NativeCallables.GetTypeSizeFptr(m_Id);
+		return s_ManagedFunctions.GetTypeSizeFptr(m_Id);
 	}
 
 	bool Type::IsSubclassOf(const Type& InOther) const
 	{
-		return s_NativeCallables.IsTypeSubclassOfFptr(m_Id, InOther.m_Id);
+		return s_ManagedFunctions.IsTypeSubclassOfFptr(m_Id, InOther.m_Id);
 	}
 
 	bool Type::IsAssignableTo(const Type& InOther) const
 	{
-		return s_NativeCallables.IsTypeAssignableToFptr(m_Id, InOther.m_Id);
+		return s_ManagedFunctions.IsTypeAssignableToFptr(m_Id, InOther.m_Id);
 	}
 
 	bool Type::IsAssignableFrom(const Type& InOther) const
 	{
-		return s_NativeCallables.IsTypeAssignableFromFptr(m_Id, InOther.m_Id);
+		return s_ManagedFunctions.IsTypeAssignableFromFptr(m_Id, InOther.m_Id);
 	}
 
 	std::vector<MethodInfo> Type::GetMethods() const
 	{
 		int32_t methodCount = 0;
-		s_NativeCallables.GetTypeMethodsFptr(m_Id, nullptr, &methodCount);
+		s_ManagedFunctions.GetTypeMethodsFptr(m_Id, nullptr, &methodCount);
 		std::vector<ManagedHandle> handles(methodCount);
-		s_NativeCallables.GetTypeMethodsFptr(m_Id, handles.data(), &methodCount);
+		s_ManagedFunctions.GetTypeMethodsFptr(m_Id, handles.data(), &methodCount);
 
 		std::vector<MethodInfo> methods(handles.size());
 		for (size_t i = 0; i < handles.size(); i++)
@@ -64,9 +64,9 @@ namespace Coral {
 	std::vector<FieldInfo> Type::GetFields() const
 	{
 		int32_t fieldCount = 0;
-		s_NativeCallables.GetTypeFieldsFptr(m_Id, nullptr, &fieldCount);
+		s_ManagedFunctions.GetTypeFieldsFptr(m_Id, nullptr, &fieldCount);
 		std::vector<ManagedHandle> handles(fieldCount);
-		s_NativeCallables.GetTypeFieldsFptr(m_Id, handles.data(), &fieldCount);
+		s_ManagedFunctions.GetTypeFieldsFptr(m_Id, handles.data(), &fieldCount);
 
 		std::vector<FieldInfo> fields(handles.size());
 		for (size_t i = 0; i < handles.size(); i++)
@@ -78,9 +78,9 @@ namespace Coral {
 	std::vector<PropertyInfo> Type::GetProperties() const
 	{
 		int32_t propertyCount = 0;
-		s_NativeCallables.GetTypePropertiesFptr(m_Id, nullptr, &propertyCount);
+		s_ManagedFunctions.GetTypePropertiesFptr(m_Id, nullptr, &propertyCount);
 		std::vector<ManagedHandle> handles(propertyCount);
-		s_NativeCallables.GetTypePropertiesFptr(m_Id, handles.data(), &propertyCount);
+		s_ManagedFunctions.GetTypePropertiesFptr(m_Id, handles.data(), &propertyCount);
 
 		std::vector<PropertyInfo> properties(handles.size());
 		for (size_t i = 0; i < handles.size(); i++)
@@ -91,15 +91,15 @@ namespace Coral {
 
 	bool Type::HasAttribute(const Type& InAttributeType) const
 	{
-		return s_NativeCallables.HasTypeAttributeFptr(m_Id, InAttributeType.m_Id);
+		return s_ManagedFunctions.HasTypeAttributeFptr(m_Id, InAttributeType.m_Id);
 	}
 
 	std::vector<Attribute> Type::GetAttributes() const
 	{
 		int32_t attributeCount;
-		s_NativeCallables.GetTypeAttributesFptr(m_Id, nullptr, &attributeCount);
+		s_ManagedFunctions.GetTypeAttributesFptr(m_Id, nullptr, &attributeCount);
 		std::vector<ManagedHandle> attributeHandles(attributeCount);
-		s_NativeCallables.GetTypeAttributesFptr(m_Id, attributeHandles.data(), &attributeCount);
+		s_ManagedFunctions.GetTypeAttributesFptr(m_Id, attributeHandles.data(), &attributeCount);
 
 		std::vector<Attribute> result(attributeHandles.size());
 		for (size_t i = 0; i < attributeHandles.size(); i++)
@@ -110,12 +110,12 @@ namespace Coral {
 
 	ManagedType Type::GetManagedType() const
 	{
-		return s_NativeCallables.GetTypeManagedTypeFptr(m_Id);
+		return s_ManagedFunctions.GetTypeManagedTypeFptr(m_Id);
 	}
 
 	bool Type::IsSZArray() const
 	{
-		return s_NativeCallables.IsTypeSZArrayFptr(m_Id);
+		return s_ManagedFunctions.IsTypeSZArrayFptr(m_Id);
 	}
 
 	Type& Type::GetElementType()
@@ -123,7 +123,7 @@ namespace Coral {
 		if (!m_ElementType)
 		{
 			Type elementType;
-			s_NativeCallables.GetElementTypeFptr(m_Id, &elementType.m_Id);
+			s_ManagedFunctions.GetElementTypeFptr(m_Id, &elementType.m_Id);
 			m_ElementType = TypeCache::Get().CacheType(std::move(elementType));
 		}
 
@@ -138,7 +138,7 @@ namespace Coral {
 	ManagedObject Type::CreateInstanceInternal(const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
 	{
 		ManagedObject result;
-		result.m_Handle = s_NativeCallables.CreateObjectFptr(m_Id, false, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		result.m_Handle = s_ManagedFunctions.CreateObjectFptr(m_Id, false, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 		result.m_Type = this;
 		return result;
 	}
@@ -146,14 +146,14 @@ namespace Coral {
 	void Type::InvokeStaticMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
 	{
 		auto methodName = String::New(InMethodName);
-		s_NativeCallables.InvokeStaticMethodFptr(m_Id, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
+		s_ManagedFunctions.InvokeStaticMethodFptr(m_Id, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 		String::Free(methodName);
 	}
 
 	void Type::InvokeStaticMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
 	{
 		auto methodName = String::New(InMethodName);
-		s_NativeCallables.InvokeStaticMethodRetFptr(m_Id, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
+		s_ManagedFunctions.InvokeStaticMethodRetFptr(m_Id, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
 		String::Free(methodName);
 	}
 

@@ -12,7 +12,6 @@ namespace Coral.Managed;
 
 using static ManagedHost;
 
-[NativeType("Coral::AssemblyLoadStatus")]
 public enum AssemblyLoadStatus
 {
 	Success, FileNotFound, FileLoadFailure, InvalidFilePath, InvalidAssembly, UnknownError
@@ -87,7 +86,7 @@ public static class AssemblyLoader
 		return null;
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static int CreateAssemblyLoadContext(NativeString InName)
 	{
 		string? name = InName;
@@ -112,7 +111,7 @@ public static class AssemblyLoader
 		return contextId;
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static void UnloadAssemblyLoadContext(int InContextId)
 	{
 		if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
@@ -161,7 +160,7 @@ public static class AssemblyLoader
 		alc.Unload();
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static int LoadAssembly(int InContextId, NativeString InAssemblyFilePath)
 	{
 		try
@@ -216,10 +215,10 @@ public static class AssemblyLoader
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static NativeString GetAssemblyName(int InAssemblyId)
 	{
 		if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))

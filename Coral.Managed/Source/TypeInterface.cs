@@ -3,8 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Coral.Managed;
 
@@ -108,7 +110,7 @@ internal static class TypeInterface
 		return result;
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetAssemblyTypes(int InAssemblyId, int* OutTypes, int* OutTypeCount)
 	{
 		try
@@ -144,7 +146,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetTypeId(NativeString InName, int* OutType)
 	{
 		try
@@ -165,7 +167,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe NativeString GetFullTypeName(int InType)
 	{
 		try
@@ -182,7 +184,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe NativeString GetAssemblyQualifiedName(int InType)
 	{
 		try
@@ -199,7 +201,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetBaseType(int InType, int* OutBaseType)
 	{
 		try
@@ -221,7 +223,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static int GetTypeSize(int InType)
 	{
 		try
@@ -238,7 +240,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe Bool32 IsTypeSubclassOf(int InType0, int InType1)
 	{
 		try
@@ -255,7 +257,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe Bool32 IsTypeAssignableTo(int InType0, int InType1)
 	{
 		try
@@ -272,7 +274,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe Bool32 IsTypeAssignableFrom(int InType0, int InType1)
 	{
 		try
@@ -289,13 +291,18 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe Bool32 IsTypeSZArray(int InTypeID)
 	{
 		try
 		{
 			if (!s_CachedTypes.TryGetValue(InTypeID, out var type))
 				return false;
+
+			if (type == null)
+			{
+				return false;
+			}
 
 			return type.IsSZArray;
 		}
@@ -306,7 +313,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetElementType(int InTypeID, int* OutElementTypeID)
 	{
 		try
@@ -327,7 +334,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetTypeMethods(int InType, int* InMethodArray, int* InMethodCount)
 	{
 		try
@@ -359,7 +366,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetTypeFields(int InType, int* InFieldArray, int* InFieldCount)
 	{
 		try
@@ -391,7 +398,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetTypeProperties(int InType, int* InPropertyArray, int* InPropertyCount)
 	{
 		try
@@ -423,7 +430,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe Bool32 HasTypeAttribute(int InType, int InAttributeType)
 	{
 		try
@@ -440,7 +447,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetTypeAttributes(int InType, int* OutAttributes, int* OutAttributesCount)
 	{
 		try
@@ -473,7 +480,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe ManagedType GetTypeManagedType(int InType)
 	{
 		try
@@ -494,7 +501,7 @@ internal static class TypeInterface
 	}
 
 	// TODO(Peter): Refactor this to GetMemberInfoName (should work for all types of members)
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe NativeString GetMethodInfoName(int InMethodInfo)
 	{
 		try
@@ -511,7 +518,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetMethodInfoReturnType(int InMethodInfo, int* OutReturnType)
 	{
 		try
@@ -527,7 +534,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetMethodInfoParameterTypes(int InMethodInfo, int* OutParameterTypes, int* OutParameterCount)
 	{
 		try
@@ -559,7 +566,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetMethodInfoAttributes(int InMethodInfo, int* OutAttributes, int* OutAttributesCount)
 	{
 		try
@@ -591,7 +598,6 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeType("Coral::TypeAccessibility")]
 	internal enum TypeAccessibility
 	{
 		Public,
@@ -624,7 +630,7 @@ internal static class TypeInterface
 		return TypeAccessibility.Public;
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe TypeAccessibility GetMethodInfoAccessibility(int InMethodInfo)
 	{
 		try
@@ -641,7 +647,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe NativeString GetFieldInfoName(int InFieldInfo)
 	{
 		try
@@ -658,7 +664,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetFieldInfoType(int InFieldInfo, int* OutFieldType)
 	{
 		try
@@ -674,7 +680,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe TypeAccessibility GetFieldInfoAccessibility(int InFieldInfo)
 	{
 		try
@@ -691,7 +697,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetFieldInfoAttributes(int InFieldInfo, int* OutAttributes, int* OutAttributesCount)
 	{
 		try
@@ -723,7 +729,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe NativeString GetPropertyInfoName(int InPropertyInfo)
 	{
 		try
@@ -740,7 +746,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetPropertyInfoType(int InPropertyInfo, int* OutPropertyType)
 	{
 		try
@@ -756,7 +762,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetPropertyInfoAttributes(int InPropertyInfo, int* OutAttributes, int* OutAttributesCount)
 	{
 		try
@@ -788,7 +794,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetAttributeFieldValue(int InAttribute, NativeString InFieldName, IntPtr OutValue)
 	{
 		try
@@ -813,7 +819,7 @@ internal static class TypeInterface
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetAttributeType(int InAttribute, int* OutType)
 	{
 		try

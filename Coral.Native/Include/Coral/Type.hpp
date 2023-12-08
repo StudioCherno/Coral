@@ -32,7 +32,7 @@ namespace Coral {
 
 		ManagedType GetManagedType() const;
 
-		bool IsSZArray() const;
+		__declspec(noinline) bool IsSZArray() const;
 		Type& GetElementType();
 
 		bool operator==(const Type& InOther) const;

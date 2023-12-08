@@ -8,7 +8,7 @@ namespace Coral.Managed;
 internal static class GarbageCollector
 {
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static void CollectGarbage(int InGeneration, GCCollectionMode InCollectionMode, Bool32 InBlocking, Bool32 InCompacting)
 	{
 		try
@@ -24,7 +24,7 @@ internal static class GarbageCollector
 		}
 	}
 
-	[NativeCallable]
+	[UnmanagedCallersOnly]
 	internal static void WaitForPendingFinalizers()
 	{
 		try

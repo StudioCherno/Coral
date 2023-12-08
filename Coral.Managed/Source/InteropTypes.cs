@@ -176,7 +176,6 @@ public struct NativeInstance<T>
 	}
 }
 
-[NativeType("Coral::String")]
 [StructLayout(LayoutKind.Sequential)]
 public struct NativeString : IDisposable
 {
@@ -207,7 +206,6 @@ public struct NativeString : IDisposable
 	public static implicit operator string?(NativeString InString) => Marshal.PtrToStringAuto(InString.m_NativeString);
 }
 
-[NativeType("Coral::Internal::Bool32")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct Bool32
 {
