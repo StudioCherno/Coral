@@ -59,7 +59,7 @@ namespace Coral {
 	template <typename TArg, size_t TIndex>
 	inline void AddToArrayI(const void** InArgumentsArr, ManagedType* InParameterTypes, TArg&& InArg)
 	{
-		InParameterTypes[TIndex] = GetManagedType<TArg>();
+		InParameterTypes[TIndex] = GetManagedType<std::remove_reference_t<TArg>>();
 
 		if constexpr (std::is_pointer_v<std::remove_reference_t<TArg>>)
 		{
