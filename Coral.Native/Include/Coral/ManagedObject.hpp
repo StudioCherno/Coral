@@ -84,7 +84,7 @@ namespace Coral {
 		void SetPropertyValueRaw(std::string_view InPropertyName, void* InValue) const;
 		void GetPropertyValueRaw(std::string_view InPropertyName, void* OutValue) const;
 
-		const Type& GetType() const;
+		const Type& GetType();
 		
 		void Destroy();
 

@@ -157,6 +157,12 @@ public struct NativeInstance<T>
 	private readonly IntPtr m_Handle;
 	private readonly IntPtr m_Unused;
 
+	private NativeInstance(IntPtr handle)
+	{
+		m_Handle = handle;
+		m_Unused = IntPtr.Zero;
+	}
+
 	public T? Get()
 	{
 		if (m_Handle == IntPtr.Zero)
@@ -168,6 +174,11 @@ public struct NativeInstance<T>
 			return default;
 		
 		return (T)handle.Target;
+	}
+
+	public static implicit operator NativeInstance<T>(T instance)
+	{
+		return new(GCHandle.ToIntPtr(GCHandle.Alloc(instance, GCHandleType.Pinned)));
 	}
 
 	public static implicit operator T?(NativeInstance<T> InInstance)

@@ -444,4 +444,25 @@ internal static class ManagedObject
 			HandleException(ex);
 		}
 	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe void GetObjectTypeId(IntPtr InTarget, int* typeId)
+	{
+		try
+		{
+			var target = GCHandle.FromIntPtr(InTarget).Target;
+
+			if (target == null)
+			{
+				LogMessage($"Cannot get type of object. Target was null.", MessageLevel.Error);
+				return;
+			}
+
+			*typeId = TypeInterface.s_CachedTypes.Add(target.GetType());
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+		}
+	}
 }

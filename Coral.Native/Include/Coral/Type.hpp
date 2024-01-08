@@ -32,7 +32,7 @@ namespace Coral {
 
 		ManagedType GetManagedType() const;
 
-		__declspec(noinline) bool IsSZArray() const;
+		bool IsSZArray() const;
 		Type& GetElementType();
 
 		bool operator==(const Type& InOther) const;
@@ -122,6 +122,7 @@ namespace Coral {
 		friend class PropertyInfo;
 		friend class Attribute;
 		friend class ReflectionType;
+		friend class ManagedObject;
 	};
 
 	class ReflectionType

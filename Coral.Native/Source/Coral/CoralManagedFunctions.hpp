@@ -77,6 +77,7 @@ namespace Coral {
 	using SetPropertyValueFn = void (*)(void*, String, void*);
 	using GetPropertyValueFn = void (*)(void*, String, void*);
 	using DestroyObjectFn = void (*)(void*);
+	using GetObjectTypeIdFn = void (*)(void*, int32_t*);
 
 	using CollectGarbageFn = void (*)(int32_t, GCCollectionMode, Bool32, Bool32);
 	using WaitForPendingFinalizersFn = void (*)();
@@ -148,6 +149,7 @@ namespace Coral {
 		SetPropertyValueFn SetPropertyValueFptr = nullptr;
 		GetPropertyValueFn GetPropertyValueFptr = nullptr;
 		DestroyObjectFn DestroyObjectFptr = nullptr;
+		GetObjectTypeIdFn GetObjectTypeIdFptr = nullptr;
 
 		CollectGarbageFn CollectGarbageFptr = nullptr;
 		WaitForPendingFinalizersFn WaitForPendingFinalizersFptr = nullptr;

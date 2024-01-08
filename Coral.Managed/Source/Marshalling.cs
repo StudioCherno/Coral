@@ -74,7 +74,7 @@ public static class Marshalling
 		}
 		else
 		{
-			var valueSize = Marshal.SizeOf(type);
+			int valueSize = type.IsEnum ? Marshal.SizeOf(Enum.GetUnderlyingType(type)) : Marshal.SizeOf(type);
 			var handle = GCHandle.Alloc(InValue, GCHandleType.Pinned);
 
 			unsafe
