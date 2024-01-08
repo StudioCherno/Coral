@@ -23,8 +23,6 @@ internal static class InternalCallsManager
 	{
 		var internalCalls = new NativeArray<InternalCall>(InInternalCalls, InLength);
 
-		Console.WriteLine("Here?");
-
 		try
 		{
 			for (int i = 0; i < internalCalls.Length; i++)

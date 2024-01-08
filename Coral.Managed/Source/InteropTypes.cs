@@ -113,6 +113,12 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 		set => Marshal.StructureToPtr<T>(value!, IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()), false);
 	}
 
+	public static NativeArray<T> Map(T[] array)
+	{
+		var handle = GCHandle.Alloc(array, GCHandleType.Pinned);
+		return new(handle.AddrOfPinnedObject(), array.Length);
+	}
+
 	public static implicit operator T[](NativeArray<T> InArray) => InArray.ToArray();
 	public static implicit operator NativeArray<T>(T[] InArray) => new(InArray);
 
