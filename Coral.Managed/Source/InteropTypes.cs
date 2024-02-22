@@ -39,8 +39,9 @@ public sealed class NativeArrayEnumerator<T> : IEnumerator<T>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct NativeArray<T> : IDisposable, IEnumerable<T>
 {
-	private readonly IntPtr m_NativeArray;
-	private readonly int m_NativeLength;
+	private IntPtr m_NativeArray;
+	private IntPtr m_ArrayHandle;
+	private int m_NativeLength;
 
 	private Bool32 m_IsDisposed;
 
@@ -68,9 +69,10 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 		}
 	}
 
-	internal NativeArray(IntPtr InArray, int InLength)
+	internal NativeArray(IntPtr InArray, IntPtr InHandle, int InLength)
 	{
 		m_NativeArray = InArray;
+		m_ArrayHandle = InHandle;
 		m_NativeLength = InLength;
 	}
 
@@ -95,7 +97,7 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 
 	public void Dispose()
 	{
-		if (!m_IsDisposed)
+		if (!m_IsDisposed && m_ArrayHandle == IntPtr.Zero)
 		{
 			Marshal.FreeHGlobal(m_NativeArray);
 			m_IsDisposed = true;
@@ -116,7 +118,15 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 	public static NativeArray<T> Map(T[] array)
 	{
 		var handle = GCHandle.Alloc(array, GCHandleType.Pinned);
-		return new(handle.AddrOfPinnedObject(), array.Length);
+		return new(handle.AddrOfPinnedObject(), GCHandle.ToIntPtr(handle), array.Length);
+	}
+
+	public static void Unmap(ref NativeArray<T> array)
+	{
+		GCHandle.FromIntPtr(array.m_ArrayHandle).Free();
+		array.m_NativeArray = IntPtr.Zero;
+		array.m_ArrayHandle = IntPtr.Zero;
+		array.m_NativeLength = 0;
 	}
 
 	public static implicit operator T[](NativeArray<T> InArray) => InArray.ToArray();

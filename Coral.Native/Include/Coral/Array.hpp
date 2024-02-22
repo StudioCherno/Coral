@@ -84,6 +84,7 @@ namespace Coral {
 
 	private:
 		TValue* m_Ptr = nullptr;
+		TValue* m_ArrayHandle = nullptr;
 		int32_t m_Length = 0;
 		Bool32 m_IsDisposed = false;
 	};
