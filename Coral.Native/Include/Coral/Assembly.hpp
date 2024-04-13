@@ -55,6 +55,7 @@ namespace Coral {
 	{
 	public:
 		ManagedAssembly& LoadAssembly(std::string_view InFilePath);
+		ManagedAssembly& LoadAssemblyFromMemory(const std::byte* data, int64_t dataLength);
 		const StableVector<ManagedAssembly>& GetLoadedAssemblies() const { return m_LoadedAssemblies; }
 
 	private:

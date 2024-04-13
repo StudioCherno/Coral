@@ -15,7 +15,8 @@ namespace Coral {
 	using SetInternalCallsFn = void (*)(void*, int32_t);
 	using CreateAssemblyLoadContextFn = int32_t (*)(String);
 	using UnloadAssemblyLoadContextFn = void (*)(int32_t);
-	using LoadAssemblyFn = int32_t (*)(int32_t, String);
+	using LoadAssemblyFn = int32_t(*)(int32_t, String);
+	using LoadAssemblyFromMemoryFn = int32_t(*)(int32_t, const std::byte*, int64_t);
 	using GetLastLoadStatusFn = AssemblyLoadStatus (*)();
 	using GetAssemblyNameFn = String (*)(int32_t);
 
@@ -86,6 +87,7 @@ namespace Coral {
 	{
 		SetInternalCallsFn SetInternalCallsFptr = nullptr;
 		LoadAssemblyFn LoadAssemblyFptr = nullptr;
+		LoadAssemblyFromMemoryFn LoadAssemblyFromMemoryFptr = nullptr;
 		UnloadAssemblyLoadContextFn UnloadAssemblyLoadContextFptr = nullptr;
 		GetLastLoadStatusFn GetLastLoadStatusFptr = nullptr;
 		GetAssemblyNameFn GetAssemblyNameFptr = nullptr;

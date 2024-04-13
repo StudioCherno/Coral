@@ -216,6 +216,60 @@ public static class AssemblyLoader
 	}
 
 	[UnmanagedCallersOnly]
+	internal static unsafe int LoadAssemblyFromMemory(int InContextId, byte* data, long dataLength)
+	{
+		try
+		{
+			/*if (string.IsNullOrEmpty(InAssemblyFilePath))
+			{
+				s_LastLoadStatus = AssemblyLoadStatus.InvalidFilePath;
+				return -1;
+			}
+
+			if (!File.Exists(InAssemblyFilePath))
+			{
+				LogMessage($"Failed to load assembly '{InAssemblyFilePath}', file not found.", MessageLevel.Error);
+				s_LastLoadStatus = AssemblyLoadStatus.FileNotFound;
+				return -1;
+			}*/
+
+			if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
+			{
+				LogMessage($"Failed to load assembly, couldn't find AssemblyLoadContext with id {InContextId}.", MessageLevel.Error);
+				s_LastLoadStatus = AssemblyLoadStatus.UnknownError;
+				return -1;
+			}
+
+			if (alc == null)
+			{
+				LogMessage($"Failed to load assembly, couldn't find AssemblyLoadContext with id {InContextId} was null.", MessageLevel.Error);
+				s_LastLoadStatus = AssemblyLoadStatus.UnknownError;
+				return -1;
+			}
+
+			Assembly? assembly = null;
+
+			using (var stream = new UnmanagedMemoryStream(data, dataLength))
+			{
+				assembly = alc.LoadFromStream(stream);
+			}
+
+			LogMessage($"Loading assembly '{assembly.FullName}'", MessageLevel.Info);
+			var assemblyName = assembly.GetName();
+			int assemblyId = assemblyName.Name!.GetHashCode();
+			s_AssemblyCache.Add(assemblyId, assembly);
+			s_LastLoadStatus = AssemblyLoadStatus.Success;
+			return assemblyId;
+		}
+		catch (Exception ex)
+		{
+			s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out s_LastLoadStatus);
+			HandleException(ex);
+			return -1;
+		}
+	}
+
+	[UnmanagedCallersOnly]
 	internal static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
 
 	[UnmanagedCallersOnly]
