@@ -146,6 +146,8 @@ public static class AssemblyLoader
 				LogMessage($"Found unfreed object '{handle.Target}' from assembly '{assemblyName}'. Deallocating.", MessageLevel.Warning);
 				handle.Free();
 			}
+
+			s_AllocatedHandles.Remove(assemblyId);
 		}
 
 		ManagedObject.s_CachedMethods.Clear();
@@ -220,19 +222,6 @@ public static class AssemblyLoader
 	{
 		try
 		{
-			/*if (string.IsNullOrEmpty(InAssemblyFilePath))
-			{
-				s_LastLoadStatus = AssemblyLoadStatus.InvalidFilePath;
-				return -1;
-			}
-
-			if (!File.Exists(InAssemblyFilePath))
-			{
-				LogMessage($"Failed to load assembly '{InAssemblyFilePath}', file not found.", MessageLevel.Error);
-				s_LastLoadStatus = AssemblyLoadStatus.FileNotFound;
-				return -1;
-			}*/
-
 			if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
 			{
 				LogMessage($"Failed to load assembly, couldn't find AssemblyLoadContext with id {InContextId}.", MessageLevel.Error);
