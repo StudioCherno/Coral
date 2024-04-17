@@ -48,11 +48,14 @@ namespace Coral {
 		std::cout << "[Coral](" << level << "): " << InMessage << std::endl;
 	}
 
-	bool HostInstance::Initialize(HostSettings InSettings)
+	CoralInitStatus HostInstance::Initialize(HostSettings InSettings)
 	{
 		CORAL_VERIFY(!m_Initialized);
 
-		LoadHostFXR();
+		if (!LoadHostFXR())
+		{
+			return CoralInitStatus::DotNetNotFound;
+		}
 
 		// Setup settings
 		m_Settings = std::move(InSettings);
@@ -73,12 +76,15 @@ namespace Coral {
 		if (!std::filesystem::exists(m_CoralManagedAssemblyPath))
 		{
 			MessageCallback("Failed to find Coral.Managed.dll", MessageLevel::Error);
-			return false;
+			return CoralInitStatus::CoralManagedNotFound;
 		}
 
-		m_Initialized = InitializeCoralManaged();
+		if (!InitializeCoralManaged())
+		{
+			return CoralInitStatus::CoralManagedInitError;
+		}
 
-		return m_Initialized;
+		return CoralInitStatus::Success;
 	}
 
 	void HostInstance::Shutdown()
@@ -173,10 +179,15 @@ namespace Coral {
 		return "";
 	}
 
-	void HostInstance::LoadHostFXR() const
+	bool HostInstance::LoadHostFXR() const
 	{
 		// Retrieve the file path to the CoreCLR library
 		auto hostfxrPath = GetHostFXRPath();
+
+		if (hostfxrPath.empty())
+		{
+			return false;
+		}
 
 		// Load the CoreCLR library
 		void* libraryHandle = nullptr;
@@ -191,13 +202,18 @@ namespace Coral {
 		libraryHandle = dlopen(hostfxrPath.string().data(), RTLD_NOW | RTLD_GLOBAL);
 #endif
 
-		CORAL_VERIFY(libraryHandle != nullptr);
+		if (libraryHandle == nullptr)
+		{
+			return false;
+		}
 
 		// Load CoreCLR functions
 		s_CoreCLRFunctions.SetHostFXRErrorWriter = LoadFunctionPtr<hostfxr_set_error_writer_fn>(libraryHandle, "hostfxr_set_error_writer");
 		s_CoreCLRFunctions.InitHostFXRForRuntimeConfig = LoadFunctionPtr<hostfxr_initialize_for_runtime_config_fn>(libraryHandle, "hostfxr_initialize_for_runtime_config");
 		s_CoreCLRFunctions.GetRuntimeDelegate = LoadFunctionPtr<hostfxr_get_runtime_delegate_fn>(libraryHandle, "hostfxr_get_runtime_delegate");
 		s_CoreCLRFunctions.CloseHostFXR = LoadFunctionPtr<hostfxr_close_fn>(libraryHandle, "hostfxr_close");
+
+		return true;
 	}
 	
 	bool HostInstance::InitializeCoralManaged()
