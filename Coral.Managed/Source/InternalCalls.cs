@@ -50,7 +50,7 @@ internal static class InternalCallsManager
 				}
 
 				var bindingFlags = BindingFlags.Static | BindingFlags.NonPublic;
-				var field = type.GetFields(bindingFlags).FirstOrDefault(field => field.Name == fieldName);
+				var field = type.GetFields(bindingFlags).FirstOrDefault(field => field.Name.Equals(fieldName));
 
 				if (field == null)
 				{
