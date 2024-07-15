@@ -9,9 +9,17 @@ namespace Coral.Managed;
 
 public static class Marshalling
 {
-	struct ArrayContainer
+	struct ValueArrayContainer
 	{
 		public IntPtr Data;
+		public int Length;
+	};
+
+	// This needs to map to Coral::Array, hence the unused ArrayHandle
+	struct ObjectArrayContainer
+	{
+		public IntPtr Data;
+		public IntPtr ArrayHandle;
 		public int Length;
 	};
 
@@ -97,22 +105,24 @@ public static class Marshalling
 		if (InElementType == null)
 			return null;
 
-		var arrayContainer = MarshalPointer<ArrayContainer>(InArray);
-
-		if (ArrayStorage.HasFieldArray(null, null))
-		{
-			var fieldArray = ArrayStorage.GetFieldArray(null, null, null);
-
-			if (arrayContainer.Data == fieldArray!.Value.AddrOfPinnedObject())
-			{
-				return fieldArray.Value.Target;
-			}
-		}
-
-		var elements = Array.CreateInstance(InElementType, arrayContainer.Length);
+		Array? result;
 
 		if (InElementType.IsValueType)
 		{
+			var arrayContainer = MarshalPointer<ValueArrayContainer>(InArray);
+
+			if (ArrayStorage.HasFieldArray(null, null))
+			{
+				var fieldArray = ArrayStorage.GetFieldArray(null, null, null);
+
+				if (arrayContainer.Data == fieldArray!.Value.AddrOfPinnedObject())
+				{
+					return fieldArray.Value.Target;
+				}
+			}
+
+			result = Array.CreateInstance(InElementType, arrayContainer.Length);
+
 			int elementSize = Marshal.SizeOf(InElementType);
 
 			unsafe
@@ -120,12 +130,26 @@ public static class Marshalling
 				for (int i = 0; i < arrayContainer.Length; i++)
 				{
 					IntPtr source = (IntPtr)(((byte*)arrayContainer.Data.ToPointer()) + (i * elementSize));
-					elements.SetValue(Marshal.PtrToStructure(source, InElementType), i);
+					result.SetValue(Marshal.PtrToStructure(source, InElementType), i);
 				}
 			}
 		}
 		else
 		{
+			var arrayContainer = MarshalPointer<ObjectArrayContainer>(InArray);
+
+			if (ArrayStorage.HasFieldArray(null, null))
+			{
+				var fieldArray = ArrayStorage.GetFieldArray(null, null, null);
+
+				if (arrayContainer.Data == fieldArray!.Value.AddrOfPinnedObject())
+				{
+					return fieldArray.Value.Target;
+				}
+			}
+
+			result = Array.CreateInstance(InElementType, arrayContainer.Length);
+			
 			unsafe
 			{
 				for (int i = 0; i < arrayContainer.Length; i++)
@@ -133,14 +157,12 @@ public static class Marshalling
 					IntPtr source = (IntPtr)(((byte*)arrayContainer.Data.ToPointer()) + (i * Marshal.SizeOf<ArrayObject>()));
 					var managedObject = MarshalPointer<ArrayObject>(source);
 					var target = GCHandle.FromIntPtr(managedObject.Handle).Target;
-					elements.SetValue(target, i);
+					result.SetValue(target, i);
 				}
 			}
 		}
 
-
-
-		return elements;
+		return result;
 	}
 
 	/*public static void CopyArrayToBuffer(GCHandle InArrayHandle, Array? InArray, Type? InElementType)
