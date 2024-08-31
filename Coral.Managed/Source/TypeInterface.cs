@@ -53,6 +53,7 @@ internal static class TypeInterface
 		{ typeof(double), ManagedType.Double },
 		{ typeof(bool), ManagedType.Bool },
 		{ typeof(Bool32), ManagedType.Bool },
+		{ typeof(NativeString), ManagedType.String },
 	};
 
 	internal static unsafe T? FindSuitableMethod<T>(string? InMethodName, ManagedType* InParameterTypes, int InParameterCount, ReadOnlySpan<T> InMethods) where T : MethodBase
