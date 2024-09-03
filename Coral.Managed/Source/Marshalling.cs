@@ -56,14 +56,15 @@ public static class Marshalling
 				Marshal.WriteIntPtr(OutValue, IntPtr.Zero);
 			}
 		}
-		else if (InValue is string str)
+		else if (InValue is string)
 		{
-			NativeString nativeString = str;
+			NativeString nativeString = (NativeString) (string) InValue;
 			Marshal.StructureToPtr(nativeString, OutValue, false);
 		}
-		else if (InValue is NativeString nativeString)
+		else if (InValue is NativeString)
 		{
-			Marshal.StructureToPtr(nativeString, OutValue, false);
+			NativeString nativeString = (NativeString) InValue;
+			Marshal.StructureToPtr((NativeString) InValue, OutValue, false);
 		}
 		else if (type.IsPointer)
 		{
