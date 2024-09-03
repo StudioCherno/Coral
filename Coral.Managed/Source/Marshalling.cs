@@ -61,6 +61,11 @@ public static class Marshalling
 			NativeString nativeString = (NativeString) (string) InValue;
 			Marshal.StructureToPtr(nativeString, OutValue, false);
 		}
+		else if (InValue is bool)
+		{
+			Bool32 value = (Bool32) (bool) InValue;
+			Marshal.StructureToPtr(value, OutValue, false);
+		}
 		else if (InValue is NativeString)
 		{
 			NativeString nativeString = (NativeString) InValue;

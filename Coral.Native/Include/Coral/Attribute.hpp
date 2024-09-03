@@ -28,6 +28,14 @@ namespace Coral {
 			return std::string(result);
 		}
 
+		template<>
+		bool GetFieldValue(std::string_view InFieldName)
+		{
+			Bool32 result;
+			GetFieldValueInternal(InFieldName, &result);
+			return result;
+		}
+
 	private:
 		void GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const;
 

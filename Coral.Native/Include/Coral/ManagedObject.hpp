@@ -66,6 +66,13 @@ namespace Coral {
 			String::Free(s);
 		}
 
+		template<>
+		void SetFieldValue(std::string_view InFieldName, bool InValue) const
+		{
+			Bool32 s = InValue;
+			SetFieldValueRaw(InFieldName, &s);
+		}
+
 		template<typename TReturn>
 		TReturn GetFieldValue(std::string_view InFieldName) const
 		{
@@ -82,6 +89,14 @@ namespace Coral {
 			auto s = std::string(result);
 			String::Free(result);
 			return s;
+		}
+
+		template<>
+		bool GetFieldValue(std::string_view InFieldName) const
+		{
+			Bool32 result;
+			GetFieldValueRaw(InFieldName, &result);
+			return result;
 		}
 
 		template<typename TValue>
