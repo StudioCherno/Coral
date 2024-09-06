@@ -51,8 +51,10 @@ internal static class TypeInterface
 		{ typeof(ulong), ManagedType.ULong },
 		{ typeof(float), ManagedType.Float },
 		{ typeof(double), ManagedType.Double },
-		{ typeof(bool), ManagedType.Bool },
 		{ typeof(Bool32), ManagedType.Bool },
+		{ typeof(bool), ManagedType.Bool },
+		{ typeof(NativeString), ManagedType.String },
+		{ typeof(string), ManagedType.String },
 	};
 
 	internal static unsafe T? FindSuitableMethod<T>(string? InMethodName, ManagedType* InParameterTypes, int InParameterCount, ReadOnlySpan<T> InMethods) where T : MethodBase

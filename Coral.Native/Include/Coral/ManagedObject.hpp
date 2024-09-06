@@ -2,6 +2,7 @@
 
 #include "Core.hpp"
 #include "Utility.hpp"
+#include "String.hpp"
 
 namespace Coral {
 
@@ -57,10 +58,43 @@ namespace Coral {
 			SetFieldValueRaw(InFieldName, &InValue);
 		}
 
+		template<>
+		void SetFieldValue(std::string_view InFieldName, std::string InValue) const
+		{
+			String s = String::New(InValue);
+			SetFieldValueRaw(InFieldName, &InValue);
+			String::Free(s);
+		}
+
+		template<>
+		void SetFieldValue(std::string_view InFieldName, bool InValue) const
+		{
+			Bool32 s = InValue;
+			SetFieldValueRaw(InFieldName, &s);
+		}
+
 		template<typename TReturn>
 		TReturn GetFieldValue(std::string_view InFieldName) const
 		{
 			TReturn result;
+			GetFieldValueRaw(InFieldName, &result);
+			return result;
+		}
+
+		template<>
+		std::string GetFieldValue(std::string_view InFieldName) const
+		{
+			String result;
+			GetFieldValueRaw(InFieldName, &result);
+			auto s = std::string(result);
+			String::Free(result);
+			return s;
+		}
+
+		template<>
+		bool GetFieldValue(std::string_view InFieldName) const
+		{
+			Bool32 result;
 			GetFieldValueRaw(InFieldName, &result);
 			return result;
 		}

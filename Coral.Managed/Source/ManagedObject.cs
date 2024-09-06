@@ -29,6 +29,8 @@ internal enum ManagedType
 
 	Bool,
 
+	String,
+
 	Pointer
 };
 
@@ -333,8 +335,21 @@ internal static class ManagedObject
 				return;
 			}
 
-			object? value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
-			fieldInfo.SetValue(target, value);
+			if (fieldInfo.FieldType == typeof(string))
+			{
+				NativeString value = (NativeString) Marshalling.MarshalPointer(InValue, typeof(NativeString));
+				fieldInfo.SetValue(target, value.ToString());
+			}
+			else if (fieldInfo.FieldType == typeof(bool))
+			{
+				Bool32 value = (Bool32) Marshalling.MarshalPointer(InValue, typeof(Bool32));
+				fieldInfo.SetValue(target, (bool) value);
+			}
+			else
+			{
+				object? value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
+				fieldInfo.SetValue(target, value);
+			}
 		}
 		catch (Exception ex)
 		{
@@ -364,6 +379,7 @@ internal static class ManagedObject
 				return;
 			}
 
+			// Handles strings gracefully internally.
 			Marshalling.MarshalReturnValue(target, fieldInfo.GetValue(target), fieldInfo, OutValue);
 		}
 		catch (Exception ex)

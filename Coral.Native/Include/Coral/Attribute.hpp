@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.hpp"
+#include "String.hpp"
 
 namespace Coral {
 
@@ -15,6 +16,22 @@ namespace Coral {
 		TReturn GetFieldValue(std::string_view InFieldName)
 		{
 			TReturn result;
+			GetFieldValueInternal(InFieldName, &result);
+			return result;
+		}
+
+		template<>
+		std::string GetFieldValue(std::string_view InFieldName)
+		{
+			String result;
+			GetFieldValueInternal(InFieldName, &result);
+			return std::string(result);
+		}
+
+		template<>
+		bool GetFieldValue(std::string_view InFieldName)
+		{
+			Bool32 result;
 			GetFieldValueInternal(InFieldName, &result);
 			return result;
 		}
