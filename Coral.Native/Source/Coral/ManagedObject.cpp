@@ -4,6 +4,7 @@
 #include "String.hpp"
 #include "StringHelper.hpp"
 #include "Type.hpp"
+#include "TypeCache.hpp"
 
 namespace Coral {
 
@@ -53,8 +54,15 @@ namespace Coral {
 		String::Free(propertyName);
 	}
 
-	const Type& ManagedObject::GetType() const
+	const Type& ManagedObject::GetType()
 	{
+		if (!m_Type)
+		{
+			Type type;
+			s_ManagedFunctions.GetObjectTypeIdFptr(m_Handle, &type.m_Id);
+			m_Type = TypeCache::Get().CacheType(std::move(type));
+		}
+
 		return *m_Type;
 	}
 

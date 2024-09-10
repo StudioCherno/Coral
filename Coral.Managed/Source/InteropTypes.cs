@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace Coral.Managed.Interop;
@@ -38,8 +39,9 @@ public sealed class NativeArrayEnumerator<T> : IEnumerator<T>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct NativeArray<T> : IDisposable, IEnumerable<T>
 {
-	private readonly IntPtr m_NativeArray;
-	private readonly int m_NativeLength;
+	private IntPtr m_NativeArray;
+	private IntPtr m_ArrayHandle;
+	private int m_NativeLength;
 
 	private Bool32 m_IsDisposed;
 
@@ -67,9 +69,10 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 		}
 	}
 
-	internal NativeArray(IntPtr InArray, int InLength)
+	internal NativeArray(IntPtr InArray, IntPtr InHandle, int InLength)
 	{
 		m_NativeArray = InArray;
+		m_ArrayHandle = InHandle;
 		m_NativeLength = InLength;
 	}
 
@@ -94,7 +97,7 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 
 	public void Dispose()
 	{
-		if (!m_IsDisposed)
+		if (!m_IsDisposed && m_ArrayHandle == IntPtr.Zero)
 		{
 			Marshal.FreeHGlobal(m_NativeArray);
 			m_IsDisposed = true;
@@ -112,15 +115,69 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 		set => Marshal.StructureToPtr<T>(value!, IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()), false);
 	}
 
+	public static NativeArray<T> Map(T[] array)
+	{
+		var handle = GCHandle.Alloc(array, GCHandleType.Pinned);
+		return new(handle.AddrOfPinnedObject(), GCHandle.ToIntPtr(handle), array.Length);
+	}
+
+	public static void Unmap(ref NativeArray<T> array)
+	{
+		GCHandle.FromIntPtr(array.m_ArrayHandle).Free();
+		array.m_NativeArray = IntPtr.Zero;
+		array.m_ArrayHandle = IntPtr.Zero;
+		array.m_NativeLength = 0;
+	}
+
 	public static implicit operator T[](NativeArray<T> InArray) => InArray.ToArray();
+	public static implicit operator NativeArray<T>(T[] InArray) => new(InArray);
 
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public static class ArrayStorage
+{
+	private static Dictionary<int, GCHandle> s_FieldArrays = new();
+
+	public static bool HasFieldArray(object? InTarget, MemberInfo? InArrayMemberInfo)
+	{
+		if (InArrayMemberInfo == null)
+			return false;
+
+		int arrayId = InArrayMemberInfo.GetHashCode();
+		arrayId += InTarget != null ? InTarget.GetHashCode() : 0;
+		return s_FieldArrays.ContainsKey(arrayId);
+	}
+
+	public static GCHandle? GetFieldArray(object? InTarget, object? InValue, MemberInfo? InArrayMemberInfo)
+	{
+		if (InArrayMemberInfo == null)
+			return null;
+
+		int arrayId = InArrayMemberInfo.GetHashCode();
+		arrayId += InTarget != null ? InTarget.GetHashCode() : 0;
+
+		if (!s_FieldArrays.TryGetValue(arrayId, out var arrayHandle))
+		{
+			var arrayObject = InValue as Array;
+			arrayHandle = GCHandle.Alloc(arrayObject, GCHandleType.Pinned);
+			s_FieldArrays.Add(arrayId, arrayHandle);
+		}
+
+		return arrayHandle;
+	}
+}
+
+[StructLayout(LayoutKind.Sequential)]
 public struct NativeInstance<T>
 {
 	private readonly IntPtr m_Handle;
 	private readonly IntPtr m_Unused;
+
+	private NativeInstance(IntPtr handle)
+	{
+		m_Handle = handle;
+		m_Unused = IntPtr.Zero;
+	}
 
 	public T? Get()
 	{
@@ -133,6 +190,11 @@ public struct NativeInstance<T>
 			return default;
 		
 		return (T)handle.Target;
+	}
+
+	public static implicit operator NativeInstance<T>(T instance)
+	{
+		return new(GCHandle.ToIntPtr(GCHandle.Alloc(instance, GCHandleType.Pinned)));
 	}
 
 	public static implicit operator T?(NativeInstance<T> InInstance)

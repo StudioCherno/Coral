@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
@@ -88,7 +87,7 @@ public static class AssemblyLoader
 	}
 
 	[UnmanagedCallersOnly]
-	private static int CreateAssemblyLoadContext(NativeString InName)
+	internal static int CreateAssemblyLoadContext(NativeString InName)
 	{
 		string? name = InName;
 
@@ -113,7 +112,7 @@ public static class AssemblyLoader
 	}
 
 	[UnmanagedCallersOnly]
-	private static void UnloadAssemblyLoadContext(int InContextId)
+	internal static void UnloadAssemblyLoadContext(int InContextId)
 	{
 		if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
 		{
@@ -147,6 +146,8 @@ public static class AssemblyLoader
 				LogMessage($"Found unfreed object '{handle.Target}' from assembly '{assemblyName}'. Deallocating.", MessageLevel.Warning);
 				handle.Free();
 			}
+
+			s_AllocatedHandles.Remove(assemblyId);
 		}
 
 		ManagedObject.s_CachedMethods.Clear();
@@ -162,7 +163,7 @@ public static class AssemblyLoader
 	}
 
 	[UnmanagedCallersOnly]
-	private static int LoadAssembly(int InContextId, NativeString InAssemblyFilePath)
+	internal static int LoadAssembly(int InContextId, NativeString InAssemblyFilePath)
 	{
 		try
 		{
@@ -217,10 +218,51 @@ public static class AssemblyLoader
 	}
 
 	[UnmanagedCallersOnly]
-	private static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
+	internal static unsafe int LoadAssemblyFromMemory(int InContextId, byte* data, long dataLength)
+	{
+		try
+		{
+			if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
+			{
+				LogMessage($"Failed to load assembly, couldn't find AssemblyLoadContext with id {InContextId}.", MessageLevel.Error);
+				s_LastLoadStatus = AssemblyLoadStatus.UnknownError;
+				return -1;
+			}
+
+			if (alc == null)
+			{
+				LogMessage($"Failed to load assembly, couldn't find AssemblyLoadContext with id {InContextId} was null.", MessageLevel.Error);
+				s_LastLoadStatus = AssemblyLoadStatus.UnknownError;
+				return -1;
+			}
+
+			Assembly? assembly = null;
+
+			using (var stream = new UnmanagedMemoryStream(data, dataLength))
+			{
+				assembly = alc.LoadFromStream(stream);
+			}
+
+			LogMessage($"Loading assembly '{assembly.FullName}'", MessageLevel.Info);
+			var assemblyName = assembly.GetName();
+			int assemblyId = assemblyName.Name!.GetHashCode();
+			s_AssemblyCache.Add(assemblyId, assembly);
+			s_LastLoadStatus = AssemblyLoadStatus.Success;
+			return assemblyId;
+		}
+		catch (Exception ex)
+		{
+			s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out s_LastLoadStatus);
+			HandleException(ex);
+			return -1;
+		}
+	}
 
 	[UnmanagedCallersOnly]
-	private static NativeString GetAssemblyName(int InAssemblyId)
+	internal static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
+
+	[UnmanagedCallersOnly]
+	internal static NativeString GetAssemblyName(int InAssemblyId)
 	{
 		if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
 		{

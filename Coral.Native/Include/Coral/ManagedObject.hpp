@@ -2,6 +2,7 @@
 
 #include "Core.hpp"
 #include "Utility.hpp"
+#include "String.hpp"
 
 namespace Coral {
 
@@ -12,7 +13,7 @@ namespace Coral {
 	{
 	public:
 		template<typename TReturn, typename... TArgs>
-		TReturn InvokeMethod(std::string_view InMethodName, TArgs&&... InParameters)
+		TReturn InvokeMethod(std::string_view InMethodName, TArgs&&... InParameters) const
 		{
 			constexpr size_t parameterCount = sizeof...(InParameters);
 
@@ -34,7 +35,7 @@ namespace Coral {
 		}
 
 		template<typename... TArgs>
-		void InvokeMethod(std::string_view InMethodName, TArgs&&... InParameters)
+		void InvokeMethod(std::string_view InMethodName, TArgs&&... InParameters) const
 		{
 			constexpr size_t parameterCount = sizeof...(InParameters);
 
@@ -52,27 +53,60 @@ namespace Coral {
 		}
 
 		template<typename TValue>
-		void SetFieldValue(std::string_view InFieldName, TValue InValue)
+		void SetFieldValue(std::string_view InFieldName, TValue InValue) const
 		{
 			SetFieldValueRaw(InFieldName, &InValue);
 		}
 
+		template<>
+		void SetFieldValue(std::string_view InFieldName, std::string InValue) const
+		{
+			String s = String::New(InValue);
+			SetFieldValueRaw(InFieldName, &InValue);
+			String::Free(s);
+		}
+
+		template<>
+		void SetFieldValue(std::string_view InFieldName, bool InValue) const
+		{
+			Bool32 s = InValue;
+			SetFieldValueRaw(InFieldName, &s);
+		}
+
 		template<typename TReturn>
-		TReturn GetFieldValue(std::string_view InFieldName)
+		TReturn GetFieldValue(std::string_view InFieldName) const
 		{
 			TReturn result;
 			GetFieldValueRaw(InFieldName, &result);
 			return result;
 		}
 
+		template<>
+		std::string GetFieldValue(std::string_view InFieldName) const
+		{
+			String result;
+			GetFieldValueRaw(InFieldName, &result);
+			auto s = std::string(result);
+			String::Free(result);
+			return s;
+		}
+
+		template<>
+		bool GetFieldValue(std::string_view InFieldName) const
+		{
+			Bool32 result;
+			GetFieldValueRaw(InFieldName, &result);
+			return result;
+		}
+
 		template<typename TValue>
-		void SetPropertyValue(std::string_view InPropertyName, TValue InValue)
+		void SetPropertyValue(std::string_view InPropertyName, TValue InValue) const
 		{
 			SetPropertyValueRaw(InPropertyName, &InValue);
 		}
 
 		template<typename TReturn>
-		TReturn GetPropertyValue(std::string_view InPropertyName)
+		TReturn GetPropertyValue(std::string_view InPropertyName) const
 		{
 			TReturn result;
 			GetPropertyValueRaw(InPropertyName, &result);
@@ -84,9 +118,11 @@ namespace Coral {
 		void SetPropertyValueRaw(std::string_view InPropertyName, void* InValue) const;
 		void GetPropertyValueRaw(std::string_view InPropertyName, void* OutValue) const;
 
-		const Type& GetType() const;
+		const Type& GetType();
 		
 		void Destroy();
+
+		bool IsValid() const { return m_Handle != nullptr && m_Type != nullptr; }
 
 	private:
 		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
@@ -94,7 +130,7 @@ namespace Coral {
 
 	private:
 		void* m_Handle = nullptr;
-		Type* m_Type;
+		const Type* m_Type;
 
 	private:
 		friend class ManagedAssembly;

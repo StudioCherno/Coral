@@ -22,6 +22,8 @@ namespace Coral {
 
 		Bool,
 
+		String,
+
 		Pointer,
 	};
 
@@ -52,6 +54,8 @@ namespace Coral {
 			return ManagedType::Double;
 		else if constexpr (std::same_as<TArg, bool>)
 			return ManagedType::Bool;
+		else if constexpr (std::same_as<TArg, std::string>)
+			return ManagedType::String;
 		else
 			return ManagedType::Unknown;
 	}
@@ -59,7 +63,7 @@ namespace Coral {
 	template <typename TArg, size_t TIndex>
 	inline void AddToArrayI(const void** InArgumentsArr, ManagedType* InParameterTypes, TArg&& InArg)
 	{
-		InParameterTypes[TIndex] = GetManagedType<TArg>();
+		InParameterTypes[TIndex] = GetManagedType<std::remove_reference_t<TArg>>();
 
 		if constexpr (std::is_pointer_v<std::remove_reference_t<TArg>>)
 		{

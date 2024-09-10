@@ -3,8 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Coral.Managed;
 
@@ -49,8 +51,10 @@ internal static class TypeInterface
 		{ typeof(ulong), ManagedType.ULong },
 		{ typeof(float), ManagedType.Float },
 		{ typeof(double), ManagedType.Double },
-		{ typeof(bool), ManagedType.Bool },
 		{ typeof(Bool32), ManagedType.Bool },
+		{ typeof(bool), ManagedType.Bool },
+		{ typeof(NativeString), ManagedType.String },
+		{ typeof(string), ManagedType.String },
 	};
 
 	internal static unsafe T? FindSuitableMethod<T>(string? InMethodName, ManagedType* InParameterTypes, int InParameterCount, ReadOnlySpan<T> InMethods) where T : MethodBase
@@ -109,7 +113,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetAssemblyTypes(int InAssemblyId, int* OutTypes, int* OutTypeCount)
+	internal static unsafe void GetAssemblyTypes(int InAssemblyId, int* OutTypes, int* OutTypeCount)
 	{
 		try
 		{
@@ -145,7 +149,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetTypeId(NativeString InName, int* OutType)
+	internal static unsafe void GetTypeId(NativeString InName, int* OutType)
 	{
 		try
 		{
@@ -166,7 +170,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe NativeString GetFullTypeName(int InType)
+	internal static unsafe NativeString GetFullTypeName(int InType)
 	{
 		try
 		{
@@ -183,7 +187,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe NativeString GetAssemblyQualifiedName(int InType)
+	internal static unsafe NativeString GetAssemblyQualifiedName(int InType)
 	{
 		try
 		{
@@ -200,7 +204,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetBaseType(int InType, int* OutBaseType)
+	internal static unsafe void GetBaseType(int InType, int* OutBaseType)
 	{
 		try
 		{
@@ -222,7 +226,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static int GetTypeSize(int InType)
+	internal static int GetTypeSize(int InType)
 	{
 		try
 		{
@@ -239,7 +243,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe Bool32 IsTypeSubclassOf(int InType0, int InType1)
+	internal static unsafe Bool32 IsTypeSubclassOf(int InType0, int InType1)
 	{
 		try
 		{
@@ -256,7 +260,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe Bool32 IsTypeAssignableTo(int InType0, int InType1)
+	internal static unsafe Bool32 IsTypeAssignableTo(int InType0, int InType1)
 	{
 		try
 		{
@@ -273,7 +277,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe Bool32 IsTypeAssignableFrom(int InType0, int InType1)
+	internal static unsafe Bool32 IsTypeAssignableFrom(int InType0, int InType1)
 	{
 		try
 		{
@@ -290,12 +294,17 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe Bool32 IsTypeSZArray(int InTypeID)
+	internal static unsafe Bool32 IsTypeSZArray(int InTypeID)
 	{
 		try
 		{
 			if (!s_CachedTypes.TryGetValue(InTypeID, out var type))
 				return false;
+
+			if (type == null)
+			{
+				return false;
+			}
 
 			return type.IsSZArray;
 		}
@@ -307,7 +316,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetElementType(int InTypeID, int* OutElementTypeID)
+	internal static unsafe void GetElementType(int InTypeID, int* OutElementTypeID)
 	{
 		try
 		{
@@ -328,7 +337,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetTypeMethods(int InType, int* InMethodArray, int* InMethodCount)
+	internal static unsafe void GetTypeMethods(int InType, int* InMethodArray, int* InMethodCount)
 	{
 		try
 		{
@@ -360,7 +369,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetTypeFields(int InType, int* InFieldArray, int* InFieldCount)
+	internal static unsafe void GetTypeFields(int InType, int* InFieldArray, int* InFieldCount)
 	{
 		try
 		{
@@ -392,7 +401,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetTypeProperties(int InType, int* InPropertyArray, int* InPropertyCount)
+	internal static unsafe void GetTypeProperties(int InType, int* InPropertyArray, int* InPropertyCount)
 	{
 		try
 		{
@@ -424,7 +433,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe Bool32 HasTypeAttribute(int InType, int InAttributeType)
+	internal static unsafe Bool32 HasTypeAttribute(int InType, int InAttributeType)
 	{
 		try
 		{
@@ -441,7 +450,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetTypeAttributes(int InType, int* OutAttributes, int* OutAttributesCount)
+	internal static unsafe void GetTypeAttributes(int InType, int* OutAttributes, int* OutAttributesCount)
 	{
 		try
 		{
@@ -474,7 +483,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe ManagedType GetTypeManagedType(int InType)
+	internal static unsafe ManagedType GetTypeManagedType(int InType)
 	{
 		try
 		{
@@ -495,7 +504,7 @@ internal static class TypeInterface
 
 	// TODO(Peter): Refactor this to GetMemberInfoName (should work for all types of members)
 	[UnmanagedCallersOnly]
-	private static unsafe NativeString GetMethodInfoName(int InMethodInfo)
+	internal static unsafe NativeString GetMethodInfoName(int InMethodInfo)
 	{
 		try
 		{
@@ -512,7 +521,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetMethodInfoReturnType(int InMethodInfo, int* OutReturnType)
+	internal static unsafe void GetMethodInfoReturnType(int InMethodInfo, int* OutReturnType)
 	{
 		try
 		{
@@ -528,7 +537,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetMethodInfoParameterTypes(int InMethodInfo, int* OutParameterTypes, int* OutParameterCount)
+	internal static unsafe void GetMethodInfoParameterTypes(int InMethodInfo, int* OutParameterTypes, int* OutParameterCount)
 	{
 		try
 		{
@@ -560,7 +569,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetMethodInfoAttributes(int InMethodInfo, int* OutAttributes, int* OutAttributesCount)
+	internal static unsafe void GetMethodInfoAttributes(int InMethodInfo, int* OutAttributes, int* OutAttributesCount)
 	{
 		try
 		{
@@ -624,7 +633,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe TypeAccessibility GetMethodInfoAccessibility(int InMethodInfo)
+	internal static unsafe TypeAccessibility GetMethodInfoAccessibility(int InMethodInfo)
 	{
 		try
 		{
@@ -641,7 +650,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe NativeString GetFieldInfoName(int InFieldInfo)
+	internal static unsafe NativeString GetFieldInfoName(int InFieldInfo)
 	{
 		try
 		{
@@ -658,7 +667,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetFieldInfoType(int InFieldInfo, int* OutFieldType)
+	internal static unsafe void GetFieldInfoType(int InFieldInfo, int* OutFieldType)
 	{
 		try
 		{
@@ -674,7 +683,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe TypeAccessibility GetFieldInfoAccessibility(int InFieldInfo)
+	internal static unsafe TypeAccessibility GetFieldInfoAccessibility(int InFieldInfo)
 	{
 		try
 		{
@@ -691,7 +700,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetFieldInfoAttributes(int InFieldInfo, int* OutAttributes, int* OutAttributesCount)
+	internal static unsafe void GetFieldInfoAttributes(int InFieldInfo, int* OutAttributes, int* OutAttributesCount)
 	{
 		try
 		{
@@ -723,7 +732,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe NativeString GetPropertyInfoName(int InPropertyInfo)
+	internal static unsafe NativeString GetPropertyInfoName(int InPropertyInfo)
 	{
 		try
 		{
@@ -740,7 +749,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetPropertyInfoType(int InPropertyInfo, int* OutPropertyType)
+	internal static unsafe void GetPropertyInfoType(int InPropertyInfo, int* OutPropertyType)
 	{
 		try
 		{
@@ -756,7 +765,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetPropertyInfoAttributes(int InPropertyInfo, int* OutAttributes, int* OutAttributesCount)
+	internal static unsafe void GetPropertyInfoAttributes(int InPropertyInfo, int* OutAttributes, int* OutAttributesCount)
 	{
 		try
 		{
@@ -788,7 +797,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetAttributeFieldValue(int InAttribute, NativeString InFieldName, IntPtr OutValue)
+	internal static unsafe void GetAttributeFieldValue(int InAttribute, NativeString InFieldName, IntPtr OutValue)
 	{
 		try
 		{
@@ -804,7 +813,7 @@ internal static class TypeInterface
 				return;
 			}
 
-			Marshalling.MarshalReturnValue(fieldInfo.GetValue(attribute), fieldInfo.FieldType, OutValue);
+			Marshalling.MarshalReturnValue(attribute, fieldInfo.GetValue(attribute), fieldInfo, OutValue);
 		}
 		catch (Exception ex)
 		{
@@ -813,7 +822,7 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	private static unsafe void GetAttributeType(int InAttribute, int* OutType)
+	internal static unsafe void GetAttributeType(int InAttribute, int* OutType)
 	{
 		try
 		{

@@ -1,9 +1,10 @@
 #include "HostInstance.hpp"
 #include "Verify.hpp"
 #include "HostFXRErrorCodes.hpp"
-#include "CoralManagedFunctions.hpp"
 #include "StringHelper.hpp"
 #include "TypeCache.hpp"
+
+#include "CoralManagedFunctions.hpp"
 
 #if defined(CORAL_WINDOWS)
 	#include <ShlObj_core.h>
@@ -47,11 +48,14 @@ namespace Coral {
 		std::cout << "[Coral](" << level << "): " << InMessage << std::endl;
 	}
 
-	bool HostInstance::Initialize(HostSettings InSettings)
+	CoralInitStatus HostInstance::Initialize(HostSettings InSettings)
 	{
 		CORAL_VERIFY(!m_Initialized);
 
-		LoadHostFXR();
+		if (!LoadHostFXR())
+		{
+			return CoralInitStatus::DotNetNotFound;
+		}
 
 		// Setup settings
 		m_Settings = std::move(InSettings);
@@ -72,12 +76,15 @@ namespace Coral {
 		if (!std::filesystem::exists(m_CoralManagedAssemblyPath))
 		{
 			MessageCallback("Failed to find Coral.Managed.dll", MessageLevel::Error);
-			return false;
+			return CoralInitStatus::CoralManagedNotFound;
 		}
 
-		m_Initialized = InitializeCoralManaged();
+		if (!InitializeCoralManaged())
+		{
+			return CoralInitStatus::CoralManagedInitError;
+		}
 
-		return m_Initialized;
+		return CoralInitStatus::Success;
 	}
 
 	void HostInstance::Shutdown()
@@ -172,10 +179,15 @@ namespace Coral {
 		return "";
 	}
 
-	void HostInstance::LoadHostFXR() const
+	bool HostInstance::LoadHostFXR() const
 	{
 		// Retrieve the file path to the CoreCLR library
 		auto hostfxrPath = GetHostFXRPath();
+
+		if (hostfxrPath.empty())
+		{
+			return false;
+		}
 
 		// Load the CoreCLR library
 		void* libraryHandle = nullptr;
@@ -190,13 +202,18 @@ namespace Coral {
 		libraryHandle = dlopen(hostfxrPath.string().data(), RTLD_NOW | RTLD_GLOBAL);
 #endif
 
-		CORAL_VERIFY(libraryHandle != nullptr);
+		if (libraryHandle == nullptr)
+		{
+			return false;
+		}
 
 		// Load CoreCLR functions
 		s_CoreCLRFunctions.SetHostFXRErrorWriter = LoadFunctionPtr<hostfxr_set_error_writer_fn>(libraryHandle, "hostfxr_set_error_writer");
 		s_CoreCLRFunctions.InitHostFXRForRuntimeConfig = LoadFunctionPtr<hostfxr_initialize_for_runtime_config_fn>(libraryHandle, "hostfxr_initialize_for_runtime_config");
 		s_CoreCLRFunctions.GetRuntimeDelegate = LoadFunctionPtr<hostfxr_get_runtime_delegate_fn>(libraryHandle, "hostfxr_get_runtime_delegate");
 		s_CoreCLRFunctions.CloseHostFXR = LoadFunctionPtr<hostfxr_close_fn>(libraryHandle, "hostfxr_close");
+
+		return true;
 	}
 	
 	bool HostInstance::InitializeCoralManaged()
@@ -254,7 +271,8 @@ namespace Coral {
 	{
 		s_ManagedFunctions.CreateAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<CreateAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("CreateAssemblyLoadContext"));
 		s_ManagedFunctions.UnloadAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<UnloadAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("UnloadAssemblyLoadContext"));
-		s_ManagedFunctions.LoadManagedAssemblyFptr = LoadCoralManagedFunctionPtr<LoadManagedAssemblyFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssembly"));
+		s_ManagedFunctions.LoadAssemblyFptr = LoadCoralManagedFunctionPtr<LoadAssemblyFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssembly"));
+		s_ManagedFunctions.LoadAssemblyFromMemoryFptr = LoadCoralManagedFunctionPtr<LoadAssemblyFromMemoryFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssemblyFromMemory"));
 		s_ManagedFunctions.UnloadAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<UnloadAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("UnloadAssemblyLoadContext"));
 		s_ManagedFunctions.GetLastLoadStatusFptr = LoadCoralManagedFunctionPtr<GetLastLoadStatusFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("GetLastLoadStatus"));
 		s_ManagedFunctions.GetAssemblyNameFptr = LoadCoralManagedFunctionPtr<GetAssemblyNameFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("GetAssemblyName"));
@@ -306,6 +324,8 @@ namespace Coral {
 		s_ManagedFunctions.SetPropertyValueFptr = LoadCoralManagedFunctionPtr<SetFieldValueFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("SetPropertyValue"));
 		s_ManagedFunctions.GetPropertyValueFptr = LoadCoralManagedFunctionPtr<GetFieldValueFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("GetPropertyValue"));
 		s_ManagedFunctions.DestroyObjectFptr = LoadCoralManagedFunctionPtr<DestroyObjectFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("DestroyObject"));
+		s_ManagedFunctions.GetObjectTypeIdFptr = LoadCoralManagedFunctionPtr<GetObjectTypeIdFn>(CORAL_STR("Coral.Managed.ManagedObject, Coral.Managed"), CORAL_STR("GetObjectTypeId"));
+
 		s_ManagedFunctions.CollectGarbageFptr = LoadCoralManagedFunctionPtr<CollectGarbageFn>(CORAL_STR("Coral.Managed.GarbageCollector, Coral.Managed"), CORAL_STR("CollectGarbage"));
 		s_ManagedFunctions.WaitForPendingFinalizersFptr = LoadCoralManagedFunctionPtr<WaitForPendingFinalizersFn>(CORAL_STR("Coral.Managed.GarbageCollector, Coral.Managed"), CORAL_STR("WaitForPendingFinalizers"));
 	}

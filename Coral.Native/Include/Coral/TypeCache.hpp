@@ -16,6 +16,8 @@ namespace Coral {
 		Type* GetTypeByName(std::string_view InName) const;
 		Type* GetTypeByID(TypeId InTypeID) const;
 
+		void Clear();
+
 	private:
 		StableVector<Type> m_Types;
 		std::unordered_map<std::string, Type*> m_NameCache;

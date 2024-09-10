@@ -24,17 +24,25 @@ namespace Coral {
 		ExceptionCallbackFn ExceptionCallback = nullptr;
 	};
 
+	enum class CoralInitStatus
+	{
+		Success,
+		CoralManagedNotFound,
+		CoralManagedInitError,
+		DotNetNotFound,
+	};
+
 	class HostInstance
 	{
 	public:
-		bool Initialize(HostSettings InSettings);
+		CoralInitStatus Initialize(HostSettings InSettings);
 		void Shutdown();
 
 		AssemblyLoadContext CreateAssemblyLoadContext(std::string_view InName);
 		void UnloadAssemblyLoadContext(AssemblyLoadContext& InLoadContext);
 
 	private:
-		void LoadHostFXR() const;
+		bool LoadHostFXR() const;
 		bool InitializeCoralManaged();
 		void LoadCoralFunctions();
 

@@ -50,10 +50,14 @@ namespace Coral {
 	bool String::operator==(const String& InOther) const
 	{
 		if (m_String == InOther.m_String)
+		{
 			return true;
+		}
 
 		if (m_String == nullptr || InOther.m_String == nullptr)
+		{
 			return false;
+		}
 
 #if defined(CORAL_WIDE_CHARS)
 		return wcscmp(m_String, InOther.m_String) == 0;
@@ -64,6 +68,14 @@ namespace Coral {
 
 	bool String::operator==(std::string_view InOther) const
 	{
+		if (m_String == nullptr && InOther.empty())
+		{
+			return true;
+		}
+
+		if (m_String == nullptr)
+			return false;
+
 #if defined(CORAL_WIDE_CHARS)
 		auto str = StringHelper::ConvertUtf8ToWide(InOther);
 		return wcscmp(m_String, str.data()) == 0;

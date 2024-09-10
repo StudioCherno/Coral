@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 namespace Coral.Managed;
 
 public class UniqueIdList<T>
 {
-	private readonly Dictionary<int, T> m_Objects = new();
+	private readonly ConcurrentDictionary<int, T> m_Objects = new();
 
 	public bool Contains(int id)
 	{

@@ -8,13 +8,13 @@ namespace Coral {
 	class Array
 	{
 	public:
-		static Array New(int32_t InLength)
+		static Array New(size_t InLength)
 		{
 			Array<TValue> result;
 			if (InLength > 0)
 			{
 				result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InLength * sizeof(TValue)));
-				result.m_Length = InLength;
+				result.m_Length = static_cast<int32_t>(InLength);
 			}
 			return result;
 		}
@@ -84,6 +84,7 @@ namespace Coral {
 
 	private:
 		TValue* m_Ptr = nullptr;
+		TValue* m_ArrayHandle = nullptr;
 		int32_t m_Length = 0;
 		Bool32 m_IsDisposed = false;
 	};

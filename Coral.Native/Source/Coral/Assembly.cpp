@@ -48,7 +48,7 @@ namespace Coral {
 
 		auto[idx, result] = m_LoadedAssemblies.EmplaceBack();
 		result.m_Host = m_Host;
-		result.m_AssemblyID = s_ManagedFunctions.LoadManagedAssemblyFptr(m_ContextId, filepath);
+		result.m_AssemblyID = s_ManagedFunctions.LoadAssemblyFptr(m_ContextId, filepath);
 		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
 
 		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
@@ -71,6 +71,35 @@ namespace Coral {
 		}
 
 		String::Free(filepath);
+
+		return result;
+	}
+
+	ManagedAssembly& AssemblyLoadContext::LoadAssemblyFromMemory(const std::byte* data, int64_t dataLength)
+	{
+		auto [idx, result] = m_LoadedAssemblies.EmplaceBack();
+		result.m_Host = m_Host;
+		result.m_AssemblyID = s_ManagedFunctions.LoadAssemblyFromMemoryFptr(m_ContextId, data, dataLength);
+		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
+
+		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
+		{
+			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
+			result.m_Name = assemblyName;
+			String::Free(assemblyName);
+
+			int32_t typeCount = 0;
+			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);
+			std::vector<TypeId> typeIds(typeCount);
+			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, typeIds.data(), &typeCount);
+
+			for (auto typeId : typeIds)
+			{
+				Type type;
+				type.m_Id = typeId;
+				result.m_Types.push_back(TypeCache::Get().CacheType(std::move(type)));
+			}
+		}
 
 		return result;
 	}
