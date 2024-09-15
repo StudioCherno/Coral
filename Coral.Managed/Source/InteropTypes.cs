@@ -168,15 +168,33 @@ public static class ArrayStorage
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct NativeInstance<T>
+public struct NativeInstance<T> : IDisposable
 {
-	private readonly IntPtr m_Handle;
+	private IntPtr m_Handle;
 	private readonly IntPtr m_Unused;
 
 	private NativeInstance(IntPtr handle)
 	{
 		m_Handle = handle;
 		m_Unused = IntPtr.Zero;
+	}
+
+	public void Dispose()
+	{
+		if (m_Handle != IntPtr.Zero)
+		{
+			var handle = GCHandle.FromIntPtr(m_Handle);
+#if DEBUG
+			var type = handle.Target?.GetType();
+			if (type is not null)
+			{
+				AssemblyLoader.DeregisterHandle(type.Assembly, handle);
+			}
+#endif
+			handle.Free();
+			m_Handle = IntPtr.Zero;
+		}
+		GC.SuppressFinalize(this);
 	}
 
 	public T? Get()
