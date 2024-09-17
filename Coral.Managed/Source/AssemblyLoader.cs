@@ -143,17 +143,15 @@ public static class AssemblyLoader
 			// If you see messages here, it probably means you are mis-managing the lifetime of unmanaged resources.
 			// Managed objects that wrap an unmanaged resource need to implement IDisposable, and be Dispose()'d properly.
 			// Example:
-			//    // SceneQueryHit wraps an unmanaged resource, and needs to implement IDisposable
-			//    SceneQueryHit hit = new SceneQueryHit();
-			//    try
+			//    // SceneQueryHitInterop wraps an unmanaged resource. It needs to implement IDisposable
+			//    using(SceneQueryHitInterop hit = new())
 			//    {
 			//        Physics.CastRay(ray, out hit);   // Calls into native code, populates the unmanaged resource into hit
+			//
 			//        // Do something with hit
-			//    }
-			//    finally
-			//    {
-			//        hit.Dispose();
-			//    }
+			//
+			//    } // hit is Dispose()'d here
+			//
 			foreach (var handle in handles)
 			{
 				LogMessage($"Found still-registered handle '{(handle.Target is null? "null" : handle.Target)}' from assembly '{assemblyName}'", MessageLevel.Warning);
