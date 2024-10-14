@@ -59,6 +59,8 @@ public static class AssemblyLoader
 
 	internal static Assembly? ResolveAssembly(AssemblyLoadContext? InAssemblyLoadContext, AssemblyName InAssemblyName)
 	{
+		LogMessage($"[AssemblyLoader] Resolving assembly: {InAssemblyName.FullName}", MessageLevel.Trace);
+
 		try
 		{
 			int assemblyId = InAssemblyName.Name!.GetHashCode();
@@ -83,6 +85,14 @@ public static class AssemblyLoader
 		catch (Exception ex)
 		{
 			ManagedHost.HandleException(ex);
+		}
+
+		string assemblyPath = Path.Combine(AppContext.BaseDirectory, $"{InAssemblyName.Name}.dll");
+		LogMessage($"[AssemblyLoader] Trying to find assembly in {assemblyPath}", MessageLevel.Trace);
+		if (File.Exists(assemblyPath))
+		{
+			LogMessage($"[AssemblyLoader] Found assembly {InAssemblyName.FullName}", MessageLevel.Trace);
+			return InAssemblyLoadContext.LoadFromAssemblyPath(assemblyPath);
 		}
 
 		return null;

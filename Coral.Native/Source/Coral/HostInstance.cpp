@@ -17,6 +17,7 @@ namespace Coral {
 	struct CoreCLRFunctions
 	{
 		hostfxr_set_error_writer_fn SetHostFXRErrorWriter = nullptr;
+		hostfxr_set_runtime_property_value_fn SetRuntimePropertyValue = nullptr;
 		hostfxr_initialize_for_runtime_config_fn InitHostFXRForRuntimeConfig = nullptr;
 		hostfxr_get_runtime_delegate_fn GetRuntimeDelegate = nullptr;
 		hostfxr_close_fn CloseHostFXR = nullptr;
@@ -209,6 +210,7 @@ namespace Coral {
 
 		// Load CoreCLR functions
 		s_CoreCLRFunctions.SetHostFXRErrorWriter = LoadFunctionPtr<hostfxr_set_error_writer_fn>(libraryHandle, "hostfxr_set_error_writer");
+		s_CoreCLRFunctions.SetRuntimePropertyValue = LoadFunctionPtr<hostfxr_set_runtime_property_value_fn>(libraryHandle, "hostfxr_set_runtime_property_value");
 		s_CoreCLRFunctions.InitHostFXRForRuntimeConfig = LoadFunctionPtr<hostfxr_initialize_for_runtime_config_fn>(libraryHandle, "hostfxr_initialize_for_runtime_config");
 		s_CoreCLRFunctions.GetRuntimeDelegate = LoadFunctionPtr<hostfxr_get_runtime_delegate_fn>(libraryHandle, "hostfxr_get_runtime_delegate");
 		s_CoreCLRFunctions.CloseHostFXR = LoadFunctionPtr<hostfxr_close_fn>(libraryHandle, "hostfxr_close");
@@ -231,6 +233,9 @@ namespace Coral {
 			int status = s_CoreCLRFunctions.InitHostFXRForRuntimeConfig(runtimeConfigPath.c_str(), nullptr, &m_HostFXRContext);
 			CORAL_VERIFY(status == StatusCode::Success || status == StatusCode::Success_HostAlreadyInitialized || status == StatusCode::Success_DifferentRuntimeProperties);
 			CORAL_VERIFY(m_HostFXRContext != nullptr);
+
+			std::filesystem::path coralDirectoryPath = m_Settings.CoralDirectory;
+			s_CoreCLRFunctions.SetRuntimePropertyValue(m_HostFXRContext, L"APP_CONTEXT_BASE_DIRECTORY", coralDirectoryPath.c_str());
 
 			status = s_CoreCLRFunctions.GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**)&s_CoreCLRFunctions.GetManagedFunctionPtr);
 			CORAL_VERIFY(status == StatusCode::Success);
