@@ -69,7 +69,7 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 		}
 	}
 
-	internal NativeArray(IntPtr InArray, IntPtr InHandle, int InLength)
+	public NativeArray(IntPtr InArray, IntPtr InHandle, int InLength)
 	{
 		m_NativeArray = InArray;
 		m_ArrayHandle = InHandle;
@@ -212,7 +212,7 @@ public struct NativeInstance<T> : IDisposable
 
 	public static implicit operator NativeInstance<T>(T instance)
 	{
-		return new(GCHandle.ToIntPtr(GCHandle.Alloc(instance, GCHandleType.Pinned)));
+		return new(GCHandle.ToIntPtr(GCHandle.Alloc(instance, GCHandleType.Normal)));
 	}
 
 	public static implicit operator T?(NativeInstance<T> InInstance)
