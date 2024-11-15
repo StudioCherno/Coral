@@ -235,7 +235,11 @@ namespace Coral {
 			CORAL_VERIFY(m_HostFXRContext != nullptr);
 
 			std::filesystem::path coralDirectoryPath = m_Settings.CoralDirectory;
+	#ifdef CORAL_WIDE_CHARS
 			s_CoreCLRFunctions.SetRuntimePropertyValue(m_HostFXRContext, L"APP_CONTEXT_BASE_DIRECTORY", coralDirectoryPath.c_str());
+	#else
+			s_CoreCLRFunctions.SetRuntimePropertyValue(m_HostFXRContext, "APP_CONTEXT_BASE_DIRECTORY", coralDirectoryPath.c_str());
+	#endif
 
 			status = s_CoreCLRFunctions.GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**)&s_CoreCLRFunctions.GetManagedFunctionPtr);
 			CORAL_VERIFY(status == StatusCode::Success);
