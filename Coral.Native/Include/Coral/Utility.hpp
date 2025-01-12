@@ -77,6 +77,10 @@ namespace Coral {
 		}
 	}
 
+	/*
+	 * TODO(Emily): Work out a way to allow method invoke to use C++-y types (i.e. `std::string` instead of `Coral::String`).
+	 * 				See Testing/Main.cpp:StringTest/BoolTest.
+	 */
 	template <typename... TArgs, size_t... TIndices>
 	inline void AddToArray(const void** InArgumentsArr, ManagedType* InParameterTypes, TArgs&&... InArgs, const std::index_sequence<TIndices...>&)
 	{

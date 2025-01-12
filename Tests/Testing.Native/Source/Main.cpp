@@ -140,9 +140,9 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	RegisterTest("ULongTest", [InObject]() mutable{ return InObject.InvokeMethod<uint64_t, uint64_t>("ULongTest", 10) == 20; });
 	RegisterTest("FloatTest", [InObject]() mutable{ return InObject.InvokeMethod<float, float>("FloatTest", 10.0f) - 20.0f < 0.001f; });
 	RegisterTest("DoubleTest", [InObject]() mutable{ return InObject.InvokeMethod<double, double>("DoubleTest", 10.0) - 20.0 < 0.001; });
-	//RegisterTest("BoolTest", [InObject]() mutable { return InObject.InvokeMethod<bool, bool>("BoolTest", false); });
+	RegisterTest("BoolTest", [InObject]() mutable { return InObject.InvokeMethod<bool, bool>("BoolTest", false); });
 	RegisterTest("IntPtrTest", [InObject]() mutable{ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
-	RegisterTest("StringTest", [InObject, &InHost]() mutable
+	RegisterTest("StringTest", [InObject]() mutable
 	{
 		Coral::ScopedString str = InObject.InvokeMethod<Coral::String, Coral::String>("StringTest", Coral::String::New("Hello"));
 		return str == "Hello, World!";

@@ -28,8 +28,11 @@
 	using StringView = std::string_view;
 #endif
 
+// TODO(Emily): Make a better system for supported version ranges (See `HostInstance.cpp:GetHostFXRPath()`)
+/*
 #define CORAL_DOTNET_TARGET_VERSION_MAJOR 8
 #define CORAL_DOTNET_TARGET_VERSION_MAJOR_STR '8'
+*/
 #define CORAL_UNMANAGED_CALLERS_ONLY ((const CharType*)-1)
 
 namespace Coral {
