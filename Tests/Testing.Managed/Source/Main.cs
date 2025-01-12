@@ -17,6 +17,12 @@ namespace Testing.Managed {
 		}
 	}
 
+	public interface DummyInterfaceA {}
+	public interface DummyInterfaceB {}
+	public class DummyBase {}
+
+    public class MultiInheritanceTest : DummyBase, DummyInterfaceA, DummyInterfaceB {}
+
 	public class Tests
 	{
 #pragma warning disable 0649

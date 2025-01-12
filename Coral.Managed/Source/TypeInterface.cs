@@ -226,6 +226,54 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
+    internal static unsafe void GetInterfaceTypeCount(int InType, int* OutCount)
+    {
+        try
+        {
+            if (!s_CachedTypes.TryGetValue(InType, out var type) || OutCount == null || type == null)
+                return;
+
+            var typeInterfaces = type.GetInterfaces();
+            if (typeInterfaces == null)
+            {
+                *OutCount = 0;
+                return;
+            }
+
+            *OutCount = typeInterfaces.Length;
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+        }
+    }
+
+	[UnmanagedCallersOnly]
+    internal static unsafe void GetInterfaceTypes(int InType, int* OutTypes)
+    {
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InType, out var type) || OutTypes == null || type == null)
+				return;
+
+            var typeInterfaces = type.GetInterfaces();
+            if (typeInterfaces == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < typeInterfaces.Length; ++i)
+            {
+                OutTypes[i] = s_CachedTypes.Add(typeInterfaces[i]);
+            }
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
+		}
+    }
+
+	[UnmanagedCallersOnly]
 	internal static int GetTypeSize(int InType)
 	{
 		try

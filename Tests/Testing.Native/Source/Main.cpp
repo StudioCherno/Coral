@@ -598,6 +598,17 @@ int main(int argc, char** argv)
 	instance = instanceTestType2.CreateInstance();
 	instance.SetFieldValue("X", 500.0f);
 
+	auto& multiInheritanceTestType = newAssembly.GetType("Testing.Managed.MultiInheritanceTest");
+	std::cout << "Class: " << std::string(multiInheritanceTestType.GetFullName()) << std::endl;
+	std::cout << "\tBase: " << std::string(multiInheritanceTestType.GetBaseType().GetFullName()) << std::endl;
+	std::cout << "\tInterfaces:" << std::endl;
+
+	const auto& interfaceTypes = multiInheritanceTestType.GetInterfaceTypes();
+	for (const auto& type : interfaceTypes)
+	{
+		std::cout << "\t\t" << std::string(type->GetFullName()) << std::endl;
+	}
+
 	Coral::ManagedObject testsInstance2 = testsType2.CreateInstance();
 	testsInstance2.InvokeMethod("RunManagedTests");
 	testsInstance2.Destroy();

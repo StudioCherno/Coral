@@ -27,6 +27,31 @@ namespace Coral {
 		return *m_BaseType;
 	}
 
+	std::vector<Type*>& Type::GetInterfaceTypes()
+	{
+		if (!m_InterfaceTypes)
+		{
+			int count;
+			s_ManagedFunctions.GetInterfaceTypeCountFptr(m_Id, &count);
+
+			std::vector<TypeId> typeIds;
+			typeIds.resize(count);
+			s_ManagedFunctions.GetInterfaceTypesFptr(m_Id, typeIds.data());
+
+			m_InterfaceTypes = std::vector<Type*>();
+			m_InterfaceTypes->reserve(count);
+
+			for (auto id : typeIds)
+			{
+				Type type;
+				type.m_Id = id;
+				m_InterfaceTypes->emplace_back(TypeCache::Get().CacheType(std::move(type)));
+			}
+		}
+
+		return *m_InterfaceTypes;
+	}
+
 	int32_t Type::GetSize() const
 	{
 		return s_ManagedFunctions.GetTypeSizeFptr(m_Id);

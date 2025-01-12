@@ -27,6 +27,8 @@ namespace Coral {
 	using GetFullTypeNameFn = String (*)(TypeId);
 	using GetAssemblyQualifiedNameFn = String (*)(TypeId);
 	using GetBaseTypeFn = void (*)(TypeId, TypeId*);
+	using GetInterfaceTypeCountFn = void (*)(TypeId, int32_t*);
+	using GetInterfaceTypesFn = void (*)(TypeId, TypeId*);
 	using GetTypeSizeFn = int32_t (*)(TypeId);
 	using IsTypeSubclassOfFn = Bool32 (*)(TypeId, TypeId);
 	using IsTypeAssignableToFn = Bool32 (*)(TypeId, TypeId);
@@ -100,6 +102,8 @@ namespace Coral {
 		GetFullTypeNameFn GetFullTypeNameFptr = nullptr;
 		GetAssemblyQualifiedNameFn GetAssemblyQualifiedNameFptr = nullptr;
 		GetBaseTypeFn GetBaseTypeFptr = nullptr;
+		GetInterfaceTypeCountFn GetInterfaceTypeCountFptr = nullptr;
+		GetInterfaceTypesFn GetInterfaceTypesFptr = nullptr;
 		GetTypeSizeFn GetTypeSizeFptr = nullptr;
 		IsTypeSubclassOfFn IsTypeSubclassOfFptr = nullptr;
 		IsTypeAssignableToFn IsTypeAssignableToFptr = nullptr;
