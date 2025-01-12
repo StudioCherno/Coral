@@ -29,7 +29,7 @@ public class FieldMarshalTest
 	public double DoubleFieldTest = 10.0;
 	public bool BoolFieldTest = false;
 	public string StringFieldTest = "Hello";
-	public DummyClass DummyClassTest;
+	public DummyClass? DummyClassTest; // NOTE(Emily): Set from native code.
 	public DummyStruct DummyStructTest;
 
 	public sbyte SBytePropertyTest { get; set; } = 10;
@@ -62,6 +62,12 @@ public class FieldMarshalTest
 
 	public void TestClassAndStruct()
 	{
+		if (DummyClassTest == null)
+		{
+			Console.WriteLine("Invalid field `DummyClassTest`");
+			return;
+		}
+
 		Console.WriteLine(DummyClassTest.X);
 		Console.WriteLine(DummyStructTest.X);
 	}

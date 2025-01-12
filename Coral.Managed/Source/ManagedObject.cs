@@ -88,6 +88,21 @@ internal static class ManagedObject
 
 	internal static Dictionary<MethodKey, MethodInfo> s_CachedMethods = new Dictionary<MethodKey, MethodInfo>();
 
+	static string TypeNameOrNull(Type? InType) {
+		if (InType != null) {
+			return InType.FullName != null ? InType.FullName : "<null>";
+		}
+		else return "<null>";
+	}
+
+	static string NativeStringOrNull(NativeString? InString) {
+		if (InString == null) return "<null>";
+
+		string? ret = InString.ToString();
+
+		return ret != null ? ret : "<null>";
+	}
+
 	[UnmanagedCallersOnly]
 	internal static unsafe IntPtr CreateObject(int InTypeID, Bool32 InWeakRef, IntPtr InParameters, ManagedType* InParameterTypes, int InParameterCount)
 	{
@@ -116,13 +131,19 @@ internal static class ManagedObject
 
 			if (constructor == null)
 			{
-				LogMessage($"Failed to find constructor for type {type.FullName} with {InParameterCount} parameters.", MessageLevel.Error);
+				LogMessage($"Failed to find constructor for type {TypeNameOrNull(type)} with {InParameterCount} parameters.", MessageLevel.Error);
 				return IntPtr.Zero;
 			}
 
 			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, constructor);
 
 			object? result = null;
+
+			if (type == null)
+			{
+				LogMessage($"Failed to instantiate type {TypeNameOrNull(type)}.", MessageLevel.Error);
+				return IntPtr.Zero;
+			}
 
 			if (currentType != type || parameters == null)
 			{
@@ -138,7 +159,7 @@ internal static class ManagedObject
 
 			if (result == null)
 			{
-				LogMessage($"Failed to instantiate type {type.FullName}.", MessageLevel.Error);
+				LogMessage($"Failed to instantiate type {TypeNameOrNull(type)}.", MessageLevel.Error);
 			}
 
 			var handle = GCHandle.Alloc(result, InWeakRef ? GCHandleType.Weak : GCHandleType.Normal);
@@ -201,11 +222,13 @@ internal static class ManagedObject
 		}
 	}
 
-	private static unsafe MethodInfo? TryGetMethodInfo(Type InType, string InMethodName, ManagedType* InParameterTypes, int InParameterCount, BindingFlags InBindingFlags)
+	private static unsafe MethodInfo? TryGetMethodInfo(Type InType, string? InMethodName, ManagedType* InParameterTypes, int InParameterCount, BindingFlags InBindingFlags)
 	{
 		MethodInfo? methodInfo = null;
 
 		var parameterTypes = new ManagedType[InParameterCount];
+
+		if (InMethodName == null) return null;
 
 		unsafe
 		{
@@ -216,7 +239,7 @@ internal static class ManagedObject
 			}
 		}
 
-		var methodKey = new MethodKey(InType.FullName, InMethodName, parameterTypes, InParameterCount);
+		var methodKey = new MethodKey(TypeNameOrNull(InType), InMethodName, parameterTypes, InParameterCount);
 
 		if (!s_CachedMethods.TryGetValue(methodKey, out methodInfo))
 		{
@@ -248,13 +271,20 @@ internal static class ManagedObject
 	{
 		try
 		{
-			if (!TypeInterface.s_CachedTypes.TryGetValue(InType, out var type))
+			if (!TypeInterface.s_CachedTypes.TryGetValue(InType, out var type) || type == null)
 			{
-				LogMessage($"Cannot invoke method {InMethodName} on a null type.", MessageLevel.Error);
+				LogMessage($"Cannot invoke method {NativeStringOrNull(InMethodName)} on a null type.", MessageLevel.Error);
+				return;
+			}
+			
+			var methodInfo = TryGetMethodInfo(type, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+
+			if (methodInfo == null)
+			{
+				LogMessage($"Failed to get method info for {NativeStringOrNull(InMethodName)}.", MessageLevel.Error);
 				return;
 			}
 
-			var methodInfo = TryGetMethodInfo(type, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
 
 			methodInfo.Invoke(null, parameters);
@@ -270,13 +300,20 @@ internal static class ManagedObject
 	{
 		try
 		{
-			if (!TypeInterface.s_CachedTypes.TryGetValue(InType, out var type))
+			if (!TypeInterface.s_CachedTypes.TryGetValue(InType, out var type) || type == null)
 			{
-				LogMessage($"Cannot invoke method {InMethodName} on a null type.", MessageLevel.Error);
+				LogMessage($"Cannot invoke method {NativeStringOrNull(InMethodName)} on a null type.", MessageLevel.Error);
 				return;
 			}
 
 			var methodInfo = TryGetMethodInfo(type, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+
+			if (methodInfo == null)
+			{
+				LogMessage($"Failed to get method info for {NativeStringOrNull(InMethodName)}.", MessageLevel.Error);
+				return;
+			}
+
 			var methodParameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
 
 			object? value = methodInfo.Invoke(null, methodParameters);
@@ -301,13 +338,20 @@ internal static class ManagedObject
 
 			if (target == null)
 			{
-				LogMessage($"Cannot invoke method {InMethodName} on a null type.", MessageLevel.Error);
+				LogMessage($"Cannot invoke method {NativeStringOrNull(InMethodName)} on a null type.", MessageLevel.Error);
 				return;
 			}
 
 			var targetType = target.GetType();
 
 			var methodInfo = TryGetMethodInfo(targetType, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+			if (methodInfo == null)
+			{
+				LogMessage($"Failed to get method info for {NativeStringOrNull(InMethodName)}.", MessageLevel.Error);
+				return;
+			}
+
 			var parameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
 
 			methodInfo.Invoke(target, parameters);
@@ -334,6 +378,13 @@ internal static class ManagedObject
 			var targetType = target.GetType();
 
 			var methodInfo = TryGetMethodInfo(targetType, InMethodName, InParameterTypes, InParameterCount, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+			if (methodInfo == null)
+			{
+				LogMessage($"Failed to get method info for {NativeStringOrNull(InMethodName)}.", MessageLevel.Error);
+				return;
+			}
+
 			var methodParameters = Marshalling.MarshalParameterArray(InParameters, InParameterCount, methodInfo);
 			
 			object? value = methodInfo.Invoke(target, methodParameters);
@@ -373,17 +424,34 @@ internal static class ManagedObject
 
 			if (fieldInfo.FieldType == typeof(string))
 			{
-				NativeString value = (NativeString) Marshalling.MarshalPointer(InValue, typeof(NativeString));
+				object? fieldValue = Marshalling.MarshalPointer(InValue, typeof(NativeString));
+
+				if (fieldValue == null)
+				{
+					LogMessage($"Failed to get field '{InFieldName}' value in type '{targetType.FullName}'.", MessageLevel.Error);
+					return;
+				}
+
+				NativeString value = (NativeString) fieldValue;
 				fieldInfo.SetValue(target, value.ToString());
 			}
 			else if (fieldInfo.FieldType == typeof(bool))
 			{
-				Bool32 value = (Bool32) Marshalling.MarshalPointer(InValue, typeof(Bool32));
+				object? fieldValue = Marshalling.MarshalPointer(InValue, typeof(Bool32));
+
+				if (fieldValue == null)
+				{
+					LogMessage($"Failed to get field '{InFieldName}' value in type '{targetType.FullName}'.", MessageLevel.Error);
+					return;
+				}
+
+				Bool32 value = (Bool32) fieldValue;
 				fieldInfo.SetValue(target, (bool) value);
 			}
 			else
 			{
 				object? value = Marshalling.MarshalPointer(InValue, fieldInfo.FieldType);
+
 				fieldInfo.SetValue(target, value);
 			}
 		}

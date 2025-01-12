@@ -89,7 +89,7 @@ public static class AssemblyLoader
 
 		string assemblyPath = Path.Combine(AppContext.BaseDirectory, $"{InAssemblyName.Name}.dll");
 		LogMessage($"[AssemblyLoader] Trying to find assembly in {assemblyPath}", MessageLevel.Trace);
-		if (File.Exists(assemblyPath))
+		if (InAssemblyLoadContext != null && File.Exists(assemblyPath))
 		{
 			LogMessage($"[AssemblyLoader] Found assembly {InAssemblyName.FullName}", MessageLevel.Trace);
 			return InAssemblyLoadContext.LoadFromAssemblyPath(assemblyPath);
