@@ -42,6 +42,7 @@ namespace Coral {
 		return m_Types;
 	}
 
+	// TODO(Emily): Massive de-dup needed between `LoadAssembly` and `LoadAssemblyFromMemory`.
 	ManagedAssembly& AssemblyLoadContext::LoadAssembly(std::string_view InFilePath)
 	{
 		auto filepath = String::New(InFilePath);
@@ -53,14 +54,16 @@ namespace Coral {
 
 		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
 		{
-			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
+			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(m_ContextId, result.m_AssemblyID);
 			result.m_Name = assemblyName;
 			String::Free(assemblyName);
 
+			// TODO(Emily): Is it always desirable to preload every type from an assembly?
 			int32_t typeCount = 0;
-			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);
+			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyID, nullptr, &typeCount);
+
 			std::vector<TypeId> typeIds(static_cast<size_t>(typeCount));
-			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, typeIds.data(), &typeCount);
+			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyID, typeIds.data(), &typeCount);
 
 			for (auto typeId : typeIds)
 			{
@@ -84,14 +87,14 @@ namespace Coral {
 
 		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
 		{
-			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(result.m_AssemblyID);
+			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(m_ContextId, result.m_AssemblyID);
 			result.m_Name = assemblyName;
 			String::Free(assemblyName);
 
 			int32_t typeCount = 0;
-			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);
+			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyID, nullptr, &typeCount);
 			std::vector<TypeId> typeIds(static_cast<size_t>(typeCount));
-			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, typeIds.data(), &typeCount);
+			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyID, typeIds.data(), &typeCount);
 
 			for (auto typeId : typeIds)
 			{

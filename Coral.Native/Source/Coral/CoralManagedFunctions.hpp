@@ -18,11 +18,11 @@ namespace Coral {
 	using LoadAssemblyFn = int32_t(*)(int32_t, String);
 	using LoadAssemblyFromMemoryFn = int32_t(*)(int32_t, const std::byte*, int64_t);
 	using GetLastLoadStatusFn = AssemblyLoadStatus (*)();
-	using GetAssemblyNameFn = String (*)(int32_t);
+	using GetAssemblyNameFn = String (*)(int32_t, int32_t);
 
 #pragma region TypeInterface
 
-	using GetAssemblyTypesFn = void (*)(int32_t, TypeId*, int32_t*);
+	using GetAssemblyTypesFn = void (*)(int32_t, int32_t, TypeId*, int32_t*);
 	using GetTypeIdFn = void (*)(String, TypeId*);
 	using GetFullTypeNameFn = String (*)(TypeId);
 	using GetAssemblyQualifiedNameFn = String (*)(TypeId);

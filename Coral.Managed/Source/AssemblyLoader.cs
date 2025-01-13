@@ -21,12 +21,13 @@ public static class AssemblyLoader
 {
 	private static readonly Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup = new();
 	private static readonly Dictionary<int, AssemblyLoadContext?> s_AssemblyContexts = new();
-	private static readonly Dictionary<int, Assembly> s_AssemblyCache = new();
+	private static readonly Dictionary<int, Dictionary<int, Assembly>> s_AssemblyCache = new();
 #if DEBUG
 	private static readonly Dictionary<int, List<GCHandle>> s_AllocatedHandles = new();
 #endif
 	private static AssemblyLoadStatus s_LastLoadStatus = AssemblyLoadStatus.Success;
 
+	private static readonly int CORAL_ALC_CACHE_ID = -1;
 	private static readonly AssemblyLoadContext? s_CoralAssemblyLoadContext;
 
 	static AssemblyLoader()
@@ -40,6 +41,8 @@ public static class AssemblyLoader
 		s_CoralAssemblyLoadContext = AssemblyLoadContext.GetLoadContext(typeof(AssemblyLoader).Assembly);
 		s_CoralAssemblyLoadContext!.Resolving += ResolveAssembly;
 
+		s_AssemblyCache.Add(CORAL_ALC_CACHE_ID, new());
+
 		CacheCoralAssemblies();
 	}
 
@@ -48,13 +51,13 @@ public static class AssemblyLoader
 		foreach (var assembly in s_CoralAssemblyLoadContext!.Assemblies)
 		{
 			int assemblyId = assembly.GetName().Name!.GetHashCode();
-			s_AssemblyCache.Add(assemblyId, assembly);
+			s_AssemblyCache[CORAL_ALC_CACHE_ID].Add(assemblyId, assembly);
 		}
 	}
 
-	internal static bool TryGetAssembly(int InAssemblyId, out Assembly? OutAssembly)
+	internal static bool TryGetAssembly(int InAssemblyLoadContextId, int InAssemblyId, out Assembly? OutAssembly)
 	{
-		return s_AssemblyCache.TryGetValue(InAssemblyId, out OutAssembly);
+		return s_AssemblyCache[InAssemblyLoadContextId].TryGetValue(InAssemblyId, out OutAssembly);
 	}
 
 	internal static Assembly? ResolveAssembly(AssemblyLoadContext? InAssemblyLoadContext, AssemblyName InAssemblyName)
@@ -63,23 +66,59 @@ public static class AssemblyLoader
 
 		try
 		{
-			int assemblyId = InAssemblyName.Name!.GetHashCode();
-			
-			if (s_AssemblyCache.TryGetValue(assemblyId, out var cachedAssembly))
+			if (InAssemblyName.Name == null) throw new ArgumentNullException("InAssemblyName");
+
+			int assemblyId = InAssemblyName.Name.GetHashCode();
+
+			if (InAssemblyLoadContext == null || InAssemblyLoadContext.Name == null)
+			{
+				// Search all the assemblies!
+				// TODO(Emily): Mark all the non-ALC-specific APIs as deprecated.
+				LogMessage($"[AssemblyLoader] Global ALC cache behaviour is deprecated", MessageLevel.Warning);
+
+				foreach (var cache in s_AssemblyCache)
+				{
+					foreach (KeyValuePair<int, Assembly> entry in cache.Value)
+					{
+						if (InAssemblyName.Name == entry.Value.GetName().Name)
+						{
+							return entry.Value;
+						}
+					}
+				}
+
+				LogMessage($"[AssemblyLoader] Failed to resolve assembly {InAssemblyName.FullName} against global assembly cache", MessageLevel.Trace);
+				return null;
+			}
+
+			int alcId = InAssemblyLoadContext.Name.GetHashCode();
+
+			if (s_AssemblyCache[alcId].TryGetValue(assemblyId, out var cachedAssembly))
 			{
 				return cachedAssembly;
 			}
 
-			foreach (var loadContext in AssemblyLoadContext.All)
+			if (s_CoralAssemblyLoadContext != null)
 			{
-				foreach (var assembly in loadContext.Assemblies)
+				foreach (var assembly in s_CoralAssemblyLoadContext.Assemblies)
 				{
 					if (assembly.GetName().Name != InAssemblyName.Name)
 						continue;
 
-					s_AssemblyCache.Add(assemblyId, assembly);
+					// NOTE(Emily): Disabling this doesn't seem to cause any problems -- but marking it as an
+					//              Unknown just in case.
+					//s_AssemblyCache[CORAL_ALC_CACHE_ID].Add(assemblyId, assembly);
 					return assembly;
 				}
+			}
+
+			foreach (var assembly in InAssemblyLoadContext.Assemblies)
+			{
+				if (assembly.GetName().Name != InAssemblyName.Name)
+					continue;
+
+				s_AssemblyCache[alcId].Add(assemblyId, assembly);
+				return assembly;
 			}
 		}
 		catch (Exception ex)
@@ -108,18 +147,11 @@ public static class AssemblyLoader
 
 		var alc = new AssemblyLoadContext(name, true);
 		alc.Resolving += ResolveAssembly;
-		alc.Unloading += ctx =>
-		{
-			foreach (var assembly in ctx.Assemblies)
-			{
-				var assemblyName = assembly.GetName();
-				int assemblyId = assemblyName.Name!.GetHashCode();
-				s_AssemblyCache.Remove(assemblyId);
-			}
-		};
+		alc.Unloading += ctx => s_AssemblyCache.Remove(ctx.Name!.GetHashCode());
 
 		int contextId = name.GetHashCode();
 		s_AssemblyContexts.Add(contextId, alc);
+		s_AssemblyCache.Add(contextId, new());
 		return contextId;
 	}
 
@@ -234,7 +266,7 @@ public static class AssemblyLoader
 			LogMessage($"Loading assembly '{InAssemblyFilePath}'", MessageLevel.Info);
 			var assemblyName = assembly.GetName();
 			int assemblyId = assemblyName.Name!.GetHashCode();
-			s_AssemblyCache.Add(assemblyId, assembly);
+			s_AssemblyCache[InContextId].Add(assemblyId, assembly);
 			s_LastLoadStatus = AssemblyLoadStatus.Success;
 			return assemblyId;
 		}
@@ -275,7 +307,7 @@ public static class AssemblyLoader
 			LogMessage($"Loading assembly '{assembly.FullName}'", MessageLevel.Info);
 			var assemblyName = assembly.GetName();
 			int assemblyId = assemblyName.Name!.GetHashCode();
-			s_AssemblyCache.Add(assemblyId, assembly);
+			s_AssemblyCache[InContextId].Add(assemblyId, assembly);
 			s_LastLoadStatus = AssemblyLoadStatus.Success;
 			return assemblyId;
 		}
@@ -291,9 +323,9 @@ public static class AssemblyLoader
 	internal static AssemblyLoadStatus GetLastLoadStatus() => s_LastLoadStatus;
 
 	[UnmanagedCallersOnly]
-	internal static NativeString GetAssemblyName(int InAssemblyId)
+	internal static NativeString GetAssemblyName(int InContextId, int InAssemblyId)
 	{
-		if (!s_AssemblyCache.TryGetValue(InAssemblyId, out var assembly))
+		if (!s_AssemblyCache[InContextId].TryGetValue(InAssemblyId, out var assembly))
 		{
 			LogMessage($"Couldn't get assembly name for assembly '{InAssemblyId}', assembly not in dictionary.", MessageLevel.Error);
 			return "";

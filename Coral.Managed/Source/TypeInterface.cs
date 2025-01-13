@@ -113,11 +113,11 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	internal static unsafe void GetAssemblyTypes(int InAssemblyId, int* OutTypes, int* OutTypeCount)
+	internal static unsafe void GetAssemblyTypes(int InAssemblyLoadContextId, int InAssemblyId, int* OutTypes, int* OutTypeCount)
 	{
 		try
 		{
-			if (!AssemblyLoader.TryGetAssembly(InAssemblyId, out var assembly))
+			if (!AssemblyLoader.TryGetAssembly(InAssemblyLoadContextId, InAssemblyId, out var assembly))
 			{
 				LogMessage($"Couldn't get types for assembly '{InAssemblyId}', assembly not found.", MessageLevel.Error);
 				return;
