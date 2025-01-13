@@ -151,12 +151,14 @@ namespace Coral {
 		{
 			basePath
 		};
-
-#elif defined(CORAL_LINUX)
+#else
 		auto searchPaths = std::array
 		{
+			std::filesystem::path("/usr/local/lib/dotnet/host/fxr/"),
+			std::filesystem::path("/usr/local/share/dotnet/host/fxr/"),
+
 			std::filesystem::path("/usr/lib/dotnet/host/fxr/"),
-			std::filesystem::path("/usr/share/dotnet/host/fxr/"),
+			std::filesystem::path("/usr/share/dotnet/host/fxr/")
 		};
 #endif
 
