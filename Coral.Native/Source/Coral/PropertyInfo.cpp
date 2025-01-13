@@ -27,7 +27,8 @@ namespace Coral {
 	{
 		int32_t attributeCount;
 		s_ManagedFunctions.GetPropertyInfoAttributesFptr(m_Handle, nullptr, &attributeCount);
-		std::vector<ManagedHandle> attributeHandles(attributeCount);
+
+		std::vector<ManagedHandle> attributeHandles(static_cast<size_t>(attributeCount));
 		s_ManagedFunctions.GetPropertyInfoAttributesFptr(m_Handle, attributeHandles.data(), &attributeCount);
 
 		std::vector<Attribute> result(attributeHandles.size());

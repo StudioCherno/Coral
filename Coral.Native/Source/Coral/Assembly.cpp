@@ -59,7 +59,7 @@ namespace Coral {
 
 			int32_t typeCount = 0;
 			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);
-			std::vector<TypeId> typeIds(typeCount);
+			std::vector<TypeId> typeIds(static_cast<size_t>(typeCount));
 			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, typeIds.data(), &typeCount);
 
 			for (auto typeId : typeIds)
@@ -90,7 +90,7 @@ namespace Coral {
 
 			int32_t typeCount = 0;
 			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, nullptr, &typeCount);
-			std::vector<TypeId> typeIds(typeCount);
+			std::vector<TypeId> typeIds(static_cast<size_t>(typeCount));
 			s_ManagedFunctions.GetAssemblyTypesFptr(result.m_AssemblyID, typeIds.data(), &typeCount);
 
 			for (auto typeId : typeIds)

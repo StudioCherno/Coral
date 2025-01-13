@@ -25,16 +25,20 @@ namespace Coral {
 	};
 	static CoreCLRFunctions s_CoreCLRFunctions;
 
-	MessageCallbackFn MessageCallback = nullptr;
-	MessageLevel MessageFilter;
-	ExceptionCallbackFn ExceptionCallback = nullptr;
+	static MessageCallbackFn MessageCallback = nullptr;
+	static MessageLevel MessageFilter;
+	static ExceptionCallbackFn ExceptionCallback = nullptr;
 
-	void DefaultMessageCallback(std::string_view InMessage, MessageLevel InLevel)
+	static void DefaultMessageCallback(std::string_view InMessage, MessageLevel InLevel)
 	{
 		const char* level = "";
 
 		switch (InLevel)
 		{
+		default: break;
+		case MessageLevel::Trace:
+			level = "Trace";
+			break;
 		case MessageLevel::Info:
 			level = "Info";
 			break;
@@ -127,7 +131,7 @@ namespace Coral {
 	}
 #endif
 
-	std::filesystem::path GetHostFXRPath()
+	static std::filesystem::path GetHostFXRPath()
 	{
 #if defined(CORAL_WINDOWS)
 		std::filesystem::path basePath = "";
@@ -241,7 +245,7 @@ namespace Coral {
 			s_CoreCLRFunctions.SetRuntimePropertyValue(m_HostFXRContext, "APP_CONTEXT_BASE_DIRECTORY", coralDirectoryPath.c_str());
 	#endif
 
-			status = s_CoreCLRFunctions.GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**)&s_CoreCLRFunctions.GetManagedFunctionPtr);
+			status = s_CoreCLRFunctions.GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**) &s_CoreCLRFunctions.GetManagedFunctionPtr);
 			CORAL_VERIFY(status == StatusCode::Success);
 		}
 

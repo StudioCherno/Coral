@@ -22,11 +22,11 @@
 	#define CORAL_DEBUG_BREAK	
 #endif
 
-#define CORAL_VERIFY(expr) {\
+#define CORAL_VERIFY(expr) do {\
 						if(!(expr))\
 						{\
 							CORAL_SOURCE_LOCATION;\
 							std::cerr << "[Coral.Native]: Assert Failed! Expression: " << #expr << " at " << file << ":" << line << "\n";\
 							CORAL_DEBUG_BREAK;\
 						}\
-					}
+					} while(0)

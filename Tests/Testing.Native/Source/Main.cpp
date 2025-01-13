@@ -11,42 +11,42 @@
 #include <Coral/Array.hpp>
 #include <Coral/Attribute.hpp>
 
-Coral::Type g_TestsType;
+static Coral::Type g_TestsType;
 
-void ExceptionCallback(std::string_view InMessage)
+static void ExceptionCallback(std::string_view InMessage)
 {
 	std::cout << "\033[1;31m " << "Unhandled native exception: " << InMessage << "\033[0m\n";
 }
 
-char8_t SByteMarshalIcall(char8_t InValue) { return InValue * 2; }
-uint8_t ByteMarshalIcall(uint8_t InValue) { return InValue * 2; }
-int16_t ShortMarshalIcall(int16_t InValue) { return InValue * 2; }
-uint16_t UShortMarshalIcall(uint16_t InValue) { return InValue * 2; }
-int32_t IntMarshalIcall(int32_t InValue) { return InValue * 2; }
-uint32_t UIntMarshalIcall(uint32_t InValue) { return InValue * 2; }
-int64_t LongMarshalIcall(int64_t InValue) { return InValue * 2; }
-uint64_t ULongMarshalIcall(uint64_t InValue) { return InValue * 2; }
-float FloatMarshalIcall(float InValue) { return InValue * 2.0f; }
-double DoubleMarshalIcall(double InValue) { return InValue * 2.0; }
-bool BoolMarshalIcall(bool InValue)
+static char8_t SByteMarshalIcall(char8_t InValue) { return InValue * 2; }
+static uint8_t ByteMarshalIcall(uint8_t InValue) { return InValue * 2; }
+static int16_t ShortMarshalIcall(int16_t InValue) { return InValue * 2; }
+static uint16_t UShortMarshalIcall(uint16_t InValue) { return InValue * 2; }
+static int32_t IntMarshalIcall(int32_t InValue) { return InValue * 2; }
+static uint32_t UIntMarshalIcall(uint32_t InValue) { return InValue * 2; }
+static int64_t LongMarshalIcall(int64_t InValue) { return InValue * 2; }
+static uint64_t ULongMarshalIcall(uint64_t InValue) { return InValue * 2; }
+static float FloatMarshalIcall(float InValue) { return InValue * 2.0f; }
+static double DoubleMarshalIcall(double InValue) { return InValue * 2.0; }
+static bool BoolMarshalIcall(bool InValue)
 {
 	std::cout << "C++: " << (uint32_t)InValue << std::endl;
 	return !InValue;
 }
-int32_t* IntPtrMarshalIcall(int32_t* InValue)
+static int32_t* IntPtrMarshalIcall(int32_t* InValue)
 {
 	*InValue *= 2;
 	return InValue;
 }
-Coral::String StringMarshalIcall(Coral::String InStr)
+static Coral::String StringMarshalIcall(Coral::String InStr)
 {
 	return InStr;
 }
-void StringMarshalIcall2(Coral::String InStr)
+static void StringMarshalIcall2(Coral::String InStr)
 {
 	std::cout << std::string(InStr) << std::endl;
 }
-bool TypeMarshalIcall(Coral::ReflectionType InReflectionType)
+static bool TypeMarshalIcall(Coral::ReflectionType InReflectionType)
 {
 	Coral::Type& type = InReflectionType;
 	return type == g_TestsType;
@@ -58,7 +58,7 @@ struct DummyStruct
 	float Y;
 	int32_t Z;
 };
-DummyStruct DummyStructMarshalIcall(DummyStruct InStruct)
+static DummyStruct DummyStructMarshalIcall(DummyStruct InStruct)
 {
 	InStruct.X *= 2;
 	InStruct.Y *= 2.0f;
@@ -66,7 +66,7 @@ DummyStruct DummyStructMarshalIcall(DummyStruct InStruct)
 	return InStruct;
 }
 
-DummyStruct* DummyStructPtrMarshalIcall(DummyStruct* InStruct)
+static DummyStruct* DummyStructPtrMarshalIcall(DummyStruct* InStruct)
 {
 	InStruct->X *= 2;
 	InStruct->Y *= 2.0f;
@@ -74,25 +74,25 @@ DummyStruct* DummyStructPtrMarshalIcall(DummyStruct* InStruct)
 	return InStruct;
 }
 
-Coral::Array<int32_t> EmptyArrayIcall()
+static Coral::Array<int32_t> EmptyArrayIcall()
 {
 	std::vector<int32_t> empty;
 	return Coral::Array<int32_t>::New(empty);
 }
 
-Coral::Array<float> FloatArrayIcall()
+static Coral::Array<float> FloatArrayIcall()
 {
 	std::vector<float> floats = { 5.0f, 10.0f, 15.0f, 50.0f };
 	return Coral::Array<float>::New(floats);
 }
 
-Coral::ManagedObject instance;
-Coral::ManagedObject NativeInstanceIcall()
+static Coral::ManagedObject instance;
+static Coral::ManagedObject NativeInstanceIcall()
 {
 	return instance;
 }
 
-void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
+static void RegisterTestInternalCalls(Coral::ManagedAssembly& InAssembly)
 {
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "SByteMarshalIcall", reinterpret_cast<void*>(&SByteMarshalIcall));
 	InAssembly.AddInternalCall("Testing.Managed.Tests", "ByteMarshalIcall", reinterpret_cast<void*>(&ByteMarshalIcall));
@@ -121,14 +121,14 @@ struct Test
 	std::string Name;
 	std::function<bool()> Func;
 };
-std::vector<Test> tests;
+static std::vector<Test> tests;
 
-void RegisterTest(std::string_view InName, std::function<bool()> InFunc)
+static void RegisterTest(std::string_view InName, std::function<bool()> InFunc)
 {
 	tests.push_back(Test{ std::string(InName), std::move(InFunc) });
 }
 
-void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject InObject)
+static void RegisterMemberMethodTests(Coral::ManagedObject InObject)
 {
 	RegisterTest("SByteTest", [InObject]() mutable{ return InObject.InvokeMethod<char8_t, char8_t>("SByteTest", 10) == 20; });
 	RegisterTest("ByteTest", [InObject]() mutable{ return InObject.InvokeMethod<uint8_t, uint8_t>("ByteTest", 10) == 20; });
@@ -182,7 +182,7 @@ void RegisterMemberMethodTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	});
 }
 
-void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject InObject)
+static void RegisterFieldMarshalTests(Coral::ManagedObject InObject)
 {
 	RegisterTest("SByteFieldTest", [InObject]() mutable
 	{
@@ -426,7 +426,7 @@ void RegisterFieldMarshalTests(Coral::HostInstance& InHost, Coral::ManagedObject
 	});
 }
 
-void RunTests()
+static void RunTests()
 {
 	size_t passedTests = 0;
 	for (size_t i = 0; i < tests.size(); i++)
@@ -446,14 +446,8 @@ void RunTests()
 	std::cout << "[NativeTest]: Done. " << passedTests << " passed, " << tests.size() - passedTests  << " failed.\n";
 }
 
-int main(int argc, char** argv)
+int main([[maybe_unused]] int argc, char** argv)
 {
-#ifdef CORAL_TESTING_DEBUG
-	const char* ConfigName = "Debug";
-#else
-	const char* ConfigName = "Release";
-#endif
-
 	auto exeDir = std::filesystem::path(argv[0]).parent_path();
 	auto coralDir = exeDir.string();
 	Coral::HostSettings settings =
@@ -505,9 +499,6 @@ int main(int argc, char** argv)
 
 	for (auto fieldInfo : fieldTestType.GetFields())
 	{
-		auto& type = fieldInfo.GetType();
-		auto accessibility = fieldInfo.GetAccessibility();
-
 		auto attributes = fieldInfo.GetAttributes();
 		for (auto attrib : attributes)
 		{
@@ -520,8 +511,6 @@ int main(int argc, char** argv)
 
 	for (auto propertyInfo : fieldTestType.GetProperties())
 	{
-		auto& type = propertyInfo.GetType();
-
 		auto attributes = propertyInfo.GetAttributes();
 		for (auto attrib : attributes)
 		{
@@ -557,8 +546,8 @@ int main(int argc, char** argv)
 
 	auto memberMethodTest = memberMethodTestType.CreateInstance();
 
-	RegisterFieldMarshalTests(hostInstance, fieldTestObject);
-	RegisterMemberMethodTests(hostInstance, memberMethodTest);
+	RegisterFieldMarshalTests(fieldTestObject);
+	RegisterMemberMethodTests(memberMethodTest);
 	RunTests();
 
 	memberMethodTest.Destroy();
@@ -585,8 +574,6 @@ int main(int argc, char** argv)
 
 	loadContext = hostInstance.CreateAssemblyLoadContext("ALC2");
 	auto& newAssembly = loadContext.LoadAssembly(assemblyPath.string());
-
-	auto ls = newAssembly.GetLoadStatus();
 
 	RegisterTestInternalCalls(newAssembly);
 	newAssembly.UploadInternalCalls();

@@ -11,7 +11,7 @@
 #include <Coral/Array.hpp>
 #include <Coral/Attribute.hpp>
 
-void ExceptionCallback(std::string_view InMessage)
+static void ExceptionCallback(std::string_view InMessage)
 {
 	std::cout << "Unhandled native exception: " << InMessage << std::endl;
 }
@@ -23,7 +23,7 @@ struct MyVec3
 	float Z;
 };
 
-void VectorAddIcall(MyVec3* InVec0, const MyVec3* InVec1)
+static void VectorAddIcall(MyVec3* InVec0, const MyVec3* InVec1)
 {
 	std::cout << "VectorAddIcall" << std::endl;
 	InVec0->X += InVec1->X;
@@ -31,12 +31,12 @@ void VectorAddIcall(MyVec3* InVec0, const MyVec3* InVec1)
 	InVec0->Z += InVec1->Z;
 }
 
-void PrintStringIcall(Coral::String InString)
+static void PrintStringIcall(Coral::String InString)
 {
 	std::cout << std::string(InString) << std::endl;
 }
 
-void NativeArrayIcall(Coral::Array<float> InValues)
+static void NativeArrayIcall(Coral::Array<float> InValues)
 {
 	std::cout << "NativeArrayIcall" << std::endl;
 	for (auto value : InValues)
@@ -45,13 +45,13 @@ void NativeArrayIcall(Coral::Array<float> InValues)
 	}
 }
 
-Coral::Array<float> ArrayReturnIcall()
+static Coral::Array<float> ArrayReturnIcall()
 {
 	std::cout << "ArrayReturnIcall" << std::endl;
 	return Coral::Array<float>::New({ 10.0f, 5000.0f, 1000.0f });
 }
 
-int main(int argc, char** argv)
+int main([[maybe_unused]] int argc, char** argv)
 {
 	auto exeDir = std::filesystem::path(argv[0]).parent_path();
 	auto coralDir = exeDir.string();
