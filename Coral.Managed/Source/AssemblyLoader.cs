@@ -92,7 +92,7 @@ public static class AssemblyLoader
 		if (InAssemblyLoadContext != null && File.Exists(assemblyPath))
 		{
 			LogMessage($"[AssemblyLoader] Found assembly {InAssemblyName.FullName}", MessageLevel.Trace);
-			return InAssemblyLoadContext.LoadFromAssemblyPath(assemblyPath);
+			return InAssemblyLoadContext.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
 		}
 
 		return null;

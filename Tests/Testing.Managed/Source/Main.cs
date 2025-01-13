@@ -245,6 +245,8 @@ namespace Testing.Managed {
 
 		public void RunManagedTests()
 		{
+		    NuGetTest.Run();
+
 			CollectTests();
 
 			if (s_Tests == null)

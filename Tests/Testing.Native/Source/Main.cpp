@@ -570,8 +570,6 @@ int main([[maybe_unused]] int argc, char** argv)
 
 	Coral::GC::Collect();
 
-	std::cin.get();
-
 	loadContext = hostInstance.CreateAssemblyLoadContext("ALC2");
 	auto& newAssembly = loadContext.LoadAssembly(assemblyPath.string());
 
@@ -600,7 +598,6 @@ int main([[maybe_unused]] int argc, char** argv)
 	testsInstance2.InvokeMethod("RunManagedTests");
 	testsInstance2.Destroy();
 	instance.Destroy();
-	std::cin.get();
 
 	return 0;
 }
