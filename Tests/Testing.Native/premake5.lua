@@ -20,10 +20,6 @@ project "Testing.Native"
 
     externalincludedirs { "../../Coral.Native/Include/" }
 
-	postbuildcommands {
-		'{COPYFILE} "%{wks.location}/Coral.Managed/Coral.Managed.runtimeconfig.json" "%{cfg.targetdir}"',
-	}
-
 	links {
 		"Coral.Native",
 	}
