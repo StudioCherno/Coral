@@ -286,21 +286,24 @@ static void RegisterFieldMarshalTests(Coral::ManagedObject InObject)
 	
 	RegisterTest("BoolFieldTest", [InObject]() mutable
 	{
-		auto value = InObject.GetFieldValue<Coral::Bool32>("BoolFieldTest");
+		auto value = InObject.GetFieldValue<bool>("BoolFieldTest");
 		if (value != false)
 			return false;
-		InObject.SetFieldValue<Coral::Bool32>("BoolFieldTest", true);
-		value = InObject.GetFieldValue<Coral::Bool32>("BoolFieldTest");
+
+		InObject.SetFieldValue<bool>("BoolFieldTest", true);
+		value = InObject.GetFieldValue<bool>("BoolFieldTest");
+
 		return static_cast<bool>(value);
 	});
 	RegisterTest("StringFieldTest", [InObject]() mutable
 	{
-		Coral::ScopedString value = InObject.GetFieldValue<Coral::String>("StringFieldTest");
+		auto value = InObject.GetFieldValue<std::string>("StringFieldTest");
 		if (value != "Hello")
 			return false;
 
-		InObject.SetFieldValue("StringFieldTest", Coral::String::New("Hello, World!"));
-		value = InObject.GetFieldValue<Coral::String>("StringFieldTest");
+		InObject.SetFieldValue<std::string>("StringFieldTest", "Hello, World!");
+		value = InObject.GetFieldValue<std::string>("StringFieldTest");
+
 		return value == "Hello, World!";
 	});
 
@@ -565,6 +568,18 @@ int main([[maybe_unused]] int argc, char** argv)
 	instance.Destroy();
 	instance1.Destroy();
 	instance2.Destroy();
+
+	auto loadContext2 = hostInstance.CreateAssemblyLoadContext("ALCTestMulti");
+	auto& multiAssembly = loadContext2.LoadAssembly(assemblyPath.string());
+
+	if (&multiAssembly.GetType("Testing.Managed.DummyClass") != &assembly.GetType("Testing.Managed.DummyClass"))
+	{
+		std::cout << "\033[1;32mMultiple instances of the same DLL seem to be working\033[0m" << std::endl;
+	}
+	else
+	{
+		std::cout << "\033[1;31mType cache is clashing between multiple instances of the same DLL\033[0m" << std::endl;
+	}
 
 	hostInstance.UnloadAssemblyLoadContext(loadContext);
 

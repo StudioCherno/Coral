@@ -21,7 +21,7 @@ namespace Coral {
 	class ManagedAssembly
 	{
 	public:
-		int32_t GetAssemblyID() const { return m_AssemblyID; }
+		int32_t GetAssemblyID() const { return m_AssemblyId; }
 		AssemblyLoadStatus GetLoadStatus() const { return m_LoadStatus; }
 		std::string_view GetName() const { return m_Name; }
 
@@ -33,7 +33,8 @@ namespace Coral {
 		
 	private:
 		HostInstance* m_Host = nullptr;
-		int32_t m_AssemblyID = -1;
+		int32_t m_AssemblyId = -1;
+		int32_t m_OwnerContextId = 0;
 		AssemblyLoadStatus m_LoadStatus = AssemblyLoadStatus::UnknownError;
 		std::string m_Name;
 

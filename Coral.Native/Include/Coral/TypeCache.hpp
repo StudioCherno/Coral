@@ -4,9 +4,9 @@
 #include "StableVector.hpp"
 
 namespace Coral {
-
 	class Type;
 
+	// TODO(Emily): This needs to be split by ALC.
 	class TypeCache
 	{
 	public:

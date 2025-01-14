@@ -12,7 +12,7 @@ namespace Coral {
 	enum class ManagedType;
 	class ManagedField;
 
-	using SetInternalCallsFn = void (*)(void*, int32_t);
+	using SetInternalCallsFn = void (*)(int32_t, void*, int32_t);
 	using CreateAssemblyLoadContextFn = int32_t (*)(String);
 	using UnloadAssemblyLoadContextFn = void (*)(int32_t);
 	using LoadAssemblyFn = int32_t(*)(int32_t, String);
@@ -98,7 +98,6 @@ namespace Coral {
 #pragma region TypeInterface
 
 		GetAssemblyTypesFn GetAssemblyTypesFptr = nullptr;
-		GetTypeIdFn GetTypeIdFptr = nullptr;
 		GetFullTypeNameFn GetFullTypeNameFptr = nullptr;
 		GetAssemblyQualifiedNameFn GetAssemblyQualifiedNameFptr = nullptr;
 		GetBaseTypeFn GetBaseTypeFptr = nullptr;

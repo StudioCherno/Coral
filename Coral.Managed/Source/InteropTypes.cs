@@ -240,6 +240,7 @@ public struct NativeString : IDisposable
 			m_IsDisposed = true;
 		}
 
+		// TODO(Emily): Do we want to be doing this?
 		GC.SuppressFinalize(this);
 	}
 

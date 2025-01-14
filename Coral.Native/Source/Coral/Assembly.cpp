@@ -27,7 +27,7 @@ namespace Coral {
 
 	void ManagedAssembly::UploadInternalCalls()
 	{
-		s_ManagedFunctions.SetInternalCallsFptr(m_InternalCalls.data(), static_cast<int32_t>(m_InternalCalls.size()));
+		s_ManagedFunctions.SetInternalCallsFptr(m_OwnerContextId, m_InternalCalls.data(), static_cast<int32_t>(m_InternalCalls.size()));
 	}
 
 	Type& ManagedAssembly::GetType(std::string_view InClassName) const
@@ -49,21 +49,22 @@ namespace Coral {
 
 		auto[idx, result] = m_LoadedAssemblies.EmplaceBack();
 		result.m_Host = m_Host;
-		result.m_AssemblyID = s_ManagedFunctions.LoadAssemblyFptr(m_ContextId, filepath);
+		result.m_AssemblyId = s_ManagedFunctions.LoadAssemblyFptr(m_ContextId, filepath);
+		result.m_OwnerContextId = m_ContextId;
 		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
 
 		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
 		{
-			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(m_ContextId, result.m_AssemblyID);
+			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(m_ContextId, result.m_AssemblyId);
 			result.m_Name = assemblyName;
 			String::Free(assemblyName);
 
 			// TODO(Emily): Is it always desirable to preload every type from an assembly?
 			int32_t typeCount = 0;
-			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyID, nullptr, &typeCount);
+			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyId, nullptr, &typeCount);
 
 			std::vector<TypeId> typeIds(static_cast<size_t>(typeCount));
-			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyID, typeIds.data(), &typeCount);
+			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyId, typeIds.data(), &typeCount);
 
 			for (auto typeId : typeIds)
 			{
@@ -82,19 +83,19 @@ namespace Coral {
 	{
 		auto [idx, result] = m_LoadedAssemblies.EmplaceBack();
 		result.m_Host = m_Host;
-		result.m_AssemblyID = s_ManagedFunctions.LoadAssemblyFromMemoryFptr(m_ContextId, data, dataLength);
+		result.m_AssemblyId = s_ManagedFunctions.LoadAssemblyFromMemoryFptr(m_ContextId, data, dataLength);
 		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
 
 		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
 		{
-			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(m_ContextId, result.m_AssemblyID);
+			auto assemblyName = s_ManagedFunctions.GetAssemblyNameFptr(m_ContextId, result.m_AssemblyId);
 			result.m_Name = assemblyName;
 			String::Free(assemblyName);
 
 			int32_t typeCount = 0;
-			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyID, nullptr, &typeCount);
+			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyId, nullptr, &typeCount);
 			std::vector<TypeId> typeIds(static_cast<size_t>(typeCount));
-			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyID, typeIds.data(), &typeCount);
+			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyId, typeIds.data(), &typeCount);
 
 			for (auto typeId : typeIds)
 			{

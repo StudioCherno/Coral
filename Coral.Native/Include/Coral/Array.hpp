@@ -4,8 +4,10 @@
 
 namespace Coral {
 
+#pragma pack(push)
+#pragma pack(1)
 	template<typename TValue>
-	class Array
+	class [[gnu::packed]] Array
 	{
 	public:
 		static Array New(size_t InLength)
@@ -102,5 +104,6 @@ namespace Coral {
 		int32_t m_Length = 0;
 		Bool32 m_IsDisposed = false;
 	};
+#pragma pack(pop)
 
 }

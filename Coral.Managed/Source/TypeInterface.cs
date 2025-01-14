@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Runtime.Loader;
 
 namespace Coral.Managed;
 
@@ -21,10 +22,15 @@ internal static class TypeInterface
 	internal readonly static UniqueIdList<PropertyInfo> s_CachedProperties = new();
 	internal readonly static UniqueIdList<Attribute> s_CachedAttributes = new();
 
-	internal static Type? FindType(string? InTypeName)
+	internal static Type? FindType(int InAssemblyLoadContextId, string? InTypeName)
 	{
 		var type = Type.GetType(InTypeName!,
-			(name) => AssemblyLoader.ResolveAssembly(null, name),
+			(name) =>
+			{
+				AssemblyLoader.s_AssemblyContexts.TryGetValue(InAssemblyLoadContextId, out AssemblyLoadContext? alc);
+
+				return AssemblyLoader.ResolveAssembly(alc, name);
+			},
 			(assembly, name, ignore) =>
 			{
 				return assembly != null ? assembly.GetType(name, false, ignore) : Type.GetType(name, false, ignore);
@@ -145,27 +151,6 @@ internal static class TypeInterface
 		catch (Exception ex)
 		{
 			HandleException(ex);
-		}
-	}
-
-	[UnmanagedCallersOnly]
-	internal static unsafe void GetTypeId(NativeString InName, int* OutType)
-	{
-		try
-		{
-			var type = FindType(InName);
-
-			if (type == null)
-			{
-				LogMessage($"Failed to find type with name '{InName}'.", MessageLevel.Error);
-				return;
-			}
-
-			*OutType = s_CachedTypes.Add(type);
-		}
-		catch (Exception e)
-		{
-			HandleException(e);
 		}
 	}
 

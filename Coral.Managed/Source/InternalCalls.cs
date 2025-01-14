@@ -19,7 +19,7 @@ public readonly struct InternalCall
 internal static class InternalCallsManager
 {
 	[UnmanagedCallersOnly]
-	internal static void SetInternalCalls(IntPtr InInternalCalls, int InLength)
+	internal static void SetInternalCalls(int InAssemblyLoadContextId, IntPtr InInternalCalls, int InLength)
 	{
 		var internalCalls = new NativeArray<InternalCall>(InInternalCalls, IntPtr.Zero, InLength);
 
@@ -41,7 +41,7 @@ internal static class InternalCallsManager
 				var fieldName = name.Substring(fieldNameStart + 1, fieldNameEnd - fieldNameStart - 1);
 				var containingTypeName = name.Remove(fieldNameStart, fieldNameEnd - fieldNameStart);
 
-				var type = TypeInterface.FindType(containingTypeName);
+				var type = TypeInterface.FindType(InAssemblyLoadContextId, containingTypeName);
 
 				if (type == null)
 				{

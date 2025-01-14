@@ -19,8 +19,10 @@ public enum AssemblyLoadStatus
 
 public static class AssemblyLoader
 {
+	// NOTE(Emily): Visible to `TypeInterface.cs`.
+	public static readonly Dictionary<int, AssemblyLoadContext?> s_AssemblyContexts = new();
+
 	private static readonly Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup = new();
-	private static readonly Dictionary<int, AssemblyLoadContext?> s_AssemblyContexts = new();
 	private static readonly Dictionary<int, Dictionary<int, Assembly>> s_AssemblyCache = new();
 #if DEBUG
 	private static readonly Dictionary<int, List<GCHandle>> s_AllocatedHandles = new();
@@ -62,8 +64,6 @@ public static class AssemblyLoader
 
 	internal static Assembly? ResolveAssembly(AssemblyLoadContext? InAssemblyLoadContext, AssemblyName InAssemblyName)
 	{
-		LogMessage($"[AssemblyLoader] Resolving assembly: {InAssemblyName.FullName}", MessageLevel.Trace);
-
 		try
 		{
 			if (InAssemblyName.Name == null) throw new ArgumentNullException("InAssemblyName");
@@ -111,6 +111,8 @@ public static class AssemblyLoader
 					return assembly;
 				}
 			}
+
+			LogMessage($"[AssemblyLoader] Resolving uncached assembly: {InAssemblyName.FullName}", MessageLevel.Trace);
 
 			foreach (var assembly in InAssemblyLoadContext.Assemblies)
 			{

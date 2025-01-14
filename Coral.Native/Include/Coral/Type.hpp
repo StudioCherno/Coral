@@ -7,6 +7,8 @@
 #include "FieldInfo.hpp"
 #include "PropertyInfo.hpp"
 
+#include <optional>
+
 namespace Coral {
 
 	class Type
