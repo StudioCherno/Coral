@@ -32,6 +32,7 @@ namespace Coral {
 		Type& GetType(std::string_view InClassName) const;
 
 		Type& GetLocalType(std::string_view InClassName) const;
+		Type& GetLocalType(TypeId InTypeId) const;
 
 		[[deprecated(CORAL_GLOBAL_ALC_MSG)]]
 		const std::vector<Type*>& GetTypes() const;
@@ -48,7 +49,11 @@ namespace Coral {
 		std::vector<InternalCall> m_InternalCalls;
 
 		std::vector<Type*> m_Types;
+
+		// NOTE(Emily): Doesn't need to be a `StableVector` since it's static post-init.
 		std::vector<Type> m_LocalTypes;
+		std::unordered_map<std::string, Type*> m_LocalTypeNameCache;
+		std::unordered_map<TypeId, Type*> m_LocalTypeIdCache;
 
 		friend class HostInstance;
 		friend class AssemblyLoadContext;

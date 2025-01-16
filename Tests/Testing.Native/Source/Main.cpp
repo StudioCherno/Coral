@@ -572,7 +572,7 @@ int main([[maybe_unused]] int argc, char** argv)
 	auto loadContext2 = hostInstance.CreateAssemblyLoadContext("ALCTestMulti");
 	auto& multiAssembly = loadContext2.LoadAssembly(assemblyPath.string());
 
-	if (&multiAssembly.GetType("Testing.Managed.DummyClass") != &assembly.GetType("Testing.Managed.DummyClass"))
+	if (&multiAssembly.GetLocalType("Testing.Managed.DummyClass") != &assembly.GetLocalType("Testing.Managed.DummyClass"))
 	{
 		std::cout << "\033[1;32mMultiple instances of the same DLL seem to be working\033[0m" << std::endl;
 	}

@@ -31,11 +31,24 @@ namespace Coral {
 		s_ManagedFunctions.SetInternalCallsFptr(m_OwnerContextId, m_InternalCalls.data(), static_cast<int32_t>(m_InternalCalls.size()));
 	}
 
+	static Type s_NullType;
+
 	Type& ManagedAssembly::GetType(std::string_view InClassName) const
 	{
-		static Type s_NullType;
 		Type* type = TypeCache::Get().GetTypeByName(InClassName);
 		return type != nullptr ? *type : s_NullType;
+	}
+
+	Type& ManagedAssembly::GetLocalType(std::string_view InClassName) const
+	{
+		auto it = m_LocalTypeNameCache.find(std::string(InClassName));
+		return it == m_LocalTypeNameCache.end() ? s_NullType : *it->second;
+	}
+
+	Type& ManagedAssembly::GetLocalType(TypeId InClassId) const
+	{
+		auto it = m_LocalTypeIdCache.find(InClassId);
+		return it == m_LocalTypeIdCache.end() ? s_NullType : *it->second;
 	}
 
 	const std::vector<Type*>& ManagedAssembly::GetTypes() const
@@ -75,7 +88,11 @@ namespace Coral {
 
 				Type type2;
 				type2.m_Id = typeId;
-				result.m_LocalTypes.emplace_back(std::move(type));
+
+				Type& inserted = result.m_LocalTypes.emplace_back(std::move(type));
+
+				result.m_LocalTypeIdCache[inserted.GetTypeId()] = &inserted;
+				result.m_LocalTypeNameCache[inserted.GetFullName()] = &inserted;
 			}
 		}
 
