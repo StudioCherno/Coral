@@ -28,7 +28,12 @@ namespace Coral {
 		void AddInternalCall(std::string_view InClassName, std::string_view InVariableName, void* InFunctionPtr);
 		void UploadInternalCalls();
 
+		[[deprecated(CORAL_GLOBAL_ALC_MSG)]]
 		Type& GetType(std::string_view InClassName) const;
+
+		Type& GetLocalType(std::string_view InClassName) const;
+
+		[[deprecated(CORAL_GLOBAL_ALC_MSG)]]
 		const std::vector<Type*>& GetTypes() const;
 		
 	private:
@@ -38,15 +43,12 @@ namespace Coral {
 		AssemblyLoadStatus m_LoadStatus = AssemblyLoadStatus::UnknownError;
 		std::string m_Name;
 
-	#if defined(CORAL_WIDE_CHARS)
-		std::vector<std::wstring> m_InternalCallNameStorage;
-	#else
-		std::vector<std::string> m_InternalCallNameStorage;
-	#endif
-		
+		std::vector<UCString> m_InternalCallNameStorage;
+
 		std::vector<InternalCall> m_InternalCalls;
 
 		std::vector<Type*> m_Types;
+		std::vector<Type> m_LocalTypes;
 
 		friend class HostInstance;
 		friend class AssemblyLoadContext;

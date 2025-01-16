@@ -38,13 +38,9 @@ namespace Coral {
 
 	String::operator std::string() const
 	{
-		StringView string(m_String);
+		UCStringView string(m_String);
 
-#if defined(CORAL_WIDE_CHARS)
 		return StringHelper::ConvertWideToUtf8(string);
-#else
-		return std::string(string);
-#endif
 	}
 
 	bool String::operator==(const String& InOther) const
@@ -59,7 +55,7 @@ namespace Coral {
 			return false;
 		}
 
-#if defined(CORAL_WIDE_CHARS)
+#ifdef CORAL_WIDE_CHARS
 		return wcscmp(m_String, InOther.m_String) == 0;
 #else
 		return strcmp(m_String, InOther.m_String) == 0;
@@ -76,7 +72,7 @@ namespace Coral {
 		if (m_String == nullptr)
 			return false;
 
-#if defined(CORAL_WIDE_CHARS)
+#ifdef CORAL_WIDE_CHARS
 		auto str = StringHelper::ConvertUtf8ToWide(InOther);
 		return wcscmp(m_String, str.data()) == 0;
 #else

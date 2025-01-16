@@ -1,5 +1,3 @@
-include "../../Premake/CSExtensions.lua"
-
 project "Testing.Managed"
     language "C#"
     dotnetframework "net8.0"

@@ -6,7 +6,7 @@
 
 #include "CoralManagedFunctions.hpp"
 
-#if defined(CORAL_WINDOWS)
+#ifdef CORAL_WINDOWS
 	#include <ShlObj_core.h>
 #else
 	#include <dlfcn.h>
@@ -70,7 +70,7 @@ namespace Coral {
 		MessageCallback = m_Settings.MessageCallback;
 		MessageFilter = m_Settings.MessageFilter;
 
-		s_CoreCLRFunctions.SetHostFXRErrorWriter([](const CharType* InMessage)
+		s_CoreCLRFunctions.SetHostFXRErrorWriter([](const UCChar* InMessage)
 		{
 			auto message = StringHelper::ConvertWideToUtf8(InMessage);
 			MessageCallback(message, MessageLevel::Error);
@@ -113,7 +113,7 @@ namespace Coral {
 		InLoadContext.m_LoadedAssemblies.Clear();
 	}
 
-#ifdef _WIN32
+#ifdef CORAL_WINDOWS
 	template <typename TFunc>
 	TFunc LoadFunctionPtr(void* InLibraryHandle, const char* InFunctionName)
 	{
@@ -133,7 +133,7 @@ namespace Coral {
 
 	static std::filesystem::path GetHostFXRPath()
 	{
-#if defined(CORAL_WINDOWS)
+#ifdef CORAL_WINDOWS
 		std::filesystem::path basePath = "";
 		
 		// Find the Program Files folder
@@ -242,11 +242,7 @@ namespace Coral {
 			CORAL_VERIFY(m_HostFXRContext != nullptr);
 
 			std::filesystem::path coralDirectoryPath = m_Settings.CoralDirectory;
-	#ifdef CORAL_WIDE_CHARS
-			s_CoreCLRFunctions.SetRuntimePropertyValue(m_HostFXRContext, L"APP_CONTEXT_BASE_DIRECTORY", coralDirectoryPath.c_str());
-	#else
-			s_CoreCLRFunctions.SetRuntimePropertyValue(m_HostFXRContext, "APP_CONTEXT_BASE_DIRECTORY", coralDirectoryPath.c_str());
-	#endif
+			s_CoreCLRFunctions.SetRuntimePropertyValue(m_HostFXRContext, CORAL_STR("APP_CONTEXT_BASE_DIRECTORY"), coralDirectoryPath.c_str());
 
 			status = s_CoreCLRFunctions.GetRuntimeDelegate(m_HostFXRContext, hdt_load_assembly_and_get_function_pointer, (void**) &s_CoreCLRFunctions.GetManagedFunctionPtr);
 			CORAL_VERIFY(status == StatusCode::Success);
@@ -348,7 +344,7 @@ namespace Coral {
 		s_ManagedFunctions.WaitForPendingFinalizersFptr = LoadCoralManagedFunctionPtr<WaitForPendingFinalizersFn>(CORAL_STR("Coral.Managed.GarbageCollector, Coral.Managed"), CORAL_STR("WaitForPendingFinalizers"));
 	}
 
-	void* HostInstance::LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const CharType* InTypeName, const CharType* InMethodName, const CharType* InDelegateType) const
+	void* HostInstance::LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const UCChar* InTypeName, const UCChar* InMethodName, const UCChar* InDelegateType) const
 	{
 		void* funcPtr = nullptr;
 		int status = s_CoreCLRFunctions.GetManagedFunctionPtr(InAssemblyPath.c_str(), InTypeName, InMethodName, InDelegateType, nullptr, &funcPtr);

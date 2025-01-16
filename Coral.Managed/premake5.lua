@@ -1,5 +1,3 @@
-include "../Premake/CSExtensions.lua"
-
 project "Coral.Managed"
     filter { "not action:vs*", "not system:windows" }
         kind "StaticLib"

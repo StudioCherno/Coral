@@ -20,6 +20,7 @@ namespace Coral {
 		const auto& name = m_InternalCallNameStorage.emplace_back(StringHelper::ConvertUtf8ToWide(assemblyQualifiedName));
 
 		InternalCall internalCall;
+		// TODO(Emily): This would require proper conversion from UTF8 to native UC encoding.
 		internalCall.Name = name.c_str();
 		internalCall.NativeFunctionPtr = InFunctionPtr;
 		m_InternalCalls.emplace_back(internalCall);
@@ -71,6 +72,10 @@ namespace Coral {
 				Type type;
 				type.m_Id = typeId;
 				result.m_Types.push_back(TypeCache::Get().CacheType(std::move(type)));
+
+				Type type2;
+				type2.m_Id = typeId;
+				result.m_LocalTypes.emplace_back(std::move(type));
 			}
 		}
 
