@@ -66,17 +66,17 @@ public static class Marshalling
 				Marshal.WriteIntPtr(OutValue, IntPtr.Zero);
 			}
 		}
-		else if (InValue is string)
+		else if (type == typeof(string) && InValue != null)
 		{
 			NativeString nativeString = (NativeString) (string) InValue;
 			Marshal.StructureToPtr(nativeString, OutValue, false);
 		}
-		else if (InValue is bool)
+		else if (type == typeof(bool) && InValue != null)
 		{
 			Bool32 value = (Bool32) (bool) InValue;
 			Marshal.StructureToPtr(value, OutValue, false);
 		}
-		else if (InValue is NativeString)
+		else if (type == typeof(NativeString) && InValue != null)
 		{
 			NativeString nativeString = (NativeString) InValue;
 			Marshal.StructureToPtr((NativeString) InValue, OutValue, false);

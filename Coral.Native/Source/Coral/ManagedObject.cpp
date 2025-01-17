@@ -101,7 +101,7 @@ namespace Coral {
 	{
 		String result;
 		GetFieldValueRaw(InFieldName, &result);
-		auto s = std::string(result);
+		auto s = result.Data() ? std::string(result) : "";
 		String::Free(result);
 		return s;
 	}
