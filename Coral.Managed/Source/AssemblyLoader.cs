@@ -145,7 +145,7 @@ public static class AssemblyLoader
 
 		if ((resolved = tryResolve(AppContext.BaseDirectory)) != null) return resolved;
 
-		if (InAssemblyLoadContext.Name != null)
+		if (InAssemblyLoadContext != null && InAssemblyLoadContext.Name != null)
 		{
 			int alcId = InAssemblyLoadContext.Name.GetHashCode();
 			foreach (var path in s_AlcDllPaths[alcId])
@@ -245,6 +245,7 @@ public static class AssemblyLoader
 		TypeInterface.s_CachedAttributes.Clear();
 
 		s_AssemblyContexts.Remove(InContextId);
+		s_AlcDllPaths.Remove(InContextId);
 		alc.Unload();
 	}
 
