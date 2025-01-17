@@ -17,7 +17,7 @@ namespace Coral {
 		/// The file path to Coral.runtimeconfig.json (e.g C:\Dev\MyProject\ThirdParty\Coral)
 		/// </summary>
 		std::string CoralDirectory;
-		
+
 		MessageCallbackFn MessageCallback = nullptr;
 		MessageLevel MessageFilter = MessageLevel::All;
 
@@ -40,6 +40,10 @@ namespace Coral {
 
 		AssemblyLoadContext CreateAssemblyLoadContext(std::string_view InName);
 		void UnloadAssemblyLoadContext(AssemblyLoadContext& InLoadContext);
+
+		// `InDllPath` is a colon-separated list of paths from which AssemblyLoader will try and resolve load paths at runtime.
+		// This does not affect the behaviour of LoadAssembly from native code.
+		AssemblyLoadContext CreateAssemblyLoadContext(std::string_view InName, std::string_view InDllPath);
 
 	private:
 		bool LoadHostFXR() const;

@@ -21,6 +21,7 @@ public static class AssemblyLoader
 {
 	// NOTE(Emily): Visible to `TypeInterface.cs`.
 	public static readonly Dictionary<int, AssemblyLoadContext?> s_AssemblyContexts = new();
+	private static Dictionary<int, string[]> s_AlcDllPaths = new();
 
 	private static readonly Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup = new();
 	private static readonly Dictionary<int, Dictionary<int, Assembly>> s_AssemblyCache = new();
@@ -128,19 +129,36 @@ public static class AssemblyLoader
 			ManagedHost.HandleException(ex);
 		}
 
-		string assemblyPath = Path.Combine(AppContext.BaseDirectory, $"{InAssemblyName.Name}.dll");
-		LogMessage($"[AssemblyLoader] Trying to find assembly in {assemblyPath}", MessageLevel.Trace);
-		if (InAssemblyLoadContext != null && File.Exists(assemblyPath))
+		Assembly? resolved;
+		var tryResolve = (string directory) =>
 		{
-			LogMessage($"[AssemblyLoader] Found assembly {InAssemblyName.FullName}", MessageLevel.Trace);
-			return InAssemblyLoadContext.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
+			string assemblyPath = Path.Combine(directory, $"{InAssemblyName.Name}.dll");
+			LogMessage($"[AssemblyLoader] Trying to find assembly in {assemblyPath}", MessageLevel.Trace);
+			if (InAssemblyLoadContext != null && File.Exists(assemblyPath))
+			{
+				LogMessage($"[AssemblyLoader] Found assembly {InAssemblyName.FullName}", MessageLevel.Trace);
+				return InAssemblyLoadContext.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
+			}
+
+			return null;
+		};
+
+		if ((resolved = tryResolve(AppContext.BaseDirectory)) != null) return resolved;
+
+		if (InAssemblyLoadContext.Name != null)
+		{
+			int alcId = InAssemblyLoadContext.Name.GetHashCode();
+			foreach (var path in s_AlcDllPaths[alcId])
+			{
+				if ((resolved = tryResolve(path)) != null) return resolved;
+			}
 		}
 
 		return null;
 	}
 
 	[UnmanagedCallersOnly]
-	internal static int CreateAssemblyLoadContext(NativeString InName)
+	internal static int CreateAssemblyLoadContext(NativeString InName, NativeString InDllPath)
 	{
 		string? name = InName;
 
@@ -154,6 +172,11 @@ public static class AssemblyLoader
 		int contextId = name.GetHashCode();
 		s_AssemblyContexts.Add(contextId, alc);
 		s_AssemblyCache.Add(contextId, new());
+
+		var path = InDllPath.ToString();
+		LogMessage($"Added ALC '{name}' with ID '{contextId}'", MessageLevel.Trace);
+		s_AlcDllPaths.Add(contextId, (path ?? "").Split(':'));
+
 		return contextId;
 	}
 

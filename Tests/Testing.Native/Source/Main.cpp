@@ -461,7 +461,8 @@ int main([[maybe_unused]] int argc, char** argv)
 	Coral::HostInstance hostInstance;
 	hostInstance.Initialize(settings);
 
-	auto loadContext = hostInstance.CreateAssemblyLoadContext("TestContext");
+	std::string testDllPath = exeDir.parent_path().string() + ":" + exeDir.parent_path().parent_path().string();
+	auto loadContext = hostInstance.CreateAssemblyLoadContext("TestContext", testDllPath);
 
 	auto assemblyPath = exeDir / "Testing.Managed.dll";
 	auto& assembly = loadContext.LoadAssembly(assemblyPath.string());
@@ -569,7 +570,7 @@ int main([[maybe_unused]] int argc, char** argv)
 	instance1.Destroy();
 	instance2.Destroy();
 
-	auto loadContext2 = hostInstance.CreateAssemblyLoadContext("ALCTestMulti");
+	auto loadContext2 = hostInstance.CreateAssemblyLoadContext("ALCTestMulti", testDllPath);
 	auto& multiAssembly = loadContext2.LoadAssembly(assemblyPath.string());
 
 	if (&multiAssembly.GetLocalType("Testing.Managed.DummyClass") != &assembly.GetLocalType("Testing.Managed.DummyClass"))
@@ -585,7 +586,7 @@ int main([[maybe_unused]] int argc, char** argv)
 
 	Coral::GC::Collect();
 
-	loadContext = hostInstance.CreateAssemblyLoadContext("ALC2");
+	loadContext = hostInstance.CreateAssemblyLoadContext("ALC2", testDllPath);
 	auto& newAssembly = loadContext.LoadAssembly(assemblyPath.string());
 
 	RegisterTestInternalCalls(newAssembly);

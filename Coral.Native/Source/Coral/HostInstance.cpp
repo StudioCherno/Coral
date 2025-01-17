@@ -100,8 +100,19 @@ namespace Coral {
 	AssemblyLoadContext HostInstance::CreateAssemblyLoadContext(std::string_view InName)
 	{
 		ScopedString name = String::New(InName);
+		ScopedString dllPath = String::New("");
 		AssemblyLoadContext alc;
-		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(name);
+		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(name, dllPath);
+		alc.m_Host = this;
+		return alc;
+	}
+
+	AssemblyLoadContext HostInstance::CreateAssemblyLoadContext(std::string_view InName, std::string_view InDllPath)
+	{
+		ScopedString name = String::New(InName);
+		ScopedString dllPath = String::New(InDllPath);
+		AssemblyLoadContext alc;
+		alc.m_ContextId = s_ManagedFunctions.CreateAssemblyLoadContextFptr(name, dllPath);
 		alc.m_Host = this;
 		return alc;
 	}
