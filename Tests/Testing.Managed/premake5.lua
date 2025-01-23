@@ -1,6 +1,6 @@
 project "Testing.Managed"
     language "C#"
-    dotnetframework "net8.0"
+    dotnetframework "net9.0"
     kind "SharedLib"
 	clr "Unsafe"
 

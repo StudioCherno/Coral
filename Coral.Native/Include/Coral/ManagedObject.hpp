@@ -112,5 +112,39 @@ namespace Coral {
 		friend class Type;
 	};
 	
+
+	template<>
+	inline void ManagedObject::SetFieldValue(std::string_view InFieldName, std::string InValue) const
+	{
+		String s = String::New(InValue);
+		SetFieldValueRaw(InFieldName, &InValue);
+		String::Free(s);
+	}
+
+	template<>
+	inline void ManagedObject::SetFieldValue(std::string_view InFieldName, bool InValue) const
+	{
+		Bool32 s = InValue;
+		SetFieldValueRaw(InFieldName, &s);
+	}
+
+	template<>
+	inline std::string ManagedObject::GetFieldValue(std::string_view InFieldName) const
+	{
+		String result;
+		GetFieldValueRaw(InFieldName, &result);
+		auto s = result.Data() ? std::string(result) : "";
+		String::Free(result);
+		return s;
+	}
+
+	template<>
+	inline bool ManagedObject::GetFieldValue(std::string_view InFieldName) const
+	{
+		Bool32 result;
+		GetFieldValueRaw(InFieldName, &result);
+		return result;
+	}
+
 }
 

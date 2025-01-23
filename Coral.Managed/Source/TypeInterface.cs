@@ -379,7 +379,7 @@ internal static class TypeInterface
 
 			ReadOnlySpan<MethodInfo> methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-			if (methods == null || methods.Length == 0)
+			if (methods.Length == 0)
 			{
 				*InMethodCount = 0;
 				return;
@@ -411,7 +411,7 @@ internal static class TypeInterface
 
 			ReadOnlySpan<FieldInfo> fields = type.GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
 
-			if (fields == null || fields.Length == 0)
+			if (fields.Length == 0)
 			{
 				*InFieldCount = 0;
 				return;
@@ -443,7 +443,7 @@ internal static class TypeInterface
 
 			ReadOnlySpan<PropertyInfo> properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
 
-			if (properties == null || properties.Length == 0)
+			if (properties.Length == 0)
 			{
 				*InPropertyCount = 0;
 				return;
@@ -579,7 +579,7 @@ internal static class TypeInterface
 
 			ReadOnlySpan<ParameterInfo> parameters = methodInfo.GetParameters();
 
-			if (parameters == null || parameters.Length == 0)
+			if (parameters.Length == 0)
 			{
 				*OutParameterCount = 0;
 				return;

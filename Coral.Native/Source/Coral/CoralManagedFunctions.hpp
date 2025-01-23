@@ -20,6 +20,10 @@ namespace Coral {
 	using GetLastLoadStatusFn = AssemblyLoadStatus (*)();
 	using GetAssemblyNameFn = String (*)(int32_t, int32_t);
 
+#pragma region DotnetServices
+	using RunMSBuildFn = void(*)(String, Bool32, Bool32*);
+#pragma endregion DotnetServices
+
 #pragma region TypeInterface
 
 	using GetAssemblyTypesFn = void (*)(int32_t, int32_t, TypeId*, int32_t*);
@@ -94,6 +98,10 @@ namespace Coral {
 		UnloadAssemblyLoadContextFn UnloadAssemblyLoadContextFptr = nullptr;
 		GetLastLoadStatusFn GetLastLoadStatusFptr = nullptr;
 		GetAssemblyNameFn GetAssemblyNameFptr = nullptr;
+
+#pragma region DotnetServices
+		RunMSBuildFn RunMSBuildFptr = nullptr;
+#pragma endregion DotnetServices
 
 #pragma region TypeInterface
 

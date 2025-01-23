@@ -74,44 +74,11 @@ namespace Coral {
 		String::Free(methodName);
 	}
 
-	template<>
-	void ManagedObject::SetFieldValue(std::string_view InFieldName, std::string InValue) const
-	{
-		String s = String::New(InValue);
-		SetFieldValueRaw(InFieldName, &InValue);
-		String::Free(s);
-	}
-
-	template<>
-	void ManagedObject::SetFieldValue(std::string_view InFieldName, bool InValue) const
-	{
-		Bool32 s = InValue;
-		SetFieldValueRaw(InFieldName, &s);
-	}
-
 	void ManagedObject::SetFieldValueRaw(std::string_view InFieldName, void* InValue) const
 	{
 		auto fieldName = String::New(InFieldName);
 		s_ManagedFunctions.SetFieldValueFptr(m_Handle, fieldName, InValue);
 		String::Free(fieldName);
-	}
-
-	template<>
-	std::string ManagedObject::GetFieldValue(std::string_view InFieldName) const
-	{
-		String result;
-		GetFieldValueRaw(InFieldName, &result);
-		auto s = result.Data() ? std::string(result) : "";
-		String::Free(result);
-		return s;
-	}
-
-	template<>
-	bool ManagedObject::GetFieldValue(std::string_view InFieldName) const
-	{
-		Bool32 result;
-		GetFieldValueRaw(InFieldName, &result);
-		return result;
 	}
 
 	void ManagedObject::GetFieldValueRaw(std::string_view InFieldName, void* OutValue) const
