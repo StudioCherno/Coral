@@ -10,13 +10,13 @@ project "Coral.Managed"
         objdir("../Intermediates/%{cfg.buildcfg}")
         dependson { "Coral.Generator" }
 
-		nuget {
-			"Microsoft.Build:17.12.6",
-			"Microsoft.Build.Framework:17.12.6",
-			"Microsoft.Build.Runtime:17.12.6",
-			"Microsoft.Build.Utilities.Core:17.12.6",
-			"Microsoft.Build.Tasks.Core:17.12.6"
-		}
+		--nuget {
+		--	"Microsoft.Build:17.12.6",
+		--	"Microsoft.Build.Framework:17.12.6",
+		--	"Microsoft.Build.Runtime:17.12.6",
+		--	"Microsoft.Build.Utilities.Core:17.12.6",
+		--	"Microsoft.Build.Tasks.Core:17.12.6"
+		--}
 
 		-- Don't specify architecture here. (see https://github.com/premake/premake-core/issues/1758)
 

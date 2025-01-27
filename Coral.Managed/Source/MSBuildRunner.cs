@@ -1,7 +1,7 @@
-using Microsoft.Build.Evaluation;
-using Microsoft.Build.Execution;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+//using Microsoft.Build.Evaluation;
+//using Microsoft.Build.Execution;
+//using Microsoft.Build.Framework;
+//using Microsoft.Build.Utilities;
 
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
@@ -15,6 +15,7 @@ public static class MSBuildRunner
 	[UnmanagedCallersOnly]
 	internal static unsafe void Run(NativeString InSolutionPath, Bool32 InBuildDebug, Bool32* OutBuildResult)
 	{
+		/*
 		var logger = new NativeLogger();
 
 		var projectCollection = new ProjectCollection();
@@ -31,5 +32,6 @@ public static class MSBuildRunner
 		var buildResult = BuildManager.DefaultBuildManager.Build(buildParamters, buildRequest);
 
 		*OutBuildResult = buildResult.OverallResult == BuildResultCode.Failure;
+		 */
 	}
 }

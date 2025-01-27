@@ -462,7 +462,7 @@ int main([[maybe_unused]] int argc, char** argv)
 	Coral::HostInstance hostInstance;
 	hostInstance.Initialize(settings);
 
-	Coral::DotnetServices::RunMSBuild((exeDir.parent_path().parent_path() / "CoralManaged.sln").string());
+	//Coral::DotnetServices::RunMSBuild((exeDir.parent_path().parent_path() / "CoralManaged.sln").string());
 
 	std::string testDllPath = exeDir.parent_path().string() + ":" + exeDir.parent_path().parent_path().string();
 	auto loadContext = hostInstance.CreateAssemblyLoadContext("TestContext", testDllPath);
