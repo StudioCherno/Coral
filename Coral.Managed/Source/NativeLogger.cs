@@ -1,13 +1,13 @@
-using Microsoft.Build.Evaluation;
-using Microsoft.Build.Execution;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+//using Microsoft.Build.Evaluation;
+//using Microsoft.Build.Execution;
+//using Microsoft.Build.Framework;
+//using Microsoft.Build.Utilities;
 
 namespace Coral.Managed;
 
 using static Coral.Managed.ManagedHost;
 
-public class NativeLogger : Microsoft.Build.Utilities.Logger
+/*public class NativeLogger : Microsoft.Build.Utilities.Logger
 {
     public override void Initialize(IEventSource src)
     {
@@ -41,3 +41,4 @@ public class NativeLogger : Microsoft.Build.Utilities.Logger
         }
     }
 }
+*/
