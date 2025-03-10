@@ -22,10 +22,14 @@ namespace Coral {
 		UCChar* Data() { return m_String; }
 		const UCChar* Data() const { return m_String; }
 
-	private:
+	public:
 		UCChar* m_String = nullptr;
 		[[maybe_unused]] Bool32 m_IsDisposed = false; // NOTE(Peter): Required for the layout to match the C# NativeString struct, unused in C++
 	};
+
+	static_assert(offsetof(String, m_String) == 0);
+	static_assert(offsetof(String, m_IsDisposed) == 8);
+	static_assert(sizeof(String) == 16);
 
 	struct ScopedString
 	{

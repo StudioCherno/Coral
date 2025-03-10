@@ -3,11 +3,8 @@
 #include "Memory.hpp"
 
 namespace Coral {
-
-#pragma pack(push)
-#pragma pack(1)
 	template<typename TValue>
-	class [[gnu::packed]] Array
+	class alignas(8) Array
 	{
 	public:
 		static Array New(size_t InLength)
@@ -98,12 +95,16 @@ namespace Coral {
 		const TValue* cbegin() const { return m_Ptr; }
 		const TValue* cend() const { return m_Ptr + m_Length; }
 
-	private:
-		TValue* m_Ptr = nullptr;
-		TValue* m_ArrayHandle = nullptr;
-		int32_t m_Length = 0;
-		Bool32 m_IsDisposed = false;
+	public:
+		alignas(8) TValue* m_Ptr = nullptr;
+		alignas(8) TValue* m_ArrayHandle = nullptr;
+		alignas(8) int32_t m_Length = 0;
+		alignas(8) Bool32 m_IsDisposed = false;
 	};
-#pragma pack(pop)
 
+	static_assert(offsetof(Array<char>, m_Ptr) == 0);
+	static_assert(offsetof(Array<char>, m_ArrayHandle) == 8);
+	static_assert(offsetof(Array<char>, m_Length) == 16);
+	static_assert(offsetof(Array<char>, m_IsDisposed) == 24);
+	static_assert(sizeof(Array<char>) == 32);
 }

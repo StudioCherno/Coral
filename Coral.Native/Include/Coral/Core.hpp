@@ -72,6 +72,7 @@
 namespace Coral {
 
 	using Bool32 = uint32_t;
+	static_assert(sizeof(Bool32) == 4);
 
 	enum class TypeAccessibility
 	{

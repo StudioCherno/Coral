@@ -9,7 +9,7 @@ namespace Coral {
 	class ManagedAssembly;
 	class Type;
 
-	class ManagedObject
+	class alignas(8) ManagedObject
 	{
 	public:
 		ManagedObject() = default;
@@ -103,15 +103,18 @@ namespace Coral {
 		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
 		void InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
 
-	private:
-		void* m_Handle = nullptr;
-		const Type* m_Type = nullptr;
+	public:
+		alignas(8) void* m_Handle = nullptr;
+		alignas(8) const Type* m_Type = nullptr;
 
 	private:
 		friend class ManagedAssembly;
 		friend class Type;
 	};
-	
+
+	static_assert(offsetof(ManagedObject, m_Handle) == 0);
+	static_assert(offsetof(ManagedObject, m_Type) == 8);
+	static_assert(sizeof(ManagedObject) == 16);
 
 	template<>
 	inline void ManagedObject::SetFieldValue(std::string_view InFieldName, std::string InValue) const

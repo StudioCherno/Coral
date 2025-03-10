@@ -134,8 +134,10 @@ namespace Coral {
 	public:
 		operator Type&() const;
 
-	private:
+	public:
 		TypeId m_TypeID;
 	};
 
+	static_assert(offsetof(ReflectionType, m_TypeID) == 0);
+	static_assert(sizeof(ReflectionType) == 4);
 }
