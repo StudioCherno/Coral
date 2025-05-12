@@ -2,7 +2,7 @@
 
 Coral is a C++ wrapper around the .NET HostFXR library, the purpose of Coral is to provide an interface similar to [Mono](https://www.mono-project.com/) when it comes to C++/C# interop, but in a more modern style, and using .NET Core instead of .NET Framework.
 
-The goal of the API is to keep it as simple and flexible as possible, while remaning fast and (relatively) safe.
+The goal of the API is to keep it as simple and flexible as possible, while remaining fast and (relatively) safe.
 
 ## Supported Platforms
 * Windows x64 (VS2022)
@@ -13,7 +13,7 @@ The goal of the API is to keep it as simple and flexible as possible, while rema
 * It uses C++20 and depends on the .NET SDK being present on the system
 
 ### Building
-Coral uses the [premake](https://premake.github.io/) meta-build system in order to generate build files for other build systems (e.g Visual Studio Soltuions, Makefiles, etc...)
+Coral uses the [premake](https://premake.github.io/) meta-build system in order to generate build files for other build systems (e.g Visual Studio Solutions, Makefiles, etc...)
 
 You'll need to download premake from [https://premake.github.io/](https://premake.github.io/), after that open up a terminal and cd into the root directory of Coral, then run this command:
 
