@@ -6,11 +6,15 @@
 **/obj/
 **/.vscode/
 
+build/
+cmake-build-*
+
 .idea/
 
 # Files
 *.sln
 *.csproj
+!Coral.Managed/Coral-StaticProject.csproj
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
