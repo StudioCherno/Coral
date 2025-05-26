@@ -14,7 +14,7 @@ cmake-build-*
 # Files
 *.sln
 *.csproj
-!Coral.Managed/Coral-StaticProject.csproj
+!Coral.Managed/Coral.Managed-Static.csproj
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user

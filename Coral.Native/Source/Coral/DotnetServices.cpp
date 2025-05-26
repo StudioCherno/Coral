@@ -1,4 +1,5 @@
-#include "DotnetServices.hpp"
+#include "Coral/DotnetServices.hpp"
+
 #include "CoralManagedFunctions.hpp"
 
 namespace Coral

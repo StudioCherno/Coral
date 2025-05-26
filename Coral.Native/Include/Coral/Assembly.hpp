@@ -36,7 +36,9 @@ namespace Coral {
 
 		[[deprecated(CORAL_GLOBAL_ALC_MSG)]]
 		const std::vector<Type*>& GetTypes() const;
-		
+
+		const std::vector<Type>& GetLocalTypes() const;
+
 	private:
 		HostInstance* m_Host = nullptr;
 		int32_t m_AssemblyId = -1;

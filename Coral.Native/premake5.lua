@@ -29,7 +29,7 @@ project "Coral.Native"
         "Include/Coral/**.hpp",
     }
 
-    includedirs { "Source/", "Include/Coral/" }
+    includedirs { "Source/", "Include/" }
     externalincludedirs { "../NetCore/" }
 
     filter { "configurations:Debug" }

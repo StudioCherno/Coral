@@ -1,6 +1,7 @@
-#include "String.hpp"
-#include "StringHelper.hpp"
-#include "Memory.hpp"
+#include "Coral/String.hpp"
+#include "Coral/StringHelper.hpp"
+#include "Coral/Memory.hpp"
+
 #include "Verify.hpp"
 
 namespace Coral {

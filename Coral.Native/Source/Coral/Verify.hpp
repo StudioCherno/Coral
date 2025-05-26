@@ -14,8 +14,8 @@
 #define CORAL_SOURCE_LOCATION const char* file = __FILE__; int line = __LINE__
 #endif
 
-#if defined(__clang__)
-	#define CORAL_DEBUG_BREAK __builtin_debugtrap()
+#if defined(__GNUC__)
+	#define CORAL_DEBUG_BREAK __builtin_trap()
 #elif defined(_MSC_VER)
 	#define CORAL_DEBUG_BREAK __debugbreak()
 #else

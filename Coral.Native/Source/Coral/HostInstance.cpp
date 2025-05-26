@@ -1,9 +1,9 @@
-#include "HostInstance.hpp"
+#include "Coral/HostInstance.hpp"
+#include "Coral/StringHelper.hpp"
+#include "Coral/TypeCache.hpp"
+
 #include "Verify.hpp"
 #include "HostFXRErrorCodes.hpp"
-#include "StringHelper.hpp"
-#include "TypeCache.hpp"
-
 #include "CoralManagedFunctions.hpp"
 
 #ifdef CORAL_WINDOWS
@@ -360,8 +360,13 @@ namespace Coral {
 	void* HostInstance::LoadCoralManagedFunctionPtr(const std::filesystem::path& InAssemblyPath, const UCChar* InTypeName, const UCChar* InMethodName, const UCChar* InDelegateType) const
 	{
 		void* funcPtr = nullptr;
+
 		int status = s_CoreCLRFunctions.GetManagedFunctionPtr(InAssemblyPath.c_str(), InTypeName, InMethodName, InDelegateType, nullptr, &funcPtr);
-		CORAL_VERIFY(status == StatusCode::Success && funcPtr != nullptr);
+		if(status != StatusCode::Success || !funcPtr) {
+			std::cerr << "Failed to retrieve managed function pointer `" << InTypeName << "`::`" << InMethodName << "` from `" << InAssemblyPath << "`" << std::endl;
+			CORAL_VERIFY(false);
+		}
+
 		return funcPtr;
 	}
 }

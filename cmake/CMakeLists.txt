@@ -14,12 +14,14 @@ ExternalProject_Add(
 		SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}
 		BUILD_ALWAYS true
 		BUILD_COMMAND
-			dotnet build ${CORAL_ROOT}/Coral.Managed/Coral-StaticProject.csproj
+			dotnet build ${CMAKE_CURRENT_LIST_DIR}/../Coral.Managed/Coral.Managed-Static.csproj
 			--artifacts-path ${CMAKE_CURRENT_BINARY_DIR}
 			--output ${CMAKE_CURRENT_BINARY_DIR}
 			--self-contained $<IF:$<CONFIG:Debug>,true,false>)
 
 add_library(Coral STATIC)
+
+add_dependencies(Coral CoralManaged)
 
 set_target_properties(Coral PROPERTIES LINKER_LANGUAGE CXX)
 target_compile_features(Coral PUBLIC cxx_std_20)
@@ -29,8 +31,9 @@ target_precompile_headers(Coral PRIVATE ${CORAL_LIB_ROOT}/Source/CoralPCH.hpp)
 file(GLOB CORAL_HDR ${CORAL_LIB_ROOT}/Include/Coral/*.hpp)
 target_sources(Coral PUBLIC ${CORAL_HDR})
 
-file(GLOB CORAL_SRC ${CORAL_LIB_ROOT}/Include/Coral/*.cpp ${CORAL_LIB_ROOT}/Include/Coral/*.hpp)
+file(GLOB CORAL_SRC ${CORAL_LIB_ROOT}/Source/Coral/*.cpp ${CORAL_LIB_ROOT}/Source/Coral/*.hpp)
 target_sources(Coral PRIVATE ${CORAL_SRC})
 
 target_include_directories(Coral PUBLIC ${CORAL_LIB_ROOT}/Include)
 target_include_directories(Coral PRIVATE ${CORAL_LIB_ROOT}/Source)
+target_include_directories(Coral PRIVATE ${CORAL_ROOT}/NetCore)

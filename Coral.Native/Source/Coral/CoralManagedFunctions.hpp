@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core.hpp"
-#include "String.hpp"
+#include "Coral/Core.hpp"
+#include "Coral/String.hpp"
 
 namespace Coral {
 

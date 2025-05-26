@@ -1,10 +1,11 @@
-﻿#include "ManagedObject.hpp"
-#include "Assembly.hpp"
+﻿#include "Coral/ManagedObject.hpp"
+#include "Coral/Assembly.hpp"
+#include "Coral/String.hpp"
+#include "Coral/StringHelper.hpp"
+#include "Coral/Type.hpp"
+#include "Coral/TypeCache.hpp"
+
 #include "CoralManagedFunctions.hpp"
-#include "String.hpp"
-#include "StringHelper.hpp"
-#include "Type.hpp"
-#include "TypeCache.hpp"
 
 namespace Coral {
 

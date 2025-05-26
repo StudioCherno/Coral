@@ -1,9 +1,10 @@
-#include "Assembly.hpp"
-#include "HostInstance.hpp"
+#include "Coral/Assembly.hpp"
+#include "Coral/HostInstance.hpp"
+#include "Coral/StringHelper.hpp"
+#include "Coral/TypeCache.hpp"
+
 #include "CoralManagedFunctions.hpp"
 #include "Verify.hpp"
-#include "StringHelper.hpp"
-#include "TypeCache.hpp"
 
 namespace Coral {
 
@@ -54,6 +55,11 @@ namespace Coral {
 	const std::vector<Type*>& ManagedAssembly::GetTypes() const
 	{
 		return m_Types;
+	}
+
+	const std::vector<Type>& ManagedAssembly::GetLocalTypes() const
+	{
+		return m_LocalTypes;
 	}
 
 	// TODO(Emily): Massive de-dup needed between `LoadAssembly` and `LoadAssemblyFromMemory`.
