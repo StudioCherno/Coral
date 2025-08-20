@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<AssemblyName>Testing.Managed</AssemblyName>
+		<TargetFramework>net9.0</TargetFramework>
+
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<EnableDynamicLoading>true</EnableDynamicLoading>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Folder Include="Source\"/>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Coral.Managed\Coral.Managed-Static.csproj">
+		<Project>{11178401-7DD7-FF37-4612-49B5B2914414}</Project>
+		<Name>Coral.Managed</Name>
+		</ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+	</ItemGroup>
+</Project>
