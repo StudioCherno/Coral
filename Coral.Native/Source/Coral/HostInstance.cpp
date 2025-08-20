@@ -166,9 +166,11 @@ namespace Coral {
 		auto searchPaths = std::array
 		{
 			std::filesystem::path("/usr/local/lib/dotnet/host/fxr/"),
+			std::filesystem::path("/usr/local/lib64/dotnet/host/fxr/"),
 			std::filesystem::path("/usr/local/share/dotnet/host/fxr/"),
 
 			std::filesystem::path("/usr/lib/dotnet/host/fxr/"),
+			std::filesystem::path("/usr/lib64/dotnet/host/fxr/"),
 			std::filesystem::path("/usr/share/dotnet/host/fxr/")
 		};
 #endif
