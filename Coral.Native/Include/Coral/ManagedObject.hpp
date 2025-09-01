@@ -18,7 +18,7 @@ namespace Coral {
 			constexpr size_t parameterCount = sizeof...(InParameters);
 
 			TReturn result;
-			
+
 			if constexpr (parameterCount > 0)
 			{
 				const void* parameterValues[parameterCount];
@@ -58,43 +58,10 @@ namespace Coral {
 			SetFieldValueRaw(InFieldName, &InValue);
 		}
 
-		template<>
-		void SetFieldValue(std::string_view InFieldName, std::string InValue) const
-		{
-			String s = String::New(InValue);
-			SetFieldValueRaw(InFieldName, &InValue);
-			String::Free(s);
-		}
-
-		template<>
-		void SetFieldValue(std::string_view InFieldName, bool InValue) const
-		{
-			Bool32 s = InValue;
-			SetFieldValueRaw(InFieldName, &s);
-		}
-
 		template<typename TReturn>
 		TReturn GetFieldValue(std::string_view InFieldName) const
 		{
 			TReturn result;
-			GetFieldValueRaw(InFieldName, &result);
-			return result;
-		}
-
-		template<>
-		std::string GetFieldValue(std::string_view InFieldName) const
-		{
-			String result;
-			GetFieldValueRaw(InFieldName, &result);
-			auto s = std::string(result);
-			String::Free(result);
-			return s;
-		}
-
-		template<>
-		bool GetFieldValue(std::string_view InFieldName) const
-		{
-			Bool32 result;
 			GetFieldValueRaw(InFieldName, &result);
 			return result;
 		}
@@ -119,7 +86,7 @@ namespace Coral {
 		void GetPropertyValueRaw(std::string_view InPropertyName, void* OutValue) const;
 
 		const Type& GetType();
-		
+
 		void Destroy();
 
 		bool IsValid() const { return m_Handle != nullptr && m_Type != nullptr; }
@@ -136,6 +103,38 @@ namespace Coral {
 		friend class ManagedAssembly;
 		friend class Type;
 	};
-	
-}
 
+	template<> 
+	inline void ManagedObject::SetFieldValue<std::string>(std::string_view InFieldName, std::string InValue) const
+	{
+		String s = String::New(InValue);
+		SetFieldValueRaw(InFieldName, &InValue);
+		String::Free(s);
+	}
+
+	template<>
+	inline void ManagedObject::SetFieldValue<bool>(std::string_view InFieldName, bool InValue) const
+	{
+		Bool32 s = InValue;
+		SetFieldValueRaw(InFieldName, &s);
+	}
+
+	template<>
+	inline std::string ManagedObject::GetFieldValue<std::string>(std::string_view InFieldName) const
+	{
+		String result;
+		GetFieldValueRaw(InFieldName, &result);
+		auto s = std::string(result);
+		String::Free(result);
+		return s;
+	}
+
+	template<>
+	inline bool ManagedObject::GetFieldValue<bool>(std::string_view InFieldName) const
+	{
+		Bool32 result;
+		GetFieldValueRaw(InFieldName, &result);
+		return result;
+	}
+
+}
