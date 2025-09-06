@@ -76,7 +76,7 @@ add_library(Coral STATIC)
 add_dependencies(Coral CoralManaged)
 
 set_target_properties(Coral PROPERTIES LINKER_LANGUAGE CXX)
-target_compile_features(Coral PUBLIC cxx_std_20)
+target_compile_features(Coral PUBLIC cxx_std_17)
 
 target_precompile_headers(Coral PRIVATE ${CORAL_ROOT}/Coral.Native/Source/CoralPCH.hpp)
 

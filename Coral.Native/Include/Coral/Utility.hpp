@@ -33,29 +33,29 @@ namespace Coral {
 	{
 		if constexpr (std::is_pointer_v<std::remove_reference_t<TArg>>)
 			return ManagedType::Pointer;
-		else if constexpr (std::same_as<TArg, uint8_t> || std::same_as<TArg, std::byte>)
+		else if constexpr (std::is_same_v<TArg, uint8_t> || std::is_same_v<TArg, std::byte>)
 			return ManagedType::Byte;
-		else if constexpr (std::same_as<TArg, uint16_t>)
+		else if constexpr (std::is_same_v<TArg, uint16_t>)
 			return ManagedType::UShort;
-		else if constexpr (std::same_as<TArg, uint32_t> || (std::same_as<TArg, unsigned long> && sizeof(TArg) == 4))
+		else if constexpr (std::is_same_v<TArg, uint32_t> || (std::is_same_v<TArg, unsigned long> && sizeof(TArg) == 4))
 			return ManagedType::UInt;
-		else if constexpr (std::same_as<TArg, uint64_t> || (std::same_as<TArg, unsigned long> && sizeof(TArg) == 8))
+		else if constexpr (std::is_same_v<TArg, uint64_t> || (std::is_same_v<TArg, unsigned long> && sizeof(TArg) == 8))
 			return ManagedType::ULong;
-		else if constexpr (std::same_as<TArg, char8_t>)
+		else if constexpr (std::is_same_v<TArg, int8_t>)
 			return ManagedType::SByte;
-		else if constexpr (std::same_as<TArg, int16_t>)
+		else if constexpr (std::is_same_v<TArg, int16_t>)
 			return ManagedType::Short;
-		else if constexpr (std::same_as<TArg, int32_t> || (std::same_as<TArg, long> && sizeof(TArg) == 4))
+		else if constexpr (std::is_same_v<TArg, int32_t> || (std::is_same_v<TArg, long> && sizeof(TArg) == 4))
 			return ManagedType::Int;
-		else if constexpr (std::same_as<TArg, int64_t> || (std::same_as<TArg, long> && sizeof(TArg) == 8))
+		else if constexpr (std::is_same_v<TArg, int64_t> || (std::is_same_v<TArg, long> && sizeof(TArg) == 8))
 			return ManagedType::Long;
-		else if constexpr (std::same_as<TArg, float>)
+		else if constexpr (std::is_same_v<TArg, float>)
 			return ManagedType::Float;
-		else if constexpr (std::same_as<TArg, double>)
+		else if constexpr (std::is_same_v<TArg, double>)
 			return ManagedType::Double;
-		else if constexpr (std::same_as<TArg, bool>)
+		else if constexpr (std::is_same_v<TArg, bool>)
 			return ManagedType::Bool;
-		else if constexpr (std::same_as<TArg, std::string> || std::same_as<TArg, Coral::String>)
+		else if constexpr (std::is_same_v<TArg, std::string> || std::is_same_v<TArg, Coral::String>)
 			return ManagedType::String;
 		else
 			return ManagedType::Unknown;

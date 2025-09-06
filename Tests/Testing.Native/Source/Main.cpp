@@ -19,7 +19,7 @@ static void ExceptionCallback(std::string_view InMessage)
 	std::cout << "\033[1;31m " << "Unhandled native exception: " << InMessage << "\033[0m\n";
 }
 
-static char8_t SByteMarshalIcall(char8_t InValue) { return InValue * 2; }
+static int8_t SByteMarshalIcall(int8_t InValue) { return InValue * 2; }
 static uint8_t ByteMarshalIcall(uint8_t InValue) { return InValue * 2; }
 static int16_t ShortMarshalIcall(int16_t InValue) { return InValue * 2; }
 static uint16_t UShortMarshalIcall(uint16_t InValue) { return InValue * 2; }
@@ -131,7 +131,7 @@ static void RegisterTest(std::string_view InName, std::function<bool()> InFunc)
 
 static void RegisterMemberMethodTests(Coral::ManagedObject& InObject)
 {
-	RegisterTest("SByteTest", [&InObject]() mutable{ return InObject.InvokeMethod<char8_t, char8_t>("SByteTest", 10) == 20; });
+	RegisterTest("SByteTest", [&InObject]() mutable{ return InObject.InvokeMethod<int8_t, int8_t>("SByteTest", 10) == 20; });
 	RegisterTest("ByteTest", [&InObject]() mutable{ return InObject.InvokeMethod<uint8_t, uint8_t>("ByteTest", 10) == 20; });
 	RegisterTest("ShortTest", [&InObject]() mutable{ return InObject.InvokeMethod<int16_t, int16_t>("ShortTest", 10) == 20; });
 	RegisterTest("UShortTest", [&InObject]() mutable{ return InObject.InvokeMethod<uint16_t, uint16_t>("UShortTest", 10) == 20; });
@@ -187,11 +187,11 @@ static void RegisterFieldMarshalTests(Coral::ManagedObject& InObject)
 {
 	RegisterTest("SByteFieldTest", [&InObject]() mutable
 	{
-		auto value = InObject.GetFieldValue<char8_t>("SByteFieldTest");
+		auto value = InObject.GetFieldValue<int8_t>("SByteFieldTest");
 		if (value != 10)
 			return false;
-		InObject.SetFieldValue<char8_t>("SByteFieldTest", 20);
-		value = InObject.GetFieldValue<char8_t>("SByteFieldTest");
+		InObject.SetFieldValue<int8_t>("SByteFieldTest", 20);
+		value = InObject.GetFieldValue<int8_t>("SByteFieldTest");
 		return value == 20;
 	});
 
@@ -312,11 +312,11 @@ static void RegisterFieldMarshalTests(Coral::ManagedObject& InObject)
 
 	RegisterTest("SBytePropertyTest", [&InObject]() mutable
 	{
-		auto value = InObject.GetPropertyValue<char8_t>("SBytePropertyTest");
+		auto value = InObject.GetPropertyValue<int8_t>("SBytePropertyTest");
 		if (value != 10)
 			return false;
-		InObject.SetPropertyValue<char8_t>("SBytePropertyTest", 20);
-		value = InObject.GetPropertyValue<char8_t>("SBytePropertyTest");
+		InObject.SetPropertyValue<int8_t>("SBytePropertyTest", 20);
+		value = InObject.GetPropertyValue<int8_t>("SBytePropertyTest");
 		return value == 20;
 	});
 

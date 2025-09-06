@@ -20,12 +20,14 @@ namespace Coral {
 	Type* TypeCache::GetTypeByName(std::string_view InName) const
 	{
 		auto name = std::string(InName);
-		return m_NameCache.contains(name) ? m_NameCache.at(name) : nullptr;
+		auto it = m_NameCache.find(name);
+		return it != m_NameCache.end() ? it->second : nullptr;
 	}
 
 	Type* TypeCache::GetTypeByID(TypeId InTypeID) const
 	{
-		return m_IDCache.contains(InTypeID) ? m_IDCache.at(InTypeID) : nullptr;
+		auto it = m_IDCache.find(InTypeID);
+		return it != m_IDCache.end() ? it->second : nullptr;
 	}
 
 	void TypeCache::Clear()

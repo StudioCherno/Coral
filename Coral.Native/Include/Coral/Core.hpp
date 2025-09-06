@@ -67,7 +67,7 @@
 #define CORAL_DOTNET_TARGET_VERSION_MAJOR 8
 #define CORAL_DOTNET_TARGET_VERSION_MAJOR_STR '8'
 */
-#define CORAL_UNMANAGED_CALLERS_ONLY (std::bit_cast<const UCChar*>(-1ULL))
+#define CORAL_UNMANAGED_CALLERS_ONLY ((const UCChar*) (-1ULL))
 
 namespace Coral {
 

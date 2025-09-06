@@ -2,7 +2,7 @@ include "../Premake/DebuggerTypeExtension.lua"
 
 project "Coral.Native"
     language "C++"
-    cppdialect "C++20"
+    cppdialect "C++17"
     kind "StaticLib"
     staticruntime "Off"
     debuggertype "NativeWithManagedCore"
