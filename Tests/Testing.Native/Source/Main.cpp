@@ -422,7 +422,7 @@ static void RegisterFieldMarshalTests(Coral::ManagedObject& InObject)
 	RegisterTest("StringPropertyTest", [&InObject]() mutable
 	{
 		Coral::ScopedString value = InObject.GetPropertyValue<Coral::String>("StringPropertyTest");
-		if (value != "Hello")
+		if (value != std::string_view("Hello"))
 			return false;
 		InObject.SetPropertyValue("StringPropertyTest", Coral::String::New("Hello, World!"));
 		value = InObject.GetPropertyValue<Coral::String>("StringPropertyTest");

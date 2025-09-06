@@ -113,7 +113,7 @@ if(CORAL_EXAMPLE)
 
 	add_dependencies(Example ExampleManaged)
 
-	target_compile_features(Example PUBLIC cxx_std_20)
+	target_compile_features(Example PUBLIC cxx_std_17)
 	target_link_libraries(Example Coral)
 
 	file(GLOB EXAMPLE_SRC ${CORAL_ROOT}/Example/Example.Native/Source/*.cpp)
@@ -142,7 +142,7 @@ if(CORAL_TESTING)
 
 	add_dependencies(Testing TestingManaged)
 
-	target_compile_features(Testing PUBLIC cxx_std_20)
+	target_compile_features(Testing PUBLIC cxx_std_17)
 	target_link_libraries(Testing Coral)
 
 	file(GLOB TESTING_SRC ${TESTING_ROOT}/Testing.Native/Source/*.cpp)

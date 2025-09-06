@@ -19,6 +19,9 @@ namespace Coral {
 		bool operator==(const String& InOther) const;
 		bool operator==(std::string_view InOther) const;
 
+		bool operator!=(const String& InOther) const;
+		bool operator!=(std::string_view InOther) const;
+
 		UCChar* Data() { return m_String; }
 		const UCChar* Data() const { return m_String; }
 
@@ -66,6 +69,16 @@ namespace Coral {
 		bool operator==(std::string_view InOther) const
 		{
 			return m_String == InOther;
+		}
+
+		bool operator!=(const ScopedString& InOther) const
+		{
+			return m_String != InOther.m_String;
+		}
+
+		bool operator!=(std::string_view InOther) const
+		{
+			return m_String != InOther;
 		}
 
 	private:
