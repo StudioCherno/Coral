@@ -2,7 +2,7 @@
 
 Coral is a C++ wrapper around the .NET HostFXR library, the purpose of Coral is to provide an interface similar to [Mono](https://www.mono-project.com/) when it comes to C++/C# interop, but in a more modern style, and using .NET Core instead of .NET Framework.
 
-The goal of the API is to keep it as simple and flexible as possible, while remaning fast and (relatively) safe.
+The goal of the API is to keep it as simple and flexible as possible, while remaining fast and (relatively) safe.
 
 ## Supported Platforms
 * Windows x64 (VS2022)

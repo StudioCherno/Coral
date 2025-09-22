@@ -185,10 +185,9 @@ namespace Coral {
 				if (!dir.is_directory())
 					continue;
 
-				auto dirPath = dir.path().filename();
-				char version = dirPath.string()[0];
+				auto dirPath = dir.path().filename().string();
 
-				if (version != '9')
+				if (!dirPath.starts_with(CORAL_DOTNET_TARGET_VERSION_MAJOR_STR))
 					continue;
 
 				auto res = dir / std::filesystem::path(CORAL_HOSTFXR_NAME);
