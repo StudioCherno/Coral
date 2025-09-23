@@ -1,18 +1,6 @@
 #pragma once
 
-#ifdef __clang__
-	#define CORAL_HAS_SOURCE_LOCATION 0
-#else
-	#define CORAL_HAS_SOURCE_LOCATION __has_include(<source_location>)
-#endif
-
-#if CORAL_HAS_SOURCE_LOCATION
-#include <source_location>
-
-#define CORAL_SOURCE_LOCATION std::source_location location = std::source_location::current(); const char* file = location.file_name(); int line = location.line()
-#else
 #define CORAL_SOURCE_LOCATION const char* file = __FILE__; int line = __LINE__
-#endif
 
 #if defined(__GNUC__)
 	#define CORAL_DEBUG_BREAK __builtin_trap()
