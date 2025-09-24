@@ -1,15 +1,14 @@
-premake.api.addAllowed("debuggertype", "NativeWithManagedCore")
+include "../Premake/DebuggerTypeExtension.lua"
 
 project "Coral.Native"
     language "C++"
-    cppdialect "C++20"
+    cppdialect "C++17"
     kind "StaticLib"
     staticruntime "Off"
+    debuggertype "NativeWithManagedCore"
+    architecture "x86_64"
 
 	dependson "Coral.Managed"
-
-    -- Can't specify 64-bit architecture in the workspace level since VS 2022 (see https://github.com/premake/premake-core/issues/1758)
-    architecture "x86_64"
 
 	targetdir("../Build/%{cfg.buildcfg}")
 	objdir("../Intermediates/%{cfg.buildcfg}")
@@ -30,23 +29,24 @@ project "Coral.Native"
         "Include/Coral/**.hpp",
     }
 
-    includedirs { "Source/", "Include/Coral/" }
+    includedirs { "Source/", "Include/" }
     externalincludedirs { "../NetCore/" }
 
     filter { "configurations:Debug" }
         runtime "Debug"
         symbols "On"
+    filter { }
 
     filter { "configurations:Release" }
         runtime "Release"
         symbols "Off"
         optimize "On"
+    filter { }
 
 	filter { "system:windows" }
 		defines { "CORAL_WINDOWS" }
-
-	filter { "system:linux" }
-		defines { "CORAL_LINUX" }
+    filter { }
 
 	filter { "system:macosx" }
 		defines { "CORAL_MACOSX" }
+    filter { }

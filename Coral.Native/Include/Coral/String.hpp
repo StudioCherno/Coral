@@ -4,6 +4,7 @@
 
 namespace Coral {
 
+	// TODO(Emily): Could this benefit from retaining a var for size?
 	class String
 	{
 	public:
@@ -18,13 +19,20 @@ namespace Coral {
 		bool operator==(const String& InOther) const;
 		bool operator==(std::string_view InOther) const;
 
-		CharType* Data() { return m_String; }
-		const CharType* Data() const { return m_String; }
+		bool operator!=(const String& InOther) const;
+		bool operator!=(std::string_view InOther) const;
 
-	private:
-		CharType* m_String = nullptr;
-		Bool32 m_IsDisposed = false; // NOTE(Peter): Required for the layout to match the C# NativeString struct, unused in C++
+		UCChar* Data() { return m_String; }
+		const UCChar* Data() const { return m_String; }
+
+	public:
+		UCChar* m_String = nullptr;
+		[[maybe_unused]] Bool32 m_IsDisposed = false; // NOTE(Peter): Required for the layout to match the C# NativeString struct, unused in C++
 	};
+
+	static_assert(offsetof(String, m_String) == 0);
+	static_assert(offsetof(String, m_IsDisposed) == 8);
+	static_assert(sizeof(String) == 16);
 
 	struct ScopedString
 	{
@@ -61,6 +69,16 @@ namespace Coral {
 		bool operator==(std::string_view InOther) const
 		{
 			return m_String == InOther;
+		}
+
+		bool operator!=(const ScopedString& InOther) const
+		{
+			return m_String != InOther.m_String;
+		}
+
+		bool operator!=(std::string_view InOther) const
+		{
+			return m_String != InOther;
 		}
 
 	private:

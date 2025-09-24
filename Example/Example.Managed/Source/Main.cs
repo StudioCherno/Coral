@@ -21,10 +21,13 @@ namespace Example.Managed {
 			public float Z;
 		}
 
+		// NOTE(Emily): These are set from native code.
+#pragma warning disable 0649
 		internal static unsafe delegate*<MyVec3*, MyVec3*, void> VectorAddIcall;
 		internal static unsafe delegate*<NativeString, void> PrintStringIcall;
 		internal static unsafe delegate*<NativeArray<float>, void> NativeArrayIcall;
 		internal static unsafe delegate*<NativeArray<float>> ArrayReturnIcall;
+#pragma warning restore 0649
 
 		private int myPrivateValue;
 

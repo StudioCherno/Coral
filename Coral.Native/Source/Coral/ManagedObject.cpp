@@ -1,12 +1,61 @@
-﻿#include "ManagedObject.hpp"
-#include "Assembly.hpp"
+﻿#include "Coral/ManagedObject.hpp"
+#include "Coral/Assembly.hpp"
+#include "Coral/String.hpp"
+#include "Coral/StringHelper.hpp"
+#include "Coral/Type.hpp"
+#include "Coral/TypeCache.hpp"
+
 #include "CoralManagedFunctions.hpp"
-#include "String.hpp"
-#include "StringHelper.hpp"
-#include "Type.hpp"
-#include "TypeCache.hpp"
 
 namespace Coral {
+
+	ManagedObject::ManagedObject(const ManagedObject& InOther)
+	{
+		if (InOther.m_Handle)
+		{
+			m_Handle = s_ManagedFunctions.CopyObjectFptr(InOther.m_Handle);
+			m_Type = InOther.m_Type;
+		}
+	}
+
+	ManagedObject::ManagedObject(ManagedObject&& InOther) noexcept : m_Handle(InOther.m_Handle), m_Type(InOther.m_Type)
+	{
+		InOther.m_Handle = nullptr;
+		InOther.m_Type = nullptr;
+	}
+
+	ManagedObject::~ManagedObject()
+	{
+		Destroy();
+	}
+
+	ManagedObject& ManagedObject::operator=(ManagedObject&& InOther) noexcept
+	{
+		if (this != &InOther)
+		{
+			m_Handle = InOther.m_Handle;
+			m_Type = InOther.m_Type;
+			InOther.m_Handle = nullptr;
+			InOther.m_Type = nullptr;
+		}
+
+		return *this;
+	}
+
+	ManagedObject& ManagedObject::operator=(const ManagedObject& InOther)
+	{
+		if (this != &InOther)
+		{
+			Destroy();
+			if (InOther.m_Handle)
+			{
+				m_Handle = s_ManagedFunctions.CopyObjectFptr(InOther.m_Handle);
+				m_Type = InOther.m_Type;
+			}
+		}
+
+		return *this;
+	}
 
 	void ManagedObject::InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
 	{

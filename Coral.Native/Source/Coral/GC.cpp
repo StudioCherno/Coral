@@ -1,4 +1,5 @@
-﻿#include "GC.hpp"
+﻿#include "Coral/GC.hpp"
+
 #include "CoralManagedFunctions.hpp"
 
 namespace Coral {

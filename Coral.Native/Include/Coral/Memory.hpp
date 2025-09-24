@@ -9,7 +9,7 @@ namespace Coral {
 		static void* AllocHGlobal(size_t InSize);
 		static void FreeHGlobal(void* InPtr);
 
-		static CharType* StringToCoTaskMemAuto(StringView InString);
+		static UCChar* StringToCoTaskMemAuto(UCStringView InString);
 		static void FreeCoTaskMem(void* InMemory);
 
 	};

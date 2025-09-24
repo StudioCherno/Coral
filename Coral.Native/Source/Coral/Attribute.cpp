@@ -1,8 +1,9 @@
-#include "Attribute.hpp"
-#include "Type.hpp"
+#include "Coral/Attribute.hpp"
+#include "Coral/Type.hpp"
+#include "Coral/TypeCache.hpp"
+#include "Coral/String.hpp"
+
 #include "CoralManagedFunctions.hpp"
-#include "TypeCache.hpp"
-#include "String.hpp"
 
 namespace Coral {
 
@@ -16,6 +17,22 @@ namespace Coral {
 		}
 
 		return *m_Type;
+	}
+
+	template<>
+	std::string Attribute::GetFieldValue(std::string_view InFieldName)
+	{
+		String result;
+		GetFieldValueInternal(InFieldName, &result);
+		return std::string(result);
+	}
+
+	template<>
+	bool Attribute::GetFieldValue(std::string_view InFieldName)
+	{
+		Bool32 result;
+		GetFieldValueInternal(InFieldName, &result);
+		return result;
 	}
 
 	void Attribute::GetFieldValueInternal(std::string_view InFieldName, void* OutValue) const

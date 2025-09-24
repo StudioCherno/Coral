@@ -36,7 +36,7 @@ public sealed class NativeArrayEnumerator<T> : IEnumerator<T>
 
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+[StructLayout(LayoutKind.Sequential, Size=32, Pack=8)]
 public struct NativeArray<T> : IDisposable, IEnumerable<T>
 {
 	private IntPtr m_NativeArray;
@@ -69,7 +69,7 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 		}
 	}
 
-	internal NativeArray(IntPtr InArray, IntPtr InHandle, int InLength)
+	public NativeArray(IntPtr InArray, IntPtr InHandle, int InLength)
 	{
 		m_NativeArray = InArray;
 		m_ArrayHandle = InHandle;
@@ -167,16 +167,34 @@ public static class ArrayStorage
 	}
 }
 
-[StructLayout(LayoutKind.Sequential)]
-public struct NativeInstance<T>
+[StructLayout(LayoutKind.Sequential, Size=16, Pack=8)]
+public struct NativeInstance<T> : IDisposable
 {
-	private readonly IntPtr m_Handle;
+	private IntPtr m_Handle;
 	private readonly IntPtr m_Unused;
 
 	private NativeInstance(IntPtr handle)
 	{
 		m_Handle = handle;
 		m_Unused = IntPtr.Zero;
+	}
+
+	public void Dispose()
+	{
+		if (m_Handle != IntPtr.Zero)
+		{
+			var handle = GCHandle.FromIntPtr(m_Handle);
+#if DEBUG
+			var type = handle.Target?.GetType();
+			if (type is not null)
+			{
+				AssemblyLoader.DeregisterHandle(type.Assembly, handle);
+			}
+#endif
+			handle.Free();
+			m_Handle = IntPtr.Zero;
+		}
+		GC.SuppressFinalize(this);
 	}
 
 	public T? Get()
@@ -194,7 +212,7 @@ public struct NativeInstance<T>
 
 	public static implicit operator NativeInstance<T>(T instance)
 	{
-		return new(GCHandle.ToIntPtr(GCHandle.Alloc(instance, GCHandleType.Pinned)));
+		return new(GCHandle.ToIntPtr(GCHandle.Alloc(instance, GCHandleType.Normal)));
 	}
 
 	public static implicit operator T?(NativeInstance<T> InInstance)
@@ -203,11 +221,13 @@ public struct NativeInstance<T>
 	}
 }
 
-[StructLayout(LayoutKind.Sequential)]
+// TODO(Emily): Transition to just using the automatic string marshalling for interop -- this type causes too many
+//				Problems.
+[StructLayout(LayoutKind.Explicit, Size=16)]
 public struct NativeString : IDisposable
 {
-	internal IntPtr m_NativeString;
-	private Bool32 m_IsDisposed;
+	[FieldOffset(0)] internal IntPtr m_NativeString;
+	[FieldOffset(8)] private Bool32 m_IsDisposed;
 
 	public void Dispose()
 	{
@@ -222,6 +242,7 @@ public struct NativeString : IDisposable
 			m_IsDisposed = true;
 		}
 
+		// TODO(Emily): Do we want to be doing this?
 		GC.SuppressFinalize(this);
 	}
 
@@ -233,19 +254,19 @@ public struct NativeString : IDisposable
 	public static implicit operator string?(NativeString InString) => Marshal.PtrToStringAuto(InString.m_NativeString);
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+[StructLayout(LayoutKind.Explicit, Size=4)]
 public struct Bool32
 {
-	public uint Value { get; set; }
+	[FieldOffset(0)] public uint Value;
 
 	public static implicit operator Bool32(bool InValue) => new() { Value = InValue ? 1u : 0u };
 	public static implicit operator bool(Bool32 InBool32) => InBool32.Value > 0;
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+[StructLayout(LayoutKind.Explicit, Size=4)]
 public struct ReflectionType
 {
-	private readonly int m_TypeId;
+	[FieldOffset(0)] private readonly int m_TypeId;
 
 	public int ID => m_TypeId;
 

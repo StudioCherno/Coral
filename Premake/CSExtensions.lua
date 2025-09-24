@@ -1,3 +1,7 @@
+term.pushColor(term.yellow)
+printf('warning: `propertytags` is no longer required in lieu of premake5 `vsprops`')
+term.popColor()
+
 require('vstudio')
 local cs2005 = premake.vstudio.cs2005
 local dotnetbase = premake.vstudio.dotnetbase

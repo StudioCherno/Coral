@@ -1,8 +1,9 @@
-#include "MethodInfo.hpp"
+#include "Coral/MethodInfo.hpp"
+#include "Coral/Type.hpp"
+#include "Coral/Attribute.hpp"
+#include "Coral/TypeCache.hpp"
+
 #include "CoralManagedFunctions.hpp"
-#include "Type.hpp"
-#include "Attribute.hpp"
-#include "TypeCache.hpp"
 
 namespace Coral {
 
@@ -29,7 +30,8 @@ namespace Coral {
 		{
 			int32_t parameterCount;
 			s_ManagedFunctions.GetMethodInfoParameterTypesFptr(m_Handle, nullptr, &parameterCount);
-			std::vector<TypeId> parameterTypes(parameterCount);
+
+			std::vector<TypeId> parameterTypes(static_cast<size_t>(parameterCount));
 			s_ManagedFunctions.GetMethodInfoParameterTypesFptr(m_Handle, parameterTypes.data(), &parameterCount);
 
 			m_ParameterTypes.resize(parameterTypes.size());
@@ -54,7 +56,8 @@ namespace Coral {
 	{
 		int32_t attributeCount;
 		s_ManagedFunctions.GetMethodInfoAttributesFptr(m_Handle, nullptr, &attributeCount);
-		std::vector<ManagedHandle> attributeHandles(attributeCount);
+
+		std::vector<ManagedHandle> attributeHandles(static_cast<size_t>(attributeCount));
 		s_ManagedFunctions.GetMethodInfoAttributesFptr(m_Handle, attributeHandles.data(), &attributeCount);
 
 		std::vector<Attribute> result(attributeHandles.size());

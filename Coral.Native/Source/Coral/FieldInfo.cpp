@@ -1,8 +1,9 @@
-#include "FieldInfo.hpp"
-#include "Type.hpp"
-#include "Attribute.hpp"
+#include "Coral/FieldInfo.hpp"
+#include "Coral/Type.hpp"
+#include "Coral/Attribute.hpp"
+#include "Coral/TypeCache.hpp"
+
 #include "CoralManagedFunctions.hpp"
-#include "TypeCache.hpp"
 
 namespace Coral {
 
@@ -32,7 +33,7 @@ namespace Coral {
 	{
 		int32_t attributeCount;
 		s_ManagedFunctions.GetFieldInfoAttributesFptr(m_Handle, nullptr, &attributeCount);
-		std::vector<ManagedHandle> attributeHandles(attributeCount);
+		std::vector<ManagedHandle> attributeHandles(static_cast<size_t>(attributeCount));
 		s_ManagedFunctions.GetFieldInfoAttributesFptr(m_Handle, attributeHandles.data(), &attributeCount);
 
 		std::vector<Attribute> result(attributeHandles.size());

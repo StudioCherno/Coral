@@ -3,9 +3,8 @@
 #include "Memory.hpp"
 
 namespace Coral {
-
 	template<typename TValue>
-	class Array
+	class alignas(8) Array
 	{
 	public:
 		static Array New(size_t InLength)
@@ -28,6 +27,20 @@ namespace Coral {
 				result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(InValues.size() * sizeof(TValue)));
 				result.m_Length = static_cast<int32_t>(InValues.size());
 				memcpy(result.m_Ptr, InValues.data(), InValues.size() * sizeof(TValue));
+			}
+
+			return result;
+		}
+
+		static Array New(const void* buffer, size_t size)
+		{
+			Array<TValue> result;
+
+			if (buffer)
+			{
+				result.m_Ptr = static_cast<TValue*>(Memory::AllocHGlobal(size));
+				result.m_Length = static_cast<int32_t>(size);
+				memcpy(result.m_Ptr, buffer, size);
 			}
 
 			return result;
@@ -82,11 +95,16 @@ namespace Coral {
 		const TValue* cbegin() const { return m_Ptr; }
 		const TValue* cend() const { return m_Ptr + m_Length; }
 
-	private:
-		TValue* m_Ptr = nullptr;
-		TValue* m_ArrayHandle = nullptr;
-		int32_t m_Length = 0;
-		Bool32 m_IsDisposed = false;
+	public:
+		alignas(8) TValue* m_Ptr = nullptr;
+		alignas(8) TValue* m_ArrayHandle = nullptr;
+		alignas(8) int32_t m_Length = 0;
+		alignas(8) Bool32 m_IsDisposed = false;
 	};
 
+	static_assert(offsetof(Array<char>, m_Ptr) == 0);
+	static_assert(offsetof(Array<char>, m_ArrayHandle) == 8);
+	static_assert(offsetof(Array<char>, m_Length) == 16);
+	static_assert(offsetof(Array<char>, m_IsDisposed) == 24);
+	static_assert(sizeof(Array<char>) == 32);
 }

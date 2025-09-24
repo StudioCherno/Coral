@@ -9,9 +9,17 @@ namespace Coral {
 	class ManagedAssembly;
 	class Type;
 
-	class ManagedObject
+	class alignas(8) ManagedObject
 	{
 	public:
+		ManagedObject() = default;
+		ManagedObject(const ManagedObject& InOther);
+		ManagedObject(ManagedObject&& InOther) noexcept;
+		~ManagedObject();
+
+		ManagedObject& operator=(const ManagedObject& InOther);
+		ManagedObject& operator=(ManagedObject&& InOther) noexcept;
+
 		template<typename TReturn, typename... TArgs>
 		TReturn InvokeMethod(std::string_view InMethodName, TArgs&&... InParameters) const
 		{
@@ -58,43 +66,10 @@ namespace Coral {
 			SetFieldValueRaw(InFieldName, &InValue);
 		}
 
-		template<>
-		void SetFieldValue(std::string_view InFieldName, std::string InValue) const
-		{
-			String s = String::New(InValue);
-			SetFieldValueRaw(InFieldName, &InValue);
-			String::Free(s);
-		}
-
-		template<>
-		void SetFieldValue(std::string_view InFieldName, bool InValue) const
-		{
-			Bool32 s = InValue;
-			SetFieldValueRaw(InFieldName, &s);
-		}
-
 		template<typename TReturn>
 		TReturn GetFieldValue(std::string_view InFieldName) const
 		{
 			TReturn result;
-			GetFieldValueRaw(InFieldName, &result);
-			return result;
-		}
-
-		template<>
-		std::string GetFieldValue(std::string_view InFieldName) const
-		{
-			String result;
-			GetFieldValueRaw(InFieldName, &result);
-			auto s = std::string(result);
-			String::Free(result);
-			return s;
-		}
-
-		template<>
-		bool GetFieldValue(std::string_view InFieldName) const
-		{
-			Bool32 result;
 			GetFieldValueRaw(InFieldName, &result);
 			return result;
 		}
@@ -128,14 +103,51 @@ namespace Coral {
 		void InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const;
 		void InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const;
 
-	private:
-		void* m_Handle = nullptr;
-		const Type* m_Type;
+	public:
+		alignas(8) void* m_Handle = nullptr;
+		alignas(8) const Type* m_Type = nullptr;
 
 	private:
 		friend class ManagedAssembly;
 		friend class Type;
 	};
-	
+
+	static_assert(offsetof(ManagedObject, m_Handle) == 0);
+	static_assert(offsetof(ManagedObject, m_Type) == 8);
+	static_assert(sizeof(ManagedObject) == 16);
+
+	template<>
+	inline void ManagedObject::SetFieldValue(std::string_view InFieldName, std::string InValue) const
+	{
+		String s = String::New(InValue);
+		SetFieldValueRaw(InFieldName, &InValue);
+		String::Free(s);
+	}
+
+	template<>
+	inline void ManagedObject::SetFieldValue(std::string_view InFieldName, bool InValue) const
+	{
+		Bool32 s = InValue;
+		SetFieldValueRaw(InFieldName, &s);
+	}
+
+	template<>
+	inline std::string ManagedObject::GetFieldValue(std::string_view InFieldName) const
+	{
+		String result;
+		GetFieldValueRaw(InFieldName, &result);
+		auto s = result.Data() ? std::string(result) : "";
+		String::Free(result);
+		return s;
+	}
+
+	template<>
+	inline bool ManagedObject::GetFieldValue(std::string_view InFieldName) const
+	{
+		Bool32 result;
+		GetFieldValueRaw(InFieldName, &result);
+		return result;
+	}
+
 }
 

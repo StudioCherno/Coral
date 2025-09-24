@@ -1,10 +1,10 @@
-#include "Memory.hpp"
+#include "Coral/Memory.hpp"
 
 namespace Coral {
 
 	void* Memory::AllocHGlobal(size_t InSize)
 	{
-#if defined(_WIN32)
+#ifdef CORAL_WINDOWS
 		return LocalAlloc(LMEM_FIXED | LMEM_ZEROINIT, InSize);
 #else
 		return malloc(InSize);
@@ -13,20 +13,23 @@ namespace Coral {
 
 	void Memory::FreeHGlobal(void* InPtr)
 	{
-#if defined(_WIN32)
+#ifdef CORAL_WINDOWS
 		LocalFree(InPtr);
 #else
 		free(InPtr);
 #endif
 	}
 
-	CharType* Memory::StringToCoTaskMemAuto(StringView InString)
+	UCChar* Memory::StringToCoTaskMemAuto(UCStringView InString)
 	{
 		size_t length = InString.length() + 1;
-		size_t size = length * sizeof(CharType);
+		size_t size = length * sizeof(UCChar);
 
-#if defined(_WIN32)
-		auto* buffer = static_cast<CharType*>(CoTaskMemAlloc(size));
+		// TODO(Emily): This (and a few other places) misuse the WC/MB split assuming Windows is the only WC platform.
+		//				If we want to decide that is a general assumption we can entirely remove the `CORAL_WIDE_CHARS`
+		//				Macro and its exclusive effects.
+#ifdef CORAL_WINDOWS
+		auto* buffer = static_cast<UCChar*>(CoTaskMemAlloc(size));
 
 		if (buffer != nullptr)
 		{
@@ -34,11 +37,10 @@ namespace Coral {
 			wcscpy(buffer, InString.data());
 		}
 #else
-		auto* buffer = static_cast<CharType*>(AllocHGlobal(size));
+		UCChar* buffer;
 
-		if (buffer != nullptr)
+		if ((buffer = static_cast<UCChar*>(calloc(length, sizeof(UCChar)))))
 		{
-			memset(buffer, 0, size);
 			strcpy(buffer, InString.data());
 		}
 #endif
@@ -48,7 +50,7 @@ namespace Coral {
 
 	void Memory::FreeCoTaskMem(void* InMemory)
 	{
-#if defined(_WIN32)
+#ifdef CORAL_WINDOWS
 		CoTaskMemFree(InMemory);
 #else
 		FreeHGlobal(InMemory);

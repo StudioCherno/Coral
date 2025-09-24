@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core.hpp"
-#include "String.hpp"
+#include "Coral/Core.hpp"
+#include "Coral/String.hpp"
 
 namespace Coral {
 
@@ -12,21 +12,27 @@ namespace Coral {
 	enum class ManagedType;
 	class ManagedField;
 
-	using SetInternalCallsFn = void (*)(void*, int32_t);
-	using CreateAssemblyLoadContextFn = int32_t (*)(String);
+	using SetInternalCallsFn = void (*)(int32_t, void*, int32_t);
+	using CreateAssemblyLoadContextFn = int32_t (*)(String, String);
 	using UnloadAssemblyLoadContextFn = void (*)(int32_t);
 	using LoadAssemblyFn = int32_t(*)(int32_t, String);
 	using LoadAssemblyFromMemoryFn = int32_t(*)(int32_t, const std::byte*, int64_t);
 	using GetLastLoadStatusFn = AssemblyLoadStatus (*)();
-	using GetAssemblyNameFn = String (*)(int32_t);
+	using GetAssemblyNameFn = String (*)(int32_t, int32_t);
+
+#pragma region DotnetServices
+	using RunMSBuildFn = void(*)(String, Bool32, Bool32*);
+#pragma endregion DotnetServices
 
 #pragma region TypeInterface
 
-	using GetAssemblyTypesFn = void (*)(int32_t, TypeId*, int32_t*);
+	using GetAssemblyTypesFn = void (*)(int32_t, int32_t, TypeId*, int32_t*);
 	using GetTypeIdFn = void (*)(String, TypeId*);
 	using GetFullTypeNameFn = String (*)(TypeId);
 	using GetAssemblyQualifiedNameFn = String (*)(TypeId);
 	using GetBaseTypeFn = void (*)(TypeId, TypeId*);
+	using GetInterfaceTypeCountFn = void (*)(TypeId, int32_t*);
+	using GetInterfaceTypesFn = void (*)(TypeId, TypeId*);
 	using GetTypeSizeFn = int32_t (*)(TypeId);
 	using IsTypeSubclassOfFn = Bool32 (*)(TypeId, TypeId);
 	using IsTypeAssignableToFn = Bool32 (*)(TypeId, TypeId);
@@ -69,6 +75,7 @@ namespace Coral {
 #pragma endregion
 
 	using CreateObjectFn = void* (*)(TypeId, Bool32, const void**, const ManagedType*, int32_t);
+	using CopyObjectFn = void* (*)(void*);
 	using InvokeMethodFn = void (*)(void*, String, const void**, const ManagedType*, int32_t);
 	using InvokeMethodRetFn = void (*)(void*, String, const void**, const ManagedType*, int32_t, void*);
 	using InvokeStaticMethodFn = void (*)(TypeId, String, const void**, const ManagedType*, int32_t);
@@ -92,13 +99,18 @@ namespace Coral {
 		GetLastLoadStatusFn GetLastLoadStatusFptr = nullptr;
 		GetAssemblyNameFn GetAssemblyNameFptr = nullptr;
 
+#pragma region DotnetServices
+		RunMSBuildFn RunMSBuildFptr = nullptr;
+#pragma endregion DotnetServices
+
 #pragma region TypeInterface
 
 		GetAssemblyTypesFn GetAssemblyTypesFptr = nullptr;
-		GetTypeIdFn GetTypeIdFptr = nullptr;
 		GetFullTypeNameFn GetFullTypeNameFptr = nullptr;
 		GetAssemblyQualifiedNameFn GetAssemblyQualifiedNameFptr = nullptr;
 		GetBaseTypeFn GetBaseTypeFptr = nullptr;
+		GetInterfaceTypeCountFn GetInterfaceTypeCountFptr = nullptr;
+		GetInterfaceTypesFn GetInterfaceTypesFptr = nullptr;
 		GetTypeSizeFn GetTypeSizeFptr = nullptr;
 		IsTypeSubclassOfFn IsTypeSubclassOfFptr = nullptr;
 		IsTypeAssignableToFn IsTypeAssignableToFptr = nullptr;
@@ -141,6 +153,7 @@ namespace Coral {
 #pragma endregion
 
 		CreateObjectFn CreateObjectFptr = nullptr;
+		CopyObjectFn CopyObjectFptr = nullptr;
 		CreateAssemblyLoadContextFn CreateAssemblyLoadContextFptr = nullptr;
 		InvokeMethodFn InvokeMethodFptr = nullptr;
 		InvokeMethodRetFn InvokeMethodRetFptr = nullptr;

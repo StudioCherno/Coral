@@ -1,7 +1,8 @@
-#include "Type.hpp"
+#include "Coral/Type.hpp"
+#include "Coral/TypeCache.hpp"
+#include "Coral/Attribute.hpp"
+
 #include "CoralManagedFunctions.hpp"
-#include "TypeCache.hpp"
-#include "Attribute.hpp"
 
 namespace Coral {
 
@@ -25,6 +26,31 @@ namespace Coral {
 		}
 
 		return *m_BaseType;
+	}
+
+	std::vector<Type*>& Type::GetInterfaceTypes()
+	{
+		if (!m_InterfaceTypes)
+		{
+			int count;
+			s_ManagedFunctions.GetInterfaceTypeCountFptr(m_Id, &count);
+
+			std::vector<TypeId> typeIds;
+			typeIds.resize(static_cast<size_t>(count));
+			s_ManagedFunctions.GetInterfaceTypesFptr(m_Id, typeIds.data());
+
+			m_InterfaceTypes = std::vector<Type*>();
+			m_InterfaceTypes->reserve(static_cast<size_t>(count));
+
+			for (auto id : typeIds)
+			{
+				Type type;
+				type.m_Id = id;
+				m_InterfaceTypes->emplace_back(TypeCache::Get().CacheType(std::move(type)));
+			}
+		}
+
+		return *m_InterfaceTypes;
 	}
 
 	int32_t Type::GetSize() const
@@ -51,7 +77,7 @@ namespace Coral {
 	{
 		int32_t methodCount = 0;
 		s_ManagedFunctions.GetTypeMethodsFptr(m_Id, nullptr, &methodCount);
-		std::vector<ManagedHandle> handles(methodCount);
+		std::vector<ManagedHandle> handles(static_cast<size_t>(methodCount));
 		s_ManagedFunctions.GetTypeMethodsFptr(m_Id, handles.data(), &methodCount);
 
 		std::vector<MethodInfo> methods(handles.size());
@@ -65,7 +91,7 @@ namespace Coral {
 	{
 		int32_t fieldCount = 0;
 		s_ManagedFunctions.GetTypeFieldsFptr(m_Id, nullptr, &fieldCount);
-		std::vector<ManagedHandle> handles(fieldCount);
+		std::vector<ManagedHandle> handles(static_cast<size_t>(fieldCount));
 		s_ManagedFunctions.GetTypeFieldsFptr(m_Id, handles.data(), &fieldCount);
 
 		std::vector<FieldInfo> fields(handles.size());
@@ -79,7 +105,7 @@ namespace Coral {
 	{
 		int32_t propertyCount = 0;
 		s_ManagedFunctions.GetTypePropertiesFptr(m_Id, nullptr, &propertyCount);
-		std::vector<ManagedHandle> handles(propertyCount);
+		std::vector<ManagedHandle> handles(static_cast<size_t>(propertyCount));
 		s_ManagedFunctions.GetTypePropertiesFptr(m_Id, handles.data(), &propertyCount);
 
 		std::vector<PropertyInfo> properties(handles.size());
@@ -98,7 +124,7 @@ namespace Coral {
 	{
 		int32_t attributeCount;
 		s_ManagedFunctions.GetTypeAttributesFptr(m_Id, nullptr, &attributeCount);
-		std::vector<ManagedHandle> attributeHandles(attributeCount);
+		std::vector<ManagedHandle> attributeHandles(static_cast<size_t>(attributeCount));
 		s_ManagedFunctions.GetTypeAttributesFptr(m_Id, attributeHandles.data(), &attributeCount);
 
 		std::vector<Attribute> result(attributeHandles.size());

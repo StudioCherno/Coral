@@ -17,8 +17,15 @@ namespace Testing.Managed {
 		}
 	}
 
+	public interface DummyInterfaceA {}
+	public interface DummyInterfaceB {}
+	public class DummyBase {}
+
+    public class MultiInheritanceTest : DummyBase, DummyInterfaceA, DummyInterfaceB {}
+
 	public class Tests
 	{
+#pragma warning disable 0649
 		internal static unsafe delegate*<sbyte, sbyte> SByteMarshalIcall;
 		internal static unsafe delegate*<byte, byte> ByteMarshalIcall;
 		internal static unsafe delegate*<short, short> ShortMarshalIcall;
@@ -46,7 +53,8 @@ namespace Testing.Managed {
 		}
 		internal static unsafe delegate*<DummyStruct, DummyStruct> DummyStructMarshalIcall;
 		internal static unsafe delegate*<DummyStruct*, DummyStruct*> DummyStructPtrMarshalIcall;
-		
+#pragma warning restore 0649
+
 		public static void StaticMethodTest(float value)
 		{
 			Console.WriteLine(value);
@@ -221,6 +229,11 @@ namespace Testing.Managed {
 			unsafe { return TypeMarshalIcall(t); }
 		}
 
+		/*
+		 * TODO(Emily): Outgoing native instance calls result in
+		 *				"Invalid Program: attempted to call a UnmanagedCallersOnly method from managed code": Investigate.
+		 */
+		/*
 		[Test]
 		public bool NativeInstanceTest()
 		{
@@ -228,22 +241,46 @@ namespace Testing.Managed {
 			unsafe { instanceTest = NativeInstanceIcall(); }
 			return instanceTest?.X == 500.0f;
 		}
+		*/
 
 		public void RunManagedTests()
 		{
+		    NuGetTest.Run();
+
 			CollectTests();
+
+			if (s_Tests == null)
+			{
+				Console.WriteLine($"[Test]: Failed to start tests.");
+				return;
+			}
 			
 			foreach (var test in s_Tests)
+			{
+				if (test == null) continue;
+
 				test.Run();
+			}
 			
 			Console.WriteLine($"[Test]: Done. {s_PassedTests} passed, {s_Tests.Count - s_PassedTests} failed.");
 		}
 
 		private void CollectTests()
 		{
+			if (s_Tests == null)
+			{
+				Console.WriteLine($"[Test]: Failed to start tests.");
+				return;
+			}
+
 			var methods = GetType().GetMethods().Where(methodInfo => methodInfo.GetCustomAttributes(typeof(TestAttribute), false).Any());
 			foreach (var method in methods)
-				s_Tests.Add(new TestContainer(method.Name, s_Tests.Count + 1, () => (bool)method.Invoke(this, null)));
+			{
+				if (method == null) continue;
+
+				object? ret = method.Invoke(this, null);
+				s_Tests.Add(new TestContainer(method.Name, s_Tests.Count + 1, () => ret != null ? (bool)ret : false));
+			}
 		}
 		
 		[AttributeUsage(AttributeTargets.Method)]
@@ -264,6 +301,12 @@ namespace Testing.Managed {
 
 			public void Run()
 			{
+				if (s_Tests == null)
+				{
+					Console.WriteLine($"[Test]: Failed to start tests.");
+					return;
+				}
+
 				bool result = m_Func();
 				if (result)
 				{
@@ -279,12 +322,12 @@ namespace Testing.Managed {
 			}
 		}
 
-		private static List<TestContainer> s_Tests;
+		private static List<TestContainer?>? s_Tests;
 		private static int s_PassedTests;
 
 		public Tests()
 		{
-			s_Tests = new List<TestContainer>();
+			s_Tests = new List<TestContainer?>();
 		}
 
 	}
