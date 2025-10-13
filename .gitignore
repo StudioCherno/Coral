@@ -5,6 +5,7 @@
 **/bin/
 **/obj/
 **/.vscode/
+**/.cache
 
 build/
 cmake-build-*
