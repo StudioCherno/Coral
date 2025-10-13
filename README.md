@@ -7,10 +7,11 @@ The goal of the API is to keep it as simple and flexible as possible, while rema
 ## Supported Platforms
 * Windows x64 (VS2022)
 * Linux x64 (Last tested on Ubuntu 22.04)
+* macOS arm64 (Last tested on Tahoe 26.1)
 
 ## Compiling
 * Coral has been tested to compile with MSVC / CL (Visual Studio 2022) and Clang 16+
-* It uses C++20 and depends on the .NET SDK being present on the system
+* It uses C++17 and depends on the .NET SDK being present on the system
 
 ### Building
 Coral uses the [premake](https://premake.github.io/) meta-build system in order to generate build files for other build systems (e.g Visual Studio Solutions, Makefiles, etc...)
