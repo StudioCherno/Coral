@@ -82,10 +82,10 @@ namespace Coral {
 	}
 
 	bool String::operator!=(const String& InOther) const {
-		return this->operator!=(InOther);
+		return !this->operator==(InOther);
 	}
 
 	bool String::operator!=(std::string_view InOther) const {
-		return this->operator!=(InOther);
+		return !this->operator==(InOther);
 	}
 }

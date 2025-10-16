@@ -71,24 +71,24 @@ add_custom_command(
 )
 add_custom_target(CoralManaged DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Coral.Managed.dll)
 
-add_library(Coral STATIC)
+add_library(Coral.Native STATIC)
 
-add_dependencies(Coral CoralManaged)
+add_dependencies(Coral.Native CoralManaged)
 
-set_target_properties(Coral PROPERTIES LINKER_LANGUAGE CXX)
-target_compile_features(Coral PUBLIC cxx_std_17)
+set_target_properties(Coral.Native PROPERTIES LINKER_LANGUAGE CXX)
+target_compile_features(Coral.Native PUBLIC cxx_std_17)
 
-target_precompile_headers(Coral PRIVATE ${CORAL_ROOT}/Coral.Native/Source/CoralPCH.hpp)
+target_precompile_headers(Coral.Native PRIVATE ${CORAL_ROOT}/Coral.Native/Source/CoralPCH.hpp)
 
 file(GLOB CORAL_HDR ${CORAL_ROOT}/Coral.Native/Include/Coral/*.hpp)
-target_sources(Coral PUBLIC ${CORAL_HDR})
+target_sources(Coral.Native PUBLIC ${CORAL_HDR})
 
 file(GLOB CORAL_SRC ${CORAL_ROOT}/Coral.Native/Source/Coral/*.cpp ${CORAL_ROOT}/Coral.Native/Source/Coral/*.hpp)
-target_sources(Coral PRIVATE ${CORAL_SRC})
+target_sources(Coral.Native PRIVATE ${CORAL_SRC})
 
-target_include_directories(Coral PUBLIC ${CORAL_ROOT}/Coral.Native/Include)
-target_include_directories(Coral PRIVATE ${CORAL_ROOT}/Coral.Native/Source)
-target_include_directories(Coral PRIVATE ${CORAL_ROOT}/NetCore)
+target_include_directories(Coral.Native PUBLIC ${CORAL_ROOT}/Coral.Native/Include)
+target_include_directories(Coral.Native PRIVATE ${CORAL_ROOT}/Coral.Native/Source)
+target_include_directories(Coral.Native PRIVATE ${CORAL_ROOT}/NetCore)
 
 if(CORAL_EXAMPLE)
 	set(EXAMPLE_ROOT ${CORAL_ROOT}/Example)
@@ -108,16 +108,16 @@ if(CORAL_EXAMPLE)
 	)
 	add_custom_target(ExampleManaged DEPENDS ${EXAMPLE_BINDIR}/Example.Managed.dll)
 
-	add_executable(Example)
-	set_target_properties(Example PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXAMPLE_BINDIR})
+	add_executable(Example.Native)
+	set_target_properties(Example.Native PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXAMPLE_BINDIR})
 
-	add_dependencies(Example ExampleManaged)
+	add_dependencies(Example.Native ExampleManaged)
 
-	target_compile_features(Example PUBLIC cxx_std_17)
-	target_link_libraries(Example Coral)
+	target_compile_features(Example.Native PUBLIC cxx_std_17)
+	target_link_libraries(Example.Native Coral.Native)
 
 	file(GLOB EXAMPLE_SRC ${CORAL_ROOT}/Example/Example.Native/Source/*.cpp)
-	target_sources(Example PRIVATE ${EXAMPLE_SRC})
+	target_sources(Example.Native PRIVATE ${EXAMPLE_SRC})
 endif()
 if(CORAL_TESTING)
 	set(TESTING_ROOT ${CORAL_ROOT}/Tests)
@@ -137,14 +137,14 @@ if(CORAL_TESTING)
 	)
 	add_custom_target(TestingManaged DEPENDS ${TESTING_BINDIR}/Testing.Managed.dll)
 
-	add_executable(Testing)
-	set_target_properties(Testing PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TESTING_BINDIR})
+	add_executable(Testing.Native)
+	set_target_properties(Testing.Native PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TESTING_BINDIR})
 
-	add_dependencies(Testing TestingManaged)
+	add_dependencies(Testing.Native TestingManaged)
 
-	target_compile_features(Testing PUBLIC cxx_std_17)
-	target_link_libraries(Testing Coral)
+	target_compile_features(Testing.Native PUBLIC cxx_std_17)
+	target_link_libraries(Testing.Native Coral.Native)
 
 	file(GLOB TESTING_SRC ${TESTING_ROOT}/Testing.Native/Source/*.cpp)
-	target_sources(Testing PRIVATE ${TESTING_SRC})
+	target_sources(Testing.Native PRIVATE ${TESTING_SRC})
 endif()
