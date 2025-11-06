@@ -55,11 +55,9 @@ int main([[maybe_unused]] int argc, char** argv)
 {
 	auto exeDir = std::filesystem::path(argv[0]).parent_path();
 	auto coralDir = exeDir.string();
-	Coral::HostSettings settings =
-	{
-		.CoralDirectory = coralDir,
-		.ExceptionCallback = ExceptionCallback
-	};
+	Coral::HostSettings settings;
+	settings.CoralDirectory = coralDir;
+	settings.ExceptionCallback = ExceptionCallback;
 	Coral::HostInstance hostInstance;
 	hostInstance.Initialize(settings);
 
@@ -75,13 +73,13 @@ int main([[maybe_unused]] int argc, char** argv)
 	assembly.UploadInternalCalls();
 
 	// Get a reference to the ExampleClass type
-	auto& exampleType = assembly.GetType("Example.Managed.ExampleClass");
+	auto& exampleType = assembly.GetLocalType("Example.Managed.ExampleClass");
 
 	// Call the static method "StaticMethod" with value 50
 	exampleType.InvokeStaticMethod("StaticMethod", 50.0f);
 
 	// Get a reference to the CustomAttribute type
-	auto& customAttributeType = assembly.GetType("Example.Managed.CustomAttribute");
+	auto& customAttributeType = assembly.GetLocalType("Example.Managed.CustomAttribute");
 
 	// Get a list of all attributes on the exampleType class
 	auto exampleTypeAttribs = exampleType.GetAttributes();
