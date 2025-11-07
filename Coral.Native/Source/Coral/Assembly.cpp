@@ -86,17 +86,16 @@ namespace Coral {
 			std::vector<TypeId> typeIds(static_cast<size_t>(typeCount));
 			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyId, typeIds.data(), &typeCount);
 
+			result.m_LocalTypes.reserve(typeIds.size());
+			result.m_LocalTypeIdCache.reserve(typeIds.size());
+			result.m_LocalTypeNameCache.reserve(typeIds.size());
 			for (auto typeId : typeIds)
 			{
 				Type type;
 				type.m_Id = typeId;
 				result.m_Types.push_back(TypeCache::Get().CacheType(std::move(type)));
 
-				Type type2;
-				type2.m_Id = typeId;
-
 				Type& inserted = result.m_LocalTypes.emplace_back(std::move(type));
-
 				result.m_LocalTypeIdCache[inserted.GetTypeId()] = &inserted;
 				result.m_LocalTypeNameCache[inserted.GetFullName()] = &inserted;
 			}

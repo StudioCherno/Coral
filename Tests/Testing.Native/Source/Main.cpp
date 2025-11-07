@@ -141,7 +141,7 @@ static void RegisterMemberMethodTests(Coral::ManagedObject& InObject)
 	RegisterTest("ULongTest", [&InObject]() mutable{ return InObject.InvokeMethod<uint64_t, uint64_t>("ULongTest", 10) == 20; });
 	RegisterTest("FloatTest", [&InObject]() mutable{ return InObject.InvokeMethod<float, float>("FloatTest", 10.0f) - 20.0f < 0.001f; });
 	RegisterTest("DoubleTest", [&InObject]() mutable{ return InObject.InvokeMethod<double, double>("DoubleTest", 10.0) - 20.0 < 0.001; });
-	RegisterTest("BoolTest", [&InObject]() mutable { return InObject.InvokeMethod<Coral::Bool32, Coral::Bool32>("BoolTest", false); });
+	RegisterTest("BoolTest", [&InObject]() mutable { return InObject.InvokeMethod<Coral::Bool32, bool>("BoolTest", false); });
 	RegisterTest("IntPtrTest", [&InObject]() mutable{ int32_t v = 10; return *InObject.InvokeMethod<int32_t*, int32_t*>("IntPtrTest", &v) == 50; });
 	RegisterTest("StringTest", [&InObject]() mutable
 	{
@@ -153,9 +153,9 @@ static void RegisterMemberMethodTests(Coral::ManagedObject& InObject)
 	{
 		DummyStruct value =
 		{
-			.X = 10,
-			.Y = 10.0f,
-			.Z = 10,
+			10,
+			10.0f,
+			10,
 		};
 		auto result = InObject.InvokeMethod<DummyStruct, DummyStruct&>("DummyStructTest", value);
 		return result.X == 20 && result.Y - 20.0f < 0.001f && result.Z == 20;
@@ -164,9 +164,9 @@ static void RegisterMemberMethodTests(Coral::ManagedObject& InObject)
 	{
 		DummyStruct value =
 		{
-			.X = 10,
-			.Y = 10.0f,
-			.Z = 10,
+			10,
+			10.0f,
+			10,
 		};
 		auto* result = InObject.InvokeMethod<DummyStruct*, DummyStruct*>("DummyStructPtrTest", &value);
 		return result->X == 20 && result->Y - 20.0f < 0.001f && result->Z == 20;
@@ -454,11 +454,9 @@ int main([[maybe_unused]] int argc, char** argv)
 {
 	auto exeDir = std::filesystem::path(argv[0]).parent_path();
 	auto coralDir = exeDir.string();
-	Coral::HostSettings settings =
-	{
-		.CoralDirectory = coralDir,
-		.ExceptionCallback = ExceptionCallback
-	};
+	Coral::HostSettings settings;
+	settings.CoralDirectory = coralDir;
+	settings.ExceptionCallback = ExceptionCallback;
 	Coral::HostInstance hostInstance;
 	hostInstance.Initialize(settings);
 
@@ -473,12 +471,12 @@ int main([[maybe_unused]] int argc, char** argv)
 	RegisterTestInternalCalls(assembly);
 	assembly.UploadInternalCalls();
 
-	auto& testsType = assembly.GetType("Testing.Managed.Tests");
+	auto& testsType = assembly.GetLocalType("Testing.Managed.Tests");
 	g_TestsType = testsType;
 	testsType.InvokeStaticMethod("StaticMethodTest", 50.0f);
 	testsType.InvokeStaticMethod("StaticMethodTest", 1000);
 
-	auto& instanceTestType = assembly.GetType("Testing.Managed.InstanceTest");
+	auto& instanceTestType = assembly.GetLocalType("Testing.Managed.InstanceTest");
 	instance = instanceTestType.CreateInstance();
 	instance.SetFieldValue("X", 500.0f);
 
@@ -486,12 +484,12 @@ int main([[maybe_unused]] int argc, char** argv)
 	testsInstance.InvokeMethod("RunManagedTests");
 	testsInstance.Destroy();
 
-	auto& fieldTestType = assembly.GetType("Testing.Managed.FieldMarshalTest");
+	auto& fieldTestType = assembly.GetLocalType("Testing.Managed.FieldMarshalTest");
 	std::cout << fieldTestType.IsAssignableTo(fieldTestType) << std::endl;
 
 	auto fieldTestObject = fieldTestType.CreateInstance();
 
-	auto dummyClassInstance = assembly.GetType("Testing.Managed.DummyClass").CreateInstance();
+	auto dummyClassInstance = assembly.GetLocalType("Testing.Managed.DummyClass").CreateInstance();
 	dummyClassInstance.SetFieldValue("X", 500.0f);
 
 	struct DummyStruct
@@ -528,7 +526,7 @@ int main([[maybe_unused]] int argc, char** argv)
 		}
 	}
 	
-	auto& memberMethodTestType = assembly.GetType("Testing.Managed.MemberMethodTest");
+	auto& memberMethodTestType = assembly.GetLocalType("Testing.Managed.MemberMethodTest");
 
 	// for (auto methodInfo : memberMethodTestType.GetMethods())
 	// {
@@ -560,8 +558,8 @@ int main([[maybe_unused]] int argc, char** argv)
 	memberMethodTest.Destroy();
 	fieldTestObject.Destroy();
 
-	auto& virtualMethodTestType1 = assembly.GetType("Testing.Managed.Override1");
-	auto& virtualMethodTestType2 = assembly.GetType("Testing.Managed.Override2");
+	auto& virtualMethodTestType1 = assembly.GetLocalType("Testing.Managed.Override1");
+	auto& virtualMethodTestType2 = assembly.GetLocalType("Testing.Managed.Override2");
 
 	auto instance1 = virtualMethodTestType1.CreateInstance();
 	auto instance2 = virtualMethodTestType2.CreateInstance();
@@ -595,14 +593,14 @@ int main([[maybe_unused]] int argc, char** argv)
 	RegisterTestInternalCalls(newAssembly);
 	newAssembly.UploadInternalCalls();
 
-	auto& testsType2 = newAssembly.GetType("Testing.Managed.Tests");
+	auto& testsType2 = newAssembly.GetLocalType("Testing.Managed.Tests");
 	g_TestsType = testsType2;
 
-	auto& instanceTestType2 = newAssembly.GetType("Testing.Managed.InstanceTest");
+	auto& instanceTestType2 = newAssembly.GetLocalType("Testing.Managed.InstanceTest");
 	instance = instanceTestType2.CreateInstance();
 	instance.SetFieldValue("X", 500.0f);
 
-	auto& multiInheritanceTestType = newAssembly.GetType("Testing.Managed.MultiInheritanceTest");
+	auto& multiInheritanceTestType = newAssembly.GetLocalType("Testing.Managed.MultiInheritanceTest");
 	std::cout << "Class: " << std::string(multiInheritanceTestType.GetFullName()) << std::endl;
 	std::cout << "\tBase: " << std::string(multiInheritanceTestType.GetBaseType().GetFullName()) << std::endl;
 	std::cout << "\tInterfaces:" << std::endl;
