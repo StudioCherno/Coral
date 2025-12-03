@@ -1,6 +1,9 @@
 project "Coral.Managed"
     filter { "not action:vs*", "not system:windows" }
         kind "StaticLib"
+		-- Mach-y AR requires a non-empty file list for archive creation
+		files { "Source/Dummy.cpp" }
+
     filter { "action:vs* or system:windows" }
         language "C#"
         dotnetframework "net9.0"

@@ -6,7 +6,6 @@ project "Coral.Native"
     kind "StaticLib"
     staticruntime "Off"
     debuggertype "NativeWithManagedCore"
-    architecture "x86_64"
 
 	dependson "Coral.Managed"
 

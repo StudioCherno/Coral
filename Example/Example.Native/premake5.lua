@@ -6,7 +6,6 @@ project "Example.Native"
     kind "ConsoleApp"
     staticruntime "Off"
     debuggertype "NativeWithManagedCore"
-    architecture "x86_64"
 
     files {
         "Source/**.cpp",
