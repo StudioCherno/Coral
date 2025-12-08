@@ -144,66 +144,17 @@ namespace Coral {
 
 	static std::filesystem::path GetHostFXRPath()
 	{
-#ifdef CORAL_WINDOWS
-		std::filesystem::path basePath = "";
-		
-		// Find the Program Files folder
-		TCHAR pf[MAX_PATH];
-		SHGetSpecialFolderPath(
-		nullptr,
-		pf,
-		CSIDL_PROGRAM_FILES,
-		FALSE);
+		std::basic_string<char_t> buffer{};
+		size_t buffer_size{};
 
-		basePath = pf;
-		basePath /= "dotnet/host/fxr/";
+		int result = get_hostfxr_path(nullptr, &buffer_size, nullptr);
+		if (result && result != StatusCode::HostApiBufferTooSmall) return "";
 
-		auto searchPaths = std::array
-		{
-			basePath
-		};
-#elif defined(CORAL_APPLE)
-		auto searchPaths = std::array
-		{
-			std::filesystem::path("/usr/local/share/dotnet/host/fxr/"),
-			std::filesystem::path("/usr/share/dotnet/host/fxr/")
-		};
-#else
-		auto searchPaths = std::array
-		{
-			std::filesystem::path("/usr/local/lib/dotnet/host/fxr/"),
-			std::filesystem::path("/usr/local/lib64/dotnet/host/fxr/"),
-			std::filesystem::path("/usr/local/share/dotnet/host/fxr/"),
+		buffer.resize(buffer_size);
+		result = get_hostfxr_path(buffer.data(), &buffer_size, nullptr);
+		if (result) return "";
 
-			std::filesystem::path("/usr/lib/dotnet/host/fxr/"),
-			std::filesystem::path("/usr/lib64/dotnet/host/fxr/"),
-			std::filesystem::path("/usr/share/dotnet/host/fxr/")
-		};
-#endif
-
-		for (const auto& path : searchPaths)
-		{
-			if (!std::filesystem::exists(path))
-				continue;
-
-			for (const auto& dir : std::filesystem::recursive_directory_iterator(path))
-			{
-				if (!dir.is_directory())
-					continue;
-
-				auto dirPath = dir.path().filename();
-				char version = dirPath.string()[0];
-
-				if (version != '9')
-					continue;
-
-				auto res = dir / std::filesystem::path(CORAL_HOSTFXR_NAME);
-				CORAL_VERIFY(std::filesystem::exists(res));
-				return res;
-			}
-		}
-
-		return "";
+		return std::filesystem::path(buffer);
 	}
 
 	bool HostInstance::LoadHostFXR() const
@@ -225,14 +176,21 @@ namespace Coral {
 	#else
 		libraryHandle = LoadLibraryA(hostfxrPath.string().c_str());
 	#endif
-#else
-		libraryHandle = dlopen(hostfxrPath.string().data(), RTLD_NOW | RTLD_GLOBAL);
-#endif
 
 		if (libraryHandle == nullptr)
 		{
+			// TODO(Emily): Log Windows error.
 			return false;
 		}
+#else
+		libraryHandle = dlopen(hostfxrPath.string().data(), RTLD_NOW | RTLD_GLOBAL);
+
+		if (libraryHandle == nullptr)
+		{
+			MessageCallback(dlerror(), MessageLevel::Error);
+			return false;
+		}
+#endif
 
 		// Load CoreCLR functions
 		s_CoreCLRFunctions.SetHostFXRErrorWriter = LoadFunctionPtr<hostfxr_set_error_writer_fn>(libraryHandle, "hostfxr_set_error_writer");
