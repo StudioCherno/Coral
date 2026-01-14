@@ -14,25 +14,30 @@ function LinkNethost()
     -- Thanks to https://gist.github.com/iwanbk/5479582
     for runtime in runtimes:gmatch("([^\n]*)\n?") do
         local version = string.match(runtime, "Microsoft%.NETCore%.App ([0-9]+%.[0-9]+%.[0-9]+)")
-        table.insert(versions, version)
+
+        if version and (string.sub(version, 1, 1) == "9" or string.sub(version, 1, 2) == "10") then
+            table.insert(versions, version)
+        end
     end
 
     local sdks = captureExec('dotnet --list-sdks')
     for sdk in sdks:gmatch("([^\n]*)\n?") do
-        if string.sub(sdk, 1, 1) == "9" then
+        if string.sub(sdk, 1, 1) == "9" or string.sub(sdk, 1, 2) == "10" then
             local arch_name = ""
             if os.target() == "macosx" then
                 arch_name = "osx-"
+            elseif os.target() == "windows" then
+                arch_name = "win-"
             else
                 arch_name = "arch-"
             end
 
-            if os.hostarch() == "x86_64" then
+            if os.targetarch() == "x86_64" then
                 arch_name = arch_name .. "x64"
-            elseif os.hostarch() == "ARM64" then
+            elseif os.targetarch() == "ARM64" then
                 arch_name = arch_name .. "arm64"
             end
-
+            
             local base_path = string.match(sdk, "%[(.*)%]")
             base_path = base_path .. "/../packs/Microsoft.NETCore.App.Host." .. arch_name .. "/"
 
@@ -41,9 +46,10 @@ function LinkNethost()
                 local base_path_ver = base_path .. version .. "/"
                 if os.isdir(base_path_ver) then
                     base_path = base_path_ver .. "/runtimes/" .. arch_name .. "/native/"
-                    base_path = os.realpath(base_path) .. "/"
+                    base_path = os.realpath(base_path .. "/")
                     print("Found .NET SDK path " .. base_path)
                     found = true
+                    break
                 end
             end
             if not found then break end
@@ -51,10 +57,10 @@ function LinkNethost()
             externalincludedirs { base_path }
             libdirs { base_path }
 
-            filter { "toolset:not msc" }
+            filter { "system:not windows" }
                 linkoptions { base_path .. "libnethost.a" }
-            filter { "toolset:msc" }
-                links { "nethost" }
+            filter { "system:windows" }
+                links { base_path .. "libnethost.lib" }
             filter {}
             return
         end
