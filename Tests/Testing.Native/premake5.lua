@@ -14,6 +14,8 @@ project "Testing.Native"
 
     externalincludedirs { "../../Coral.Native/Include/" }
 
+    LinkNethost()
+
 	links { "Coral.Native", }
 
     filter { "configurations:Debug" }

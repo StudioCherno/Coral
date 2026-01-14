@@ -32,9 +32,9 @@ function LinkNethost()
                 arch_name = "arch-"
             end
 
-            if os.targetarch() == "x86_64" then
+            if os.hostarch() == "x86_64" or (os.hostarch() == "x86" and os.target() == "windows") then
                 arch_name = arch_name .. "x64"
-            elseif os.targetarch() == "ARM64" then
+            elseif os.hostarch() == "ARM64" then
                 arch_name = arch_name .. "arm64"
             end
             
@@ -56,11 +56,13 @@ function LinkNethost()
 
             externalincludedirs { base_path }
             libdirs { base_path }
-
+            
             filter { "system:not windows" }
+                defines { "NETHOST_USE_AS_STATIC" }
                 linkoptions { base_path .. "libnethost.a" }
+            -- NOTE: Nethost on Windows can't be static as it will conflict with application runtimes
             filter { "system:windows" }
-                links { base_path .. "libnethost.lib" }
+                links { base_path .. "nethost.lib" }
             filter {}
             return
         end

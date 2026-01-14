@@ -42,12 +42,31 @@ function(LinkDotnetNetHost DOTNET TARGET)
 	message(STATUS "Using .NET SDK, ${SDK_VERSION} from ${SDK_PATH}")
 	cmake_path(GET SDK_PATH PARENT_PATH SDK_PATH)
 	file(GLOB PACKS "${SDK_PATH}/packs/Microsoft.NETCore.App.Host*")
+
+	list(LENGTH PACKS PACKS_LENGTH)
+	if(${PACKS_LENGTH})
+		if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+			set(DOTNET_ARCH x64)
+		elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i386" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i686")
+			set(DOTNET_ARCH x86)
+		elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "ARM64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+			set(DOTNET_ARCH arm64)
+		else()
+			message(FATAL_ERROR "Unable to determine appropriate nethost architecture")
+		endif()
+
+		file(GLOB PACKS "${SDK_PATH}/packs/Microsoft.NETCore.App.Host*-${DOTNET_ARCH}")
+	endif()
+
 	file(GLOB NATIVES "${PACKS}/${RUNTIME_VERSION}/runtimes/*")
 
 	target_include_directories(${TARGET} PUBLIC ${NATIVES}/native)
 
 	block()
-		list(REMOVE_ITEM CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_SHARED_LIBRARY_SUFFIX})
+		if(NOT WINDOWS)
+			list(REMOVE_ITEM CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_SHARED_LIBRARY_SUFFIX})
+		endif()
+	
 		find_library(
 			NETHOST
 			NAMES nethost
