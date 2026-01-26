@@ -7,6 +7,7 @@ namespace Coral {
 
 	class Type;
 	class Attribute;
+	class ManagedObject;
 
 	class MethodInfo
 	{

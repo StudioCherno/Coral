@@ -8,7 +8,7 @@ function captureExec(cmd, raw)
     return s
 end
 
-function LinkNethost()
+function findNethost()
     local runtimes = captureExec('dotnet --list-runtimes')
     local versions = {}
     -- Thanks to https://gist.github.com/iwanbk/5479582
@@ -46,7 +46,7 @@ function LinkNethost()
                 local base_path_ver = base_path .. version .. "/"
                 if os.isdir(base_path_ver) then
                     base_path = base_path_ver .. "/runtimes/" .. arch_name .. "/native/"
-                    base_path = os.realpath(base_path .. "/")
+                    base_path = os.realpath(base_path) .. "/"
                     print("Found .NET SDK path " .. base_path)
                     found = true
                     break
@@ -54,22 +54,28 @@ function LinkNethost()
             end
             if not found then break end
 
-            externalincludedirs { base_path }
-            libdirs { base_path }
-            
-            filter { "system:not windows" }
-                defines { "NETHOST_USE_AS_STATIC" }
-                linkoptions { base_path .. "libnethost.a" }
-            -- NOTE: Nethost on Windows can't be static as it will conflict with application runtimes
-            filter { "system:windows" }
-                links { base_path .. "nethost.lib" }
-            filter {}
+            _G["CORAL_NETHOST_BASE_PATH"] = base_path
             return
         end
     end
 
     print("Failed to find .NET 9 SDK!")
     os.exit(1)
+end
+
+findNethost()
+
+function LinkNethost()
+    externalincludedirs { _G["CORAL_NETHOST_BASE_PATH"] }
+    libdirs { _G["CORAL_NETHOST_BASE_PATH"] }
+    
+    filter { "system:not windows" }
+        defines { "NETHOST_USE_AS_STATIC" }
+        linkoptions { _G["CORAL_NETHOST_BASE_PATH"] .. "libnethost.a" }
+    -- NOTE: Nethost on Windows can't be static as it will conflict with application runtimes
+    filter { "system:windows" }
+        links { _G["CORAL_NETHOST_BASE_PATH"] .. "nethost.lib" }
+    filter {}
 end
 
 project "Coral.Native"

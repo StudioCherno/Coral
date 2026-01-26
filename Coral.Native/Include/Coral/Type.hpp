@@ -8,6 +8,7 @@
 #include "PropertyInfo.hpp"
 
 #include <optional>
+#include <vector>
 
 namespace Coral {
 
