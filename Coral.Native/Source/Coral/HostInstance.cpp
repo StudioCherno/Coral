@@ -149,7 +149,7 @@ namespace Coral {
 		size_t buffer_size{};
 
 		int result = get_hostfxr_path(nullptr, &buffer_size, nullptr);
-		if (result && result != StatusCode::HostApiBufferTooSmall) return "";
+		if (result && result != static_cast<int>(StatusCode::HostApiBufferTooSmall)) return "";
 
 		buffer.resize(buffer_size);
 		result = get_hostfxr_path(buffer.data(), &buffer_size, nullptr);

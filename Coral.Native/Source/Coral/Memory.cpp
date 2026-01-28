@@ -23,12 +23,13 @@ namespace Coral {
 	UCChar* Memory::StringToCoTaskMemAuto(UCStringView InString)
 	{
 		size_t length = InString.length() + 1;
-		size_t size = length * sizeof(UCChar);
-
+		
 		// TODO(Emily): This (and a few other places) misuse the WC/MB split assuming Windows is the only WC platform.
 		//				If we want to decide that is a general assumption we can entirely remove the `CORAL_WIDE_CHARS`
 		//				Macro and its exclusive effects.
 #ifdef CORAL_WINDOWS
+		size_t size = length * sizeof(UCChar);
+
 		auto* buffer = static_cast<UCChar*>(CoTaskMemAlloc(size));
 
 		if (buffer != nullptr)
