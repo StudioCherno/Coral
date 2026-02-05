@@ -23,43 +23,53 @@ function findNethost()
     local sdks = captureExec('dotnet --list-sdks')
     for sdk in sdks:gmatch("([^\n]*)\n?") do
         if string.sub(sdk, 1, 1) == "9" or string.sub(sdk, 1, 2) == "10" then
-            local arch_name = ""
+            local arch_prefixes = {}
             if os.target() == "macosx" then
-                arch_name = "osx-"
+                arch_prefixes = { "osx-" }
             elseif os.target() == "windows" then
-                arch_name = "win-"
+                arch_prefixes = { "win-" }
             else
-                arch_name = "arch-"
+                -- .NET on Linux uses linux-* RIDs; Arch sometimes packages arch-* as well.
+                arch_prefixes = { "linux-", "arch-", "ubuntu.24.04-" }
             end
 
+            local arch_suffix = ""
             if os.hostarch() == "x86_64" or (os.hostarch() == "x86" and os.target() == "windows") then
-                arch_name = arch_name .. "x64"
-            elseif os.hostarch() == "ARM64" then
-                arch_name = arch_name .. "arm64"
+                arch_suffix = "x64"
+            elseif os.hostarch() == "ARM64" or os.hostarch() == "arm64" or os.hostarch() == "aarch64" then
+                arch_suffix = "arm64"
+            elseif os.hostarch() == "x86" then
+                arch_suffix = "x86"
             end
-            
-            local base_path = string.match(sdk, "%[(.*)%]")
-            base_path = base_path .. "/../packs/Microsoft.NETCore.App.Host." .. arch_name .. "/"
 
             local found = false
-            for index, version in pairs(versions) do
-                local base_path_ver = base_path .. version .. "/"
-                if os.isdir(base_path_ver) then
-                    base_path = base_path_ver .. "/runtimes/" .. arch_name .. "/native/"
-                    base_path = os.realpath(base_path) .. "/"
-                    print("Found .NET SDK path " .. base_path)
-                    found = true
-                    break
+            for _, arch_prefix in pairs(arch_prefixes) do
+                local arch_name = arch_prefix .. arch_suffix
+                local base_path = string.match(sdk, "%[(.*)%]")
+                base_path = base_path .. "/../packs/Microsoft.NETCore.App.Host." .. arch_name .. "/"
+                print("base_path: " .. base_path)
+                for _, version in pairs(versions) do
+                    local base_path_ver = base_path .. version .. "/"
+                    print("Searching .NET SDK path " .. base_path_ver)
+                    if os.isdir(base_path_ver) then
+                        base_path = base_path_ver .. "/runtimes/" .. arch_name .. "/native/"
+                        base_path = os.realpath(base_path) .. "/"
+                        print("Found .NET SDK path " .. base_path)
+                        found = true
+                        _G["CORAL_NETHOST_BASE_PATH"] = base_path
+                        return
+                    end
                 end
             end
-            if not found then break end
 
-            _G["CORAL_NETHOST_BASE_PATH"] = base_path
-            return
+            if found then
+                return
+            end
+            break
         end
     end
 
-    print("Failed to find .NET 9 SDK!")
+    print("Failed to find .NET SDK!")
     os.exit(1)
 end
 
@@ -75,6 +85,8 @@ function LinkNethost()
     -- NOTE: Nethost on Windows can't be static as it will conflict with application runtimes
     filter { "system:windows" }
         links { _G["CORAL_NETHOST_BASE_PATH"] .. "nethost.lib" }
+        -- Suppress benign duplicate import descriptor warnings from nethost.
+        linkoptions { "/ignore:4006" }
     filter {}
 end
 
