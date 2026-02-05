@@ -117,6 +117,12 @@ project "Coral.Native"
 
     filter { "configurations:Release" }
         runtime "Release"
+        symbols "On"
+        optimize "On"
+    filter { }
+
+     filter { "configurations:Dist" }
+        runtime "Release"
         symbols "Off"
         optimize "On"
     filter { }
