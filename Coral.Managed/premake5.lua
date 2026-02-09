@@ -28,6 +28,7 @@ project "Coral.Managed"
 			Nullable = "enable",
 			CopyLocalLockFileAssemblies = "true",
 			EnableDynamicLoading = "true",
+			RollForward = "Major",
 		}
 
         disablewarnings {
