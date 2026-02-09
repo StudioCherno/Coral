@@ -216,8 +216,18 @@ namespace Coral {
 			}
 
 			int status = s_CoreCLRFunctions.InitHostFXRForRuntimeConfig(runtimeConfigPath.c_str(), nullptr, &m_HostFXRContext);
-			CORAL_VERIFY(status == StatusCode::Success || status == StatusCode::Success_HostAlreadyInitialized || status == StatusCode::Success_DifferentRuntimeProperties);
-			CORAL_VERIFY(m_HostFXRContext != nullptr);
+			if (status != StatusCode::Success && status != StatusCode::Success_HostAlreadyInitialized && status != StatusCode::Success_DifferentRuntimeProperties)
+			{
+				MessageCallback("Failed to initialize .NET runtime from Coral.Managed.runtimeconfig.json (status: " + std::to_string(status) + "). "
+					"Ensure a compatible .NET runtime is installed.", MessageLevel::Error);
+				return false;
+			}
+
+			if (m_HostFXRContext == nullptr)
+			{
+				MessageCallback("hostfxr context is null after initialization.", MessageLevel::Error);
+				return false;
+			}
 
 			std::filesystem::path coralDirectoryPath = m_Settings.CoralDirectory;
 			s_CoreCLRFunctions.SetRuntimePropertyValue(m_HostFXRContext, CORAL_STR("APP_CONTEXT_BASE_DIRECTORY"), coralDirectoryPath.c_str());
