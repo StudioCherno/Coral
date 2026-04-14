@@ -4,6 +4,7 @@
 #include "Coral/StringHelper.hpp"
 #include "Coral/Type.hpp"
 #include "Coral/TypeCache.hpp"
+#include "Coral/FPUGuard.hpp"
 
 #include "CoralManagedFunctions.hpp"
 
@@ -59,10 +60,10 @@ namespace Coral {
 
 	void ManagedObject::InvokeMethodInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength) const
 	{
-		// NOTE(Peter): If you get an exception in this function it's most likely because you're using a Native only debugger type in Visual Studio
-		//				and it's catching a C# exception even though it shouldn't. I recommend switching the debugger type to Mixed (.NET Core)
-		//				which should be the default for Hazelnut, or simply press "Continue" until it works.
-		//				This is a problem with the Visual Studio debugger and nothing we can change.
+		// FPUGuard workaround for CoreCLR bug on x86-64 Windows: when the managed
+		// InvokeMethod body executes a caught exception, the UCO return transition
+		// corrupts caller-saved XMM6-XMM15. See Coral/FPUGuard.hpp.
+		FPUGuard fpu;
 		auto methodName = String::New(InMethodName);
 		s_ManagedFunctions.InvokeMethodFptr(m_Handle, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength));
 		String::Free(methodName);
@@ -70,6 +71,7 @@ namespace Coral {
 
 	void ManagedObject::InvokeMethodRetInternal(std::string_view InMethodName, const void** InParameters, const ManagedType* InParameterTypes, size_t InLength, void* InResultStorage) const
 	{
+		FPUGuard fpu;
 		auto methodName = String::New(InMethodName);
 		s_ManagedFunctions.InvokeMethodRetFptr(m_Handle, methodName, InParameters, InParameterTypes, static_cast<int32_t>(InLength), InResultStorage);
 		String::Free(methodName);
