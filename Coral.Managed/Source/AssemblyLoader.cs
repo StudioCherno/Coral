@@ -283,9 +283,9 @@ public static class AssemblyLoader
 
 			Assembly? assembly = null;
 
-			using (var file = MemoryMappedFile.CreateFromFile(InAssemblyFilePath!))
+			using (var file = MemoryMappedFile.CreateFromFile(InAssemblyFilePath!, FileMode.Open, null, 0, MemoryMappedFileAccess.Read))
 			{
-				using var stream = file.CreateViewStream();
+				using var stream = file.CreateViewStream(0, 0, MemoryMappedFileAccess.Read);
 				assembly = alc.LoadFromStream(stream);
 			}
 
@@ -298,7 +298,8 @@ public static class AssemblyLoader
 		}
 		catch (Exception ex)
 		{
-			s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out s_LastLoadStatus);
+			if (!s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out s_LastLoadStatus))
+				s_LastLoadStatus = AssemblyLoadStatus.UnknownError;
 			HandleException(ex);
 			return -1;
 		}
@@ -339,7 +340,8 @@ public static class AssemblyLoader
 		}
 		catch (Exception ex)
 		{
-			s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out s_LastLoadStatus);
+			if (!s_AssemblyLoadErrorLookup.TryGetValue(ex.GetType(), out s_LastLoadStatus))
+				s_LastLoadStatus = AssemblyLoadStatus.UnknownError;
 			HandleException(ex);
 			return -1;
 		}
