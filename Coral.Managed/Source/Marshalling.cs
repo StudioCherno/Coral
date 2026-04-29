@@ -56,14 +56,19 @@ public static class Marshalling
 		if (type != null && type.IsSZArray)
 		{
 			var fieldArray = ArrayStorage.GetFieldArray(InTarget, InValue, InMemberInfo);
+			int length = (InValue as Array)?.Length ?? 0;
 
 			if (fieldArray != null)
 			{
-				Marshal.WriteIntPtr(OutValue, fieldArray.Value.AddrOfPinnedObject());
+				Marshal.WriteIntPtr(OutValue, 0, fieldArray.Value.AddrOfPinnedObject());
+				Marshal.WriteIntPtr(OutValue, 8, GCHandle.ToIntPtr(fieldArray.Value));
+				Marshal.WriteInt32(OutValue, 16, length);
 			}
 			else
 			{
-				Marshal.WriteIntPtr(OutValue, IntPtr.Zero);
+				Marshal.WriteIntPtr(OutValue, 0, IntPtr.Zero);
+				Marshal.WriteIntPtr(OutValue, 8, IntPtr.Zero);
+				Marshal.WriteInt32(OutValue, 16, 0);
 			}
 		}
 		else if (type == typeof(string) && InValue != null)

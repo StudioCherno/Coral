@@ -65,6 +65,12 @@ namespace Coral {
 			if (!InArray.m_Ptr || InArray.m_Length == 0)
 				return;
 
+			// Arrays returned via MarshalReturnValue point at pinned managed memory
+			// owned by ArrayStorage; m_ArrayHandle is the GCHandle sentinel.
+			// Only free memory we allocated via AllocHGlobal (m_ArrayHandle == nullptr).
+			if (InArray.m_ArrayHandle != nullptr)
+				return;
+
 			Memory::FreeHGlobal(InArray.m_Ptr);
 			InArray.m_Ptr = nullptr;
 			InArray.m_Length = 0;
