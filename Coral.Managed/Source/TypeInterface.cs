@@ -6,6 +6,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Runtime.Loader;
 
@@ -545,6 +546,128 @@ internal static class TypeInterface
 				return NativeString.Null();
 
 			return methodInfo.Name;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return NativeString.Null();
+		}
+	}
+
+	private static readonly Dictionary<Type, string> s_PrimitiveAliases = new()
+	{
+		{ typeof(void),    "void"    },
+		{ typeof(bool),    "bool"    },
+		{ typeof(byte),    "byte"    },
+		{ typeof(sbyte),   "sbyte"   },
+		{ typeof(short),   "short"   },
+		{ typeof(ushort),  "ushort"  },
+		{ typeof(int),     "int"     },
+		{ typeof(uint),    "uint"    },
+		{ typeof(long),    "long"    },
+		{ typeof(ulong),   "ulong"   },
+		{ typeof(float),   "float"   },
+		{ typeof(double),  "double"  },
+		{ typeof(decimal), "decimal" },
+		{ typeof(char),    "char"    },
+		{ typeof(string),  "string"  },
+		{ typeof(object),  "object"  },
+		{ typeof(nint),    "nint"    },
+		{ typeof(nuint),   "nuint"   },
+	};
+
+	// Recursive type-name formatter that handles every case where Type.FullName is null.
+	private static string FormatType(Type t)
+	{
+		if (t.IsByRef)
+			return FormatType(t.GetElementType()!);
+
+		if (t.IsPointer)
+			return FormatType(t.GetElementType()!) + "*";
+
+		if (t.IsArray)
+			return FormatType(t.GetElementType()!) + "[]";
+
+		if (t.IsGenericParameter)
+			return t.Name;
+
+		if (s_PrimitiveAliases.TryGetValue(t, out var alias))
+			return alias;
+
+		if (t.IsGenericType)
+		{
+			ReadOnlySpan<char> name = t.Name.AsSpan();
+			int tick = name.IndexOf('`');
+			if (tick >= 0)
+				name = name.Slice(0, tick);
+
+			var sb = new StringBuilder();
+			if (!string.IsNullOrEmpty(t.Namespace))
+				sb.Append(t.Namespace).Append('.');
+			sb.Append(name).Append('<');
+
+			var args = t.GetGenericArguments();
+			for (int i = 0; i < args.Length; i++)
+			{
+				if (i > 0) sb.Append(", ");
+				sb.Append(FormatType(args[i]));
+			}
+			sb.Append('>');
+			return sb.ToString();
+		}
+
+		return t.FullName ?? t.Name;
+	}
+
+	private static string FormatMethod(MethodInfo method)
+	{
+		var sb = new StringBuilder();
+
+		if (method.IsStatic)
+			sb.Append("static ");
+
+		sb.Append(FormatType(method.ReturnType)).Append(' ').Append(method.Name);
+
+		if (method.IsGenericMethod)
+		{
+			sb.Append('<');
+			var genArgs = method.GetGenericArguments();
+			for (int i = 0; i < genArgs.Length; i++)
+			{
+				if (i > 0) sb.Append(", ");
+				sb.Append(FormatType(genArgs[i]));
+			}
+			sb.Append('>');
+		}
+
+		sb.Append('(');
+		var parameters = method.GetParameters();
+		for (int i = 0; i < parameters.Length; i++)
+		{
+			if (i > 0) sb.Append(", ");
+			var p = parameters[i];
+			if (p.IsOut)
+				sb.Append("out ");
+			else if (p.ParameterType.IsByRef)
+				sb.Append(p.IsIn ? "in " : "ref ");
+			sb.Append(FormatType(p.ParameterType));
+			if (!string.IsNullOrEmpty(p.Name))
+				sb.Append(' ').Append(p.Name);
+		}
+		sb.Append(')');
+
+		return sb.ToString();
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe NativeString GetMethodInfoFriendlyName(int InMethodInfo)
+	{
+		try
+		{
+			if (!s_CachedMethods.TryGetValue(InMethodInfo, out var methodInfo) || methodInfo == null)
+				return NativeString.Null();
+
+			return FormatMethod(methodInfo);
 		}
 		catch (Exception ex)
 		{

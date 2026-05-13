@@ -13,6 +13,7 @@ namespace Coral {
 	{
 	public:
 		String GetName() const;
+		String GetFriendlyName() const;
 
 		Type& GetReturnType();
 		const std::vector<Type*>& GetParameterTypes();

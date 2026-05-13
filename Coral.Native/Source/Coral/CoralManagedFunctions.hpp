@@ -50,6 +50,7 @@ namespace Coral {
 
 #pragma region MethodInfo
 	using GetMethodInfoNameFn = String (*)(ManagedHandle);
+	using GetMethodInfoFriendlyNameFn = String (*)(ManagedHandle);
 	using GetMethodInfoReturnTypeFn = void (*)(ManagedHandle, TypeId*);
 	using GetMethodInfoParameterTypesFn = void (*)(ManagedHandle, TypeId*, int32_t*);
 	using GetMethodInfoAccessibilityFn = TypeAccessibility (*)(ManagedHandle);
@@ -128,6 +129,7 @@ namespace Coral {
 
 #pragma region MethodInfo
 		GetMethodInfoNameFn GetMethodInfoNameFptr = nullptr;
+		GetMethodInfoFriendlyNameFn GetMethodInfoFriendlyNameFptr = nullptr;
 		GetMethodInfoReturnTypeFn GetMethodInfoReturnTypeFptr = nullptr;
 		GetMethodInfoParameterTypesFn GetMethodInfoParameterTypesFptr = nullptr;
 		GetMethodInfoAccessibilityFn GetMethodInfoAccessibilityFptr = nullptr;

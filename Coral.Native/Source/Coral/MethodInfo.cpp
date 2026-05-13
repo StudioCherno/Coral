@@ -12,6 +12,11 @@ namespace Coral {
 		return s_ManagedFunctions.GetMethodInfoNameFptr(m_Handle);
 	}
 
+	String MethodInfo::GetFriendlyName() const
+	{
+		return s_ManagedFunctions.GetMethodInfoFriendlyNameFptr(m_Handle);
+	}
+
 	Type& MethodInfo::GetReturnType()
 	{
 		if (!m_ReturnType)
