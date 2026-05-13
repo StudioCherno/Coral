@@ -12,7 +12,12 @@ namespace Coral {
 	Type* TypeCache::CacheType(Type&& InType)
 	{
 		Type* type = &m_Types.Insert(std::move(InType)).second;
-		m_NameCache[type->GetFullName()] = type;
+
+		// Type.FullName is null for open generic params and other reflection sentinels
+		String fullName = type->GetFullName();
+		if (fullName.Data() != nullptr)
+			m_NameCache[fullName] = type;
+
 		m_IDCache[type->GetTypeId()] = type;
 		return type;
 	}
