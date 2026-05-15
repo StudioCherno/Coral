@@ -89,6 +89,7 @@ namespace Coral {
 
 #pragma region EventInfo
 	using GetEventInfoNameFn = String (*)(ManagedHandle);
+	using GetEventInfoFriendlyNameFn = String (*)(ManagedHandle);
 	using GetEventInfoHandlerTypeFn = void (*)(ManagedHandle, TypeId*);
 	using GetEventInfoAccessibilityFn = TypeAccessibility (*)(ManagedHandle);
 	using GetEventInfoIsStaticFn = Bool32 (*)(ManagedHandle);
@@ -193,6 +194,7 @@ namespace Coral {
 
 #pragma region EventInfo
 		GetEventInfoNameFn GetEventInfoNameFptr = nullptr;
+		GetEventInfoFriendlyNameFn GetEventInfoFriendlyNameFptr = nullptr;
 		GetEventInfoHandlerTypeFn GetEventInfoHandlerTypeFptr = nullptr;
 		GetEventInfoAccessibilityFn GetEventInfoAccessibilityFptr = nullptr;
 		GetEventInfoIsStaticFn GetEventInfoIsStaticFptr = nullptr;

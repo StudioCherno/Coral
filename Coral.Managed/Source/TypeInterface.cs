@@ -1291,6 +1291,39 @@ internal static class TypeInterface
 		}
 	}
 
+	private static string FormatEvent(EventInfo eventInfo)
+	{
+		var sb = new StringBuilder();
+
+		var add = eventInfo.GetAddMethod(nonPublic: true);
+		if (add != null && add.IsStatic)
+			sb.Append("static ");
+
+		sb.Append("event ");
+		if (eventInfo.EventHandlerType != null)
+			sb.Append(FormatType(eventInfo.EventHandlerType));
+		sb.Append(' ').Append(eventInfo.Name);
+
+		return sb.ToString();
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe NativeString GetEventInfoFriendlyName(int InEventInfo)
+	{
+		try
+		{
+			if (!s_CachedEvents.TryGetValue(InEventInfo, out var eventInfo) || eventInfo == null)
+				return NativeString.Null();
+
+			return FormatEvent(eventInfo);
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return NativeString.Null();
+		}
+	}
+
 	[UnmanagedCallersOnly]
 	internal static unsafe void GetEventInfoHandlerType(int InEventInfo, int* OutHandlerType)
 	{

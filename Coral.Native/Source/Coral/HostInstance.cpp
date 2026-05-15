@@ -332,6 +332,7 @@ namespace Coral {
 		s_ManagedFunctions.GetConstructorInfoAttributesFptr = LoadCoralManagedFunctionPtr<GetConstructorInfoAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetConstructorInfoAttributes"));
 
 		s_ManagedFunctions.GetEventInfoNameFptr = LoadCoralManagedFunctionPtr<GetEventInfoNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetEventInfoName"));
+		s_ManagedFunctions.GetEventInfoFriendlyNameFptr = LoadCoralManagedFunctionPtr<GetEventInfoFriendlyNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetEventInfoFriendlyName"));
 		s_ManagedFunctions.GetEventInfoHandlerTypeFptr = LoadCoralManagedFunctionPtr<GetEventInfoHandlerTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetEventInfoHandlerType"));
 		s_ManagedFunctions.GetEventInfoAccessibilityFptr = LoadCoralManagedFunctionPtr<GetEventInfoAccessibilityFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetEventInfoAccessibility"));
 		s_ManagedFunctions.GetEventInfoIsStaticFptr = LoadCoralManagedFunctionPtr<GetEventInfoIsStaticFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetEventInfoIsStatic"));

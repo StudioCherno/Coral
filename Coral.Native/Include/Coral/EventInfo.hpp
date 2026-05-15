@@ -12,6 +12,7 @@ namespace Coral {
 	{
 	public:
 		String GetName() const;
+		String GetFriendlyName() const;
 		Type& GetEventHandlerType();
 
 		TypeAccessibility GetAccessibility() const;

@@ -12,6 +12,11 @@ namespace Coral {
 		return s_ManagedFunctions.GetEventInfoNameFptr(m_Handle);
 	}
 
+	String EventInfo::GetFriendlyName() const
+	{
+		return s_ManagedFunctions.GetEventInfoFriendlyNameFptr(m_Handle);
+	}
+
 	Type& EventInfo::GetEventHandlerType()
 	{
 		if (!m_HandlerType)
