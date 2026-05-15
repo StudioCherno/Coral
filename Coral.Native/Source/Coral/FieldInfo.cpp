@@ -29,6 +29,21 @@ namespace Coral {
 		return s_ManagedFunctions.GetFieldInfoAccessibilityFptr(m_Handle);
 	}
 
+	bool FieldInfo::IsStatic() const
+	{
+		return s_ManagedFunctions.GetFieldInfoIsStaticFptr(m_Handle);
+	}
+
+	bool FieldInfo::IsLiteral() const
+	{
+		return s_ManagedFunctions.GetFieldInfoIsLiteralFptr(m_Handle);
+	}
+
+	bool FieldInfo::IsInitOnly() const
+	{
+		return s_ManagedFunctions.GetFieldInfoIsInitOnlyFptr(m_Handle);
+	}
+
 	std::vector<Attribute> FieldInfo::GetAttributes() const
 	{
 		int32_t attributeCount;

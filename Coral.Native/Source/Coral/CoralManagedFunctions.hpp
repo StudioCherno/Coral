@@ -42,6 +42,9 @@ namespace Coral {
 	using GetTypeMethodsFn = void (*)(TypeId, ManagedHandle*, int32_t*);
 	using GetTypeFieldsFn = void (*)(TypeId, ManagedHandle*, int32_t*);
 	using GetTypePropertiesFn = void (*)(TypeId, ManagedHandle*, int32_t*);
+	using GetTypeConstructorsFn = void (*)(TypeId, ManagedHandle*, int32_t*);
+	using GetTypeEventsFn = void (*)(TypeId, ManagedHandle*, int32_t*);
+	using GetTypeNestedTypesFn = void (*)(TypeId, TypeId*, int32_t*);
 	using HasTypeAttributeFn = Bool32 (*)(TypeId, TypeId);
 	using GetTypeAttributesFn = void (*)(ManagedHandle, TypeId*, int32_t*);
 	using GetTypeManagedTypeFn = ManagedType (*)(TypeId);
@@ -61,13 +64,35 @@ namespace Coral {
 	using GetFieldInfoNameFn = String (*)(ManagedHandle);
 	using GetFieldInfoTypeFn = void (*)(ManagedHandle, TypeId*);
 	using GetFieldInfoAccessibilityFn = TypeAccessibility (*)(ManagedHandle);
+	using GetFieldInfoIsStaticFn = Bool32 (*)(ManagedHandle);
+	using GetFieldInfoIsLiteralFn = Bool32 (*)(ManagedHandle);
+	using GetFieldInfoIsInitOnlyFn = Bool32 (*)(ManagedHandle);
 	using GetFieldInfoAttributesFn = void (*)(ManagedHandle, TypeId*, int32_t*);
 #pragma endregion
 
 #pragma region PropertyInfo
 	using GetPropertyInfoNameFn = String (*)(ManagedHandle);
 	using GetPropertyInfoTypeFn = void (*)(ManagedHandle, TypeId*);
+	using GetPropertyInfoHasGetterFn = Bool32 (*)(ManagedHandle);
+	using GetPropertyInfoHasSetterFn = Bool32 (*)(ManagedHandle);
+	using GetPropertyInfoGetterAccessibilityFn = TypeAccessibility (*)(ManagedHandle);
+	using GetPropertyInfoSetterAccessibilityFn = TypeAccessibility (*)(ManagedHandle);
+	using GetPropertyInfoIsStaticFn = Bool32 (*)(ManagedHandle);
 	using GetPropertyInfoAttributesFn = void (*)(ManagedHandle, TypeId*, int32_t*);
+#pragma endregion
+
+#pragma region ConstructorInfo
+	using GetConstructorInfoFriendlyNameFn = String (*)(ManagedHandle);
+	using GetConstructorInfoAccessibilityFn = TypeAccessibility (*)(ManagedHandle);
+	using GetConstructorInfoAttributesFn = void (*)(ManagedHandle, TypeId*, int32_t*);
+#pragma endregion
+
+#pragma region EventInfo
+	using GetEventInfoNameFn = String (*)(ManagedHandle);
+	using GetEventInfoHandlerTypeFn = void (*)(ManagedHandle, TypeId*);
+	using GetEventInfoAccessibilityFn = TypeAccessibility (*)(ManagedHandle);
+	using GetEventInfoIsStaticFn = Bool32 (*)(ManagedHandle);
+	using GetEventInfoAttributesFn = void (*)(ManagedHandle, TypeId*, int32_t*);
 #pragma endregion
 
 #pragma region Attribute
@@ -121,6 +146,9 @@ namespace Coral {
 		GetTypeMethodsFn GetTypeMethodsFptr = nullptr;
 		GetTypeFieldsFn GetTypeFieldsFptr = nullptr;
 		GetTypePropertiesFn GetTypePropertiesFptr = nullptr;
+		GetTypeConstructorsFn GetTypeConstructorsFptr = nullptr;
+		GetTypeEventsFn GetTypeEventsFptr = nullptr;
+		GetTypeNestedTypesFn GetTypeNestedTypesFptr = nullptr;
 		HasTypeAttributeFn HasTypeAttributeFptr = nullptr;
 		GetTypeAttributesFn GetTypeAttributesFptr = nullptr;
 		GetTypeManagedTypeFn GetTypeManagedTypeFptr = nullptr;
@@ -140,13 +168,35 @@ namespace Coral {
 		GetFieldInfoNameFn GetFieldInfoNameFptr = nullptr;
 		GetFieldInfoTypeFn GetFieldInfoTypeFptr = nullptr;
 		GetFieldInfoAccessibilityFn GetFieldInfoAccessibilityFptr = nullptr;
+		GetFieldInfoIsStaticFn GetFieldInfoIsStaticFptr = nullptr;
+		GetFieldInfoIsLiteralFn GetFieldInfoIsLiteralFptr = nullptr;
+		GetFieldInfoIsInitOnlyFn GetFieldInfoIsInitOnlyFptr = nullptr;
 		GetFieldInfoAttributesFn GetFieldInfoAttributesFptr = nullptr;
 #pragma endregion
 
 #pragma region PropertyInfo
 		GetPropertyInfoNameFn GetPropertyInfoNameFptr = nullptr;
 		GetPropertyInfoTypeFn GetPropertyInfoTypeFptr = nullptr;
+		GetPropertyInfoHasGetterFn GetPropertyInfoHasGetterFptr = nullptr;
+		GetPropertyInfoHasSetterFn GetPropertyInfoHasSetterFptr = nullptr;
+		GetPropertyInfoGetterAccessibilityFn GetPropertyInfoGetterAccessibilityFptr = nullptr;
+		GetPropertyInfoSetterAccessibilityFn GetPropertyInfoSetterAccessibilityFptr = nullptr;
+		GetPropertyInfoIsStaticFn GetPropertyInfoIsStaticFptr = nullptr;
 		GetPropertyInfoAttributesFn GetPropertyInfoAttributesFptr = nullptr;
+#pragma endregion
+
+#pragma region ConstructorInfo
+		GetConstructorInfoFriendlyNameFn GetConstructorInfoFriendlyNameFptr = nullptr;
+		GetConstructorInfoAccessibilityFn GetConstructorInfoAccessibilityFptr = nullptr;
+		GetConstructorInfoAttributesFn GetConstructorInfoAttributesFptr = nullptr;
+#pragma endregion
+
+#pragma region EventInfo
+		GetEventInfoNameFn GetEventInfoNameFptr = nullptr;
+		GetEventInfoHandlerTypeFn GetEventInfoHandlerTypeFptr = nullptr;
+		GetEventInfoAccessibilityFn GetEventInfoAccessibilityFptr = nullptr;
+		GetEventInfoIsStaticFn GetEventInfoIsStaticFptr = nullptr;
+		GetEventInfoAttributesFn GetEventInfoAttributesFptr = nullptr;
 #pragma endregion
 
 #pragma region Attribute

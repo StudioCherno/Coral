@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Core.hpp"
 #include "String.hpp"
@@ -8,25 +8,22 @@ namespace Coral {
 	class Type;
 	class Attribute;
 
-	class PropertyInfo
+	class EventInfo
 	{
 	public:
 		String GetName() const;
-		Type& GetType();
+		Type& GetEventHandlerType();
 
-		bool HasGetter() const;
-		bool HasSetter() const;
-		TypeAccessibility GetGetterAccessibility() const;
-		TypeAccessibility GetSetterAccessibility() const;
+		TypeAccessibility GetAccessibility() const;
 		bool IsStatic() const;
 
 		std::vector<Attribute> GetAttributes() const;
 
 	private:
 		ManagedHandle m_Handle = -1;
-		Type* m_Type = nullptr;
+		Type* m_HandlerType = nullptr;
 
 		friend class Type;
 	};
-	
+
 }

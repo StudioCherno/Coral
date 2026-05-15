@@ -115,6 +115,58 @@ namespace Coral {
 		return properties;
 	}
 
+	std::vector<ConstructorInfo> Type::GetConstructors() const
+	{
+		int32_t constructorCount = 0;
+		s_ManagedFunctions.GetTypeConstructorsFptr(m_Id, nullptr, &constructorCount);
+		std::vector<ManagedHandle> handles(static_cast<size_t>(constructorCount));
+		s_ManagedFunctions.GetTypeConstructorsFptr(m_Id, handles.data(), &constructorCount);
+
+		std::vector<ConstructorInfo> constructors(handles.size());
+		for (size_t i = 0; i < handles.size(); i++)
+			constructors[i].m_Handle = handles[i];
+
+		return constructors;
+	}
+
+	std::vector<EventInfo> Type::GetEvents() const
+	{
+		int32_t eventCount = 0;
+		s_ManagedFunctions.GetTypeEventsFptr(m_Id, nullptr, &eventCount);
+		std::vector<ManagedHandle> handles(static_cast<size_t>(eventCount));
+		s_ManagedFunctions.GetTypeEventsFptr(m_Id, handles.data(), &eventCount);
+
+		std::vector<EventInfo> events(handles.size());
+		for (size_t i = 0; i < handles.size(); i++)
+			events[i].m_Handle = handles[i];
+
+		return events;
+	}
+
+	std::vector<Type*>& Type::GetNestedTypes()
+	{
+		if (!m_NestedTypes)
+		{
+			int32_t count = 0;
+			s_ManagedFunctions.GetTypeNestedTypesFptr(m_Id, nullptr, &count);
+
+			std::vector<TypeId> typeIds(static_cast<size_t>(count));
+			s_ManagedFunctions.GetTypeNestedTypesFptr(m_Id, typeIds.data(), &count);
+
+			m_NestedTypes = std::vector<Type*>();
+			m_NestedTypes->reserve(static_cast<size_t>(count));
+
+			for (auto id : typeIds)
+			{
+				Type type;
+				type.m_Id = id;
+				m_NestedTypes->emplace_back(TypeCache::Get().CacheType(std::move(type)));
+			}
+		}
+
+		return *m_NestedTypes;
+	}
+
 	bool Type::HasAttribute(const Type& InAttributeType) const
 	{
 		return s_ManagedFunctions.HasTypeAttributeFptr(m_Id, InAttributeType.m_Id);

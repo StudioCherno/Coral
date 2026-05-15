@@ -6,6 +6,8 @@
 #include "MethodInfo.hpp"
 #include "FieldInfo.hpp"
 #include "PropertyInfo.hpp"
+#include "ConstructorInfo.hpp"
+#include "EventInfo.hpp"
 
 #include <optional>
 #include <vector>
@@ -30,6 +32,9 @@ namespace Coral {
 		std::vector<MethodInfo> GetMethods() const;
 		std::vector<FieldInfo> GetFields() const;
 		std::vector<PropertyInfo> GetProperties() const;
+		std::vector<ConstructorInfo> GetConstructors() const;
+		std::vector<EventInfo> GetEvents() const;
+		std::vector<Type*>& GetNestedTypes();
 
 		bool HasAttribute(const Type& InAttributeType) const;
 		std::vector<Attribute> GetAttributes() const;
@@ -117,6 +122,7 @@ namespace Coral {
 		TypeId m_Id = -1;
 		Type* m_BaseType = nullptr;
 		std::optional<std::vector<Type*>> m_InterfaceTypes = std::nullopt;
+		std::optional<std::vector<Type*>> m_NestedTypes = std::nullopt;
 		Type* m_ElementType = nullptr;
 
 		friend class HostInstance;
@@ -125,6 +131,8 @@ namespace Coral {
 		friend class MethodInfo;
 		friend class FieldInfo;
 		friend class PropertyInfo;
+		friend class ConstructorInfo;
+		friend class EventInfo;
 		friend class Attribute;
 		friend class ReflectionType;
 		friend class ManagedObject;

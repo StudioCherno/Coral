@@ -294,6 +294,9 @@ namespace Coral {
 		s_ManagedFunctions.GetTypeMethodsFptr = LoadCoralManagedFunctionPtr<GetTypeMethodsFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeMethods"));
 		s_ManagedFunctions.GetTypeFieldsFptr = LoadCoralManagedFunctionPtr<GetTypeFieldsFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeFields"));
 		s_ManagedFunctions.GetTypePropertiesFptr = LoadCoralManagedFunctionPtr<GetTypePropertiesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeProperties"));
+		s_ManagedFunctions.GetTypeConstructorsFptr = LoadCoralManagedFunctionPtr<GetTypeConstructorsFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeConstructors"));
+		s_ManagedFunctions.GetTypeEventsFptr = LoadCoralManagedFunctionPtr<GetTypeEventsFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeEvents"));
+		s_ManagedFunctions.GetTypeNestedTypesFptr = LoadCoralManagedFunctionPtr<GetTypeNestedTypesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeNestedTypes"));
 		s_ManagedFunctions.HasTypeAttributeFptr = LoadCoralManagedFunctionPtr<HasTypeAttributeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("HasTypeAttribute"));
 		s_ManagedFunctions.GetTypeAttributesFptr = LoadCoralManagedFunctionPtr<GetTypeAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeAttributes"));
 		s_ManagedFunctions.GetTypeManagedTypeFptr = LoadCoralManagedFunctionPtr<GetTypeManagedTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetTypeManagedType"));
@@ -310,11 +313,29 @@ namespace Coral {
 		s_ManagedFunctions.GetFieldInfoNameFptr = LoadCoralManagedFunctionPtr<GetFieldInfoNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoName"));
 		s_ManagedFunctions.GetFieldInfoTypeFptr = LoadCoralManagedFunctionPtr<GetFieldInfoTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoType"));
 		s_ManagedFunctions.GetFieldInfoAccessibilityFptr = LoadCoralManagedFunctionPtr<GetFieldInfoAccessibilityFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoAccessibility"));
+		s_ManagedFunctions.GetFieldInfoIsStaticFptr = LoadCoralManagedFunctionPtr<GetFieldInfoIsStaticFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoIsStatic"));
+		s_ManagedFunctions.GetFieldInfoIsLiteralFptr = LoadCoralManagedFunctionPtr<GetFieldInfoIsLiteralFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoIsLiteral"));
+		s_ManagedFunctions.GetFieldInfoIsInitOnlyFptr = LoadCoralManagedFunctionPtr<GetFieldInfoIsInitOnlyFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoIsInitOnly"));
 		s_ManagedFunctions.GetFieldInfoAttributesFptr = LoadCoralManagedFunctionPtr<GetFieldInfoAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetFieldInfoAttributes"));
 
 		s_ManagedFunctions.GetPropertyInfoNameFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoName"));
 		s_ManagedFunctions.GetPropertyInfoTypeFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoType"));
+		s_ManagedFunctions.GetPropertyInfoHasGetterFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoHasGetterFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoHasGetter"));
+		s_ManagedFunctions.GetPropertyInfoHasSetterFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoHasSetterFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoHasSetter"));
+		s_ManagedFunctions.GetPropertyInfoGetterAccessibilityFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoGetterAccessibilityFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoGetterAccessibility"));
+		s_ManagedFunctions.GetPropertyInfoSetterAccessibilityFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoSetterAccessibilityFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoSetterAccessibility"));
+		s_ManagedFunctions.GetPropertyInfoIsStaticFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoIsStaticFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoIsStatic"));
 		s_ManagedFunctions.GetPropertyInfoAttributesFptr = LoadCoralManagedFunctionPtr<GetPropertyInfoAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetPropertyInfoAttributes"));
+
+		s_ManagedFunctions.GetConstructorInfoFriendlyNameFptr = LoadCoralManagedFunctionPtr<GetConstructorInfoFriendlyNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetConstructorInfoFriendlyName"));
+		s_ManagedFunctions.GetConstructorInfoAccessibilityFptr = LoadCoralManagedFunctionPtr<GetConstructorInfoAccessibilityFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetConstructorInfoAccessibility"));
+		s_ManagedFunctions.GetConstructorInfoAttributesFptr = LoadCoralManagedFunctionPtr<GetConstructorInfoAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetConstructorInfoAttributes"));
+
+		s_ManagedFunctions.GetEventInfoNameFptr = LoadCoralManagedFunctionPtr<GetEventInfoNameFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetEventInfoName"));
+		s_ManagedFunctions.GetEventInfoHandlerTypeFptr = LoadCoralManagedFunctionPtr<GetEventInfoHandlerTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetEventInfoHandlerType"));
+		s_ManagedFunctions.GetEventInfoAccessibilityFptr = LoadCoralManagedFunctionPtr<GetEventInfoAccessibilityFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetEventInfoAccessibility"));
+		s_ManagedFunctions.GetEventInfoIsStaticFptr = LoadCoralManagedFunctionPtr<GetEventInfoIsStaticFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetEventInfoIsStatic"));
+		s_ManagedFunctions.GetEventInfoAttributesFptr = LoadCoralManagedFunctionPtr<GetEventInfoAttributesFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetEventInfoAttributes"));
 
 		s_ManagedFunctions.GetAttributeFieldValueFptr = LoadCoralManagedFunctionPtr<GetAttributeFieldValueFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetAttributeFieldValue"));
 		s_ManagedFunctions.GetAttributeTypeFptr = LoadCoralManagedFunctionPtr<GetAttributeTypeFn>(CORAL_STR("Coral.Managed.TypeInterface, Coral.Managed"), CORAL_STR("GetAttributeType"));

@@ -31,6 +31,8 @@ namespace Coral {
 		friend class MethodInfo;
 		friend class FieldInfo;
 		friend class PropertyInfo;
+		friend class ConstructorInfo;
+		friend class EventInfo;
 	};
 
 }

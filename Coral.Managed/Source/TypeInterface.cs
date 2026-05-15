@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -21,6 +22,8 @@ internal static class TypeInterface
 	internal readonly static UniqueIdList<MethodInfo> s_CachedMethods = new();
 	internal readonly static UniqueIdList<FieldInfo> s_CachedFields = new();
 	internal readonly static UniqueIdList<PropertyInfo> s_CachedProperties = new();
+	internal readonly static UniqueIdList<ConstructorInfo> s_CachedConstructors = new();
+	internal readonly static UniqueIdList<EventInfo> s_CachedEvents = new();
 	internal readonly static UniqueIdList<Attribute> s_CachedAttributes = new();
 
 	internal static Type? FindType(int InAssemblyLoadContextId, string? InTypeName)
@@ -378,7 +381,7 @@ internal static class TypeInterface
 			if (!s_CachedTypes.TryGetValue(InType, out var type) || type == null)
 				return;
 
-			ReadOnlySpan<MethodInfo> methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+			ReadOnlySpan<MethodInfo> methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
 
 			if (methods.Length == 0)
 			{
@@ -410,7 +413,7 @@ internal static class TypeInterface
 			if (!s_CachedTypes.TryGetValue(InType, out var type) || type == null)
 				return;
 
-			ReadOnlySpan<FieldInfo> fields = type.GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+			ReadOnlySpan<FieldInfo> fields = type.GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
 
 			if (fields.Length == 0)
 			{
@@ -442,7 +445,7 @@ internal static class TypeInterface
 			if (!s_CachedTypes.TryGetValue(InType, out var type) || type == null)
 				return;
 
-			ReadOnlySpan<PropertyInfo> properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+			ReadOnlySpan<PropertyInfo> properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
 
 			if (properties.Length == 0)
 			{
@@ -619,25 +622,68 @@ internal static class TypeInterface
 		return t.FullName ?? t.Name;
 	}
 
-	private static string FormatMethod(MethodInfo method)
+	private static string GetMethodModifier(MethodBase method)
+	{
+		if (method.IsAbstract)
+			return "abstract ";
+
+		if (method is MethodInfo mi && mi.IsVirtual)
+		{
+			bool isOverride = mi.GetBaseDefinition() != mi;
+			if (isOverride)
+				return mi.IsFinal ? "sealed override " : "override ";
+			return mi.IsFinal ? "sealed " : "virtual ";
+		}
+
+		return "";
+	}
+
+	private static string FormatDefaultValue(object? value)
+	{
+		if (value == null)
+			return "null";
+		if (value is string s)
+			return $"\"{s}\"";
+		if (value is bool b)
+			return b ? "true" : "false";
+		if (value is char c)
+			return $"'{c}'";
+		return Convert.ToString(value, CultureInfo.InvariantCulture) ?? "";
+	}
+
+	private static string FormatMethod(MethodBase method)
 	{
 		var sb = new StringBuilder();
+		bool isConstructor = method is ConstructorInfo;
 
-		if (method.IsStatic)
+		sb.Append(GetMethodModifier(method));
+
+		if (method.IsStatic && !isConstructor)
 			sb.Append("static ");
 
-		sb.Append(FormatType(method.ReturnType)).Append(' ').Append(method.Name);
-
-		if (method.IsGenericMethod)
+		if (!isConstructor && method is MethodInfo mi)
 		{
-			sb.Append('<');
-			var genArgs = method.GetGenericArguments();
-			for (int i = 0; i < genArgs.Length; i++)
+			sb.Append(FormatType(mi.ReturnType)).Append(' ').Append(mi.Name);
+
+			if (mi.IsGenericMethod)
 			{
-				if (i > 0) sb.Append(", ");
-				sb.Append(FormatType(genArgs[i]));
+				sb.Append('<');
+				var genArgs = mi.GetGenericArguments();
+				for (int i = 0; i < genArgs.Length; i++)
+				{
+					if (i > 0) sb.Append(", ");
+					sb.Append(FormatType(genArgs[i]));
+				}
+				sb.Append('>');
 			}
-			sb.Append('>');
+		}
+		else if (method.DeclaringType != null)
+		{
+			string typeName = method.DeclaringType.Name;
+			int tick = typeName.IndexOf('`');
+			if (tick >= 0)
+				typeName = typeName.Substring(0, tick);
+			sb.Append(typeName);
 		}
 
 		sb.Append('(');
@@ -646,13 +692,20 @@ internal static class TypeInterface
 		{
 			if (i > 0) sb.Append(", ");
 			var p = parameters[i];
-			if (p.IsOut)
+
+			if (p.GetCustomAttribute<ParamArrayAttribute>() != null)
+				sb.Append("params ");
+			else if (p.IsOut)
 				sb.Append("out ");
 			else if (p.ParameterType.IsByRef)
 				sb.Append(p.IsIn ? "in " : "ref ");
+
 			sb.Append(FormatType(p.ParameterType));
 			if (!string.IsNullOrEmpty(p.Name))
 				sb.Append(' ').Append(p.Name);
+
+			if (p.HasDefaultValue)
+				sb.Append(" = ").Append(FormatDefaultValue(p.DefaultValue));
 		}
 		sb.Append(')');
 
@@ -777,14 +830,14 @@ internal static class TypeInterface
 		return TypeAccessibility.Public;
 	}
 
-	private static TypeAccessibility GetTypeAccessibility(MethodInfo InMethodInfo)
+	private static TypeAccessibility GetTypeAccessibility(MethodBase InMethod)
 	{
-		if (InMethodInfo.IsPublic) return TypeAccessibility.Public;
-		if (InMethodInfo.IsPrivate) return TypeAccessibility.Private;
-		if (InMethodInfo.IsFamily) return TypeAccessibility.Protected;
-		if (InMethodInfo.IsAssembly) return TypeAccessibility.Internal;
-		if (InMethodInfo.IsFamilyOrAssembly) return TypeAccessibility.ProtectedPublic;
-		if (InMethodInfo.IsFamilyAndAssembly) return TypeAccessibility.PrivateProtected;
+		if (InMethod.IsPublic) return TypeAccessibility.Public;
+		if (InMethod.IsPrivate) return TypeAccessibility.Private;
+		if (InMethod.IsFamily) return TypeAccessibility.Protected;
+		if (InMethod.IsAssembly) return TypeAccessibility.Internal;
+		if (InMethod.IsFamilyOrAssembly) return TypeAccessibility.ProtectedPublic;
+		if (InMethod.IsFamilyAndAssembly) return TypeAccessibility.PrivateProtected;
 		return TypeAccessibility.Public;
 	}
 
@@ -856,6 +909,57 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
+	internal static unsafe Bool32 GetFieldInfoIsStatic(int InFieldInfo)
+	{
+		try
+		{
+			if (!s_CachedFields.TryGetValue(InFieldInfo, out var fieldInfo) || fieldInfo == null)
+				return false;
+
+			return fieldInfo.IsStatic;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe Bool32 GetFieldInfoIsLiteral(int InFieldInfo)
+	{
+		try
+		{
+			if (!s_CachedFields.TryGetValue(InFieldInfo, out var fieldInfo) || fieldInfo == null)
+				return false;
+
+			return fieldInfo.IsLiteral;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe Bool32 GetFieldInfoIsInitOnly(int InFieldInfo)
+	{
+		try
+		{
+			if (!s_CachedFields.TryGetValue(InFieldInfo, out var fieldInfo) || fieldInfo == null)
+				return false;
+
+			return fieldInfo.IsInitOnly;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetFieldInfoAttributes(int InFieldInfo, int* OutAttributes, int* OutAttributesCount)
 	{
 		try
@@ -921,6 +1025,94 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
+	internal static unsafe Bool32 GetPropertyInfoHasGetter(int InPropertyInfo)
+	{
+		try
+		{
+			if (!s_CachedProperties.TryGetValue(InPropertyInfo, out var propertyInfo) || propertyInfo == null)
+				return false;
+
+			return propertyInfo.GetGetMethod(nonPublic: true) != null;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe Bool32 GetPropertyInfoHasSetter(int InPropertyInfo)
+	{
+		try
+		{
+			if (!s_CachedProperties.TryGetValue(InPropertyInfo, out var propertyInfo) || propertyInfo == null)
+				return false;
+
+			return propertyInfo.GetSetMethod(nonPublic: true) != null;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe TypeAccessibility GetPropertyInfoGetterAccessibility(int InPropertyInfo)
+	{
+		try
+		{
+			if (!s_CachedProperties.TryGetValue(InPropertyInfo, out var propertyInfo) || propertyInfo == null)
+				return TypeAccessibility.Private;
+
+			var getter = propertyInfo.GetGetMethod(nonPublic: true);
+			return getter != null ? GetTypeAccessibility(getter) : TypeAccessibility.Private;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return TypeAccessibility.Private;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe TypeAccessibility GetPropertyInfoSetterAccessibility(int InPropertyInfo)
+	{
+		try
+		{
+			if (!s_CachedProperties.TryGetValue(InPropertyInfo, out var propertyInfo) || propertyInfo == null)
+				return TypeAccessibility.Private;
+
+			var setter = propertyInfo.GetSetMethod(nonPublic: true);
+			return setter != null ? GetTypeAccessibility(setter) : TypeAccessibility.Private;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return TypeAccessibility.Private;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe Bool32 GetPropertyInfoIsStatic(int InPropertyInfo)
+	{
+		try
+		{
+			if (!s_CachedProperties.TryGetValue(InPropertyInfo, out var propertyInfo) || propertyInfo == null)
+				return false;
+
+			var accessor = propertyInfo.GetGetMethod(nonPublic: true) ?? propertyInfo.GetSetMethod(nonPublic: true);
+			return accessor?.IsStatic ?? false;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
 	internal static unsafe void GetPropertyInfoAttributes(int InPropertyInfo, int* OutAttributes, int* OutAttributesCount)
 	{
 		try
@@ -949,6 +1141,269 @@ internal static class TypeInterface
 		catch (Exception ex)
 		{
 			HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe void GetTypeConstructors(int InType, int* InConstructorArray, int* InConstructorCount)
+	{
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InType, out var type) || type == null)
+				return;
+
+			ReadOnlySpan<ConstructorInfo> constructors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
+
+			if (constructors.Length == 0)
+			{
+				*InConstructorCount = 0;
+				return;
+			}
+
+			*InConstructorCount = constructors.Length;
+
+			if (InConstructorArray == null)
+				return;
+
+			for (int i = 0; i < constructors.Length; i++)
+			{
+				InConstructorArray[i] = s_CachedConstructors.Add(constructors[i]);
+			}
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe NativeString GetConstructorInfoFriendlyName(int InConstructorInfo)
+	{
+		try
+		{
+			if (!s_CachedConstructors.TryGetValue(InConstructorInfo, out var ctorInfo) || ctorInfo == null)
+				return NativeString.Null();
+
+			return FormatMethod(ctorInfo);
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return NativeString.Null();
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe TypeAccessibility GetConstructorInfoAccessibility(int InConstructorInfo)
+	{
+		try
+		{
+			if (!s_CachedConstructors.TryGetValue(InConstructorInfo, out var ctorInfo) || ctorInfo == null)
+				return TypeAccessibility.Internal;
+
+			return GetTypeAccessibility(ctorInfo);
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return TypeAccessibility.Public;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe void GetConstructorInfoAttributes(int InConstructorInfo, int* OutAttributes, int* OutAttributesCount)
+	{
+		try
+		{
+			if (!s_CachedConstructors.TryGetValue(InConstructorInfo, out var ctorInfo) || ctorInfo == null)
+				return;
+
+			var attributes = ctorInfo.GetCustomAttributes().ToImmutableArray();
+
+			if (attributes.Length == 0)
+			{
+				*OutAttributesCount = 0;
+				return;
+			}
+
+			*OutAttributesCount = attributes.Length;
+
+			if (OutAttributes == null)
+				return;
+
+			for (int i = 0; i < attributes.Length; i++)
+			{
+				OutAttributes[i] = s_CachedAttributes.Add(attributes[i]);
+			}
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe void GetTypeEvents(int InType, int* InEventArray, int* InEventCount)
+	{
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InType, out var type) || type == null)
+				return;
+
+			ReadOnlySpan<EventInfo> events = type.GetEvents(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
+
+			if (events.Length == 0)
+			{
+				*InEventCount = 0;
+				return;
+			}
+
+			*InEventCount = events.Length;
+
+			if (InEventArray == null)
+				return;
+
+			for (int i = 0; i < events.Length; i++)
+			{
+				InEventArray[i] = s_CachedEvents.Add(events[i]);
+			}
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe NativeString GetEventInfoName(int InEventInfo)
+	{
+		try
+		{
+			if (!s_CachedEvents.TryGetValue(InEventInfo, out var eventInfo) || eventInfo == null)
+				return NativeString.Null();
+
+			return eventInfo.Name;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return NativeString.Null();
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe void GetEventInfoHandlerType(int InEventInfo, int* OutHandlerType)
+	{
+		try
+		{
+			if (!s_CachedEvents.TryGetValue(InEventInfo, out var eventInfo) || eventInfo == null || eventInfo.EventHandlerType == null)
+				return;
+
+			*OutHandlerType = s_CachedTypes.Add(eventInfo.EventHandlerType);
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe TypeAccessibility GetEventInfoAccessibility(int InEventInfo)
+	{
+		try
+		{
+			if (!s_CachedEvents.TryGetValue(InEventInfo, out var eventInfo) || eventInfo == null)
+				return TypeAccessibility.Private;
+
+			var add = eventInfo.GetAddMethod(nonPublic: true);
+			return add != null ? GetTypeAccessibility(add) : TypeAccessibility.Private;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return TypeAccessibility.Private;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe Bool32 GetEventInfoIsStatic(int InEventInfo)
+	{
+		try
+		{
+			if (!s_CachedEvents.TryGetValue(InEventInfo, out var eventInfo) || eventInfo == null)
+				return false;
+
+			var add = eventInfo.GetAddMethod(nonPublic: true);
+			return add?.IsStatic ?? false;
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe void GetEventInfoAttributes(int InEventInfo, int* OutAttributes, int* OutAttributesCount)
+	{
+		try
+		{
+			if (!s_CachedEvents.TryGetValue(InEventInfo, out var eventInfo) || eventInfo == null)
+				return;
+
+			var attributes = eventInfo.GetCustomAttributes().ToImmutableArray();
+
+			if (attributes.Length == 0)
+			{
+				*OutAttributesCount = 0;
+				return;
+			}
+
+			*OutAttributesCount = attributes.Length;
+
+			if (OutAttributes == null)
+				return;
+
+			for (int i = 0; i < attributes.Length; i++)
+			{
+				OutAttributes[i] = s_CachedAttributes.Add(attributes[i]);
+			}
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex);
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	internal static unsafe void GetTypeNestedTypes(int InType, int* InTypeArray, int* InTypeCount)
+	{
+		try
+		{
+			if (!s_CachedTypes.TryGetValue(InType, out var type) || type == null)
+				return;
+
+			Type[] nested = type.GetNestedTypes(BindingFlags.Public);
+
+			if (nested.Length == 0)
+			{
+				*InTypeCount = 0;
+				return;
+			}
+
+			*InTypeCount = nested.Length;
+
+			if (InTypeArray == null)
+				return;
+
+			for (int i = 0; i < nested.Length; i++)
+			{
+				InTypeArray[i] = s_CachedTypes.Add(nested[i]);
+			}
+		}
+		catch (Exception e)
+		{
+			HandleException(e);
 		}
 	}
 

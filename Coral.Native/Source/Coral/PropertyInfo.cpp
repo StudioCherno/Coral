@@ -24,6 +24,31 @@ namespace Coral {
 		return *m_Type;
 	}
 
+	bool PropertyInfo::HasGetter() const
+	{
+		return s_ManagedFunctions.GetPropertyInfoHasGetterFptr(m_Handle);
+	}
+
+	bool PropertyInfo::HasSetter() const
+	{
+		return s_ManagedFunctions.GetPropertyInfoHasSetterFptr(m_Handle);
+	}
+
+	TypeAccessibility PropertyInfo::GetGetterAccessibility() const
+	{
+		return s_ManagedFunctions.GetPropertyInfoGetterAccessibilityFptr(m_Handle);
+	}
+
+	TypeAccessibility PropertyInfo::GetSetterAccessibility() const
+	{
+		return s_ManagedFunctions.GetPropertyInfoSetterAccessibilityFptr(m_Handle);
+	}
+
+	bool PropertyInfo::IsStatic() const
+	{
+		return s_ManagedFunctions.GetPropertyInfoIsStaticFptr(m_Handle);
+	}
+
 	std::vector<Attribute> PropertyInfo::GetAttributes() const
 	{
 		int32_t attributeCount;
