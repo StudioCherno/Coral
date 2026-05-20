@@ -73,12 +73,12 @@ namespace Coral {
 		return s_ManagedFunctions.IsTypeAssignableFromFptr(m_Id, InOther.m_Id);
 	}
 
-	std::vector<MethodInfo> Type::GetMethods() const
+	std::vector<MethodInfo> Type::GetMethods(int32_t InAdditionalFlags) const
 	{
 		int32_t methodCount = 0;
-		s_ManagedFunctions.GetTypeMethodsFptr(m_Id, nullptr, &methodCount);
+		s_ManagedFunctions.GetTypeMethodsFptr(m_Id, InAdditionalFlags, nullptr, &methodCount);
 		std::vector<ManagedHandle> handles(static_cast<size_t>(methodCount));
-		s_ManagedFunctions.GetTypeMethodsFptr(m_Id, handles.data(), &methodCount);
+		s_ManagedFunctions.GetTypeMethodsFptr(m_Id, InAdditionalFlags, handles.data(), &methodCount);
 
 		std::vector<MethodInfo> methods(handles.size());
 		for (size_t i = 0; i < handles.size(); i++)
@@ -87,12 +87,12 @@ namespace Coral {
 		return methods;
 	}
 
-	std::vector<FieldInfo> Type::GetFields() const
+	std::vector<FieldInfo> Type::GetFields(int32_t InAdditionalFlags) const
 	{
 		int32_t fieldCount = 0;
-		s_ManagedFunctions.GetTypeFieldsFptr(m_Id, nullptr, &fieldCount);
+		s_ManagedFunctions.GetTypeFieldsFptr(m_Id, InAdditionalFlags, nullptr, &fieldCount);
 		std::vector<ManagedHandle> handles(static_cast<size_t>(fieldCount));
-		s_ManagedFunctions.GetTypeFieldsFptr(m_Id, handles.data(), &fieldCount);
+		s_ManagedFunctions.GetTypeFieldsFptr(m_Id, InAdditionalFlags, handles.data(), &fieldCount);
 
 		std::vector<FieldInfo> fields(handles.size());
 		for (size_t i = 0; i < handles.size(); i++)
@@ -101,12 +101,12 @@ namespace Coral {
 		return fields;
 	}
 
-	std::vector<PropertyInfo> Type::GetProperties() const
+	std::vector<PropertyInfo> Type::GetProperties(int32_t InAdditionalFlags) const
 	{
 		int32_t propertyCount = 0;
-		s_ManagedFunctions.GetTypePropertiesFptr(m_Id, nullptr, &propertyCount);
+		s_ManagedFunctions.GetTypePropertiesFptr(m_Id, InAdditionalFlags, nullptr, &propertyCount);
 		std::vector<ManagedHandle> handles(static_cast<size_t>(propertyCount));
-		s_ManagedFunctions.GetTypePropertiesFptr(m_Id, handles.data(), &propertyCount);
+		s_ManagedFunctions.GetTypePropertiesFptr(m_Id, InAdditionalFlags, handles.data(), &propertyCount);
 
 		std::vector<PropertyInfo> properties(handles.size());
 		for (size_t i = 0; i < handles.size(); i++)

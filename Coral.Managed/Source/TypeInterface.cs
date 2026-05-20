@@ -374,14 +374,15 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	internal static unsafe void GetTypeMethods(int InType, int* InMethodArray, int* InMethodCount)
+	internal static unsafe void GetTypeMethods(int InType, int InAdditionalFlags, int* InMethodArray, int* InMethodCount)
 	{
 		try
 		{
 			if (!s_CachedTypes.TryGetValue(InType, out var type) || type == null)
 				return;
 
-			ReadOnlySpan<MethodInfo> methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
+			var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | (BindingFlags)InAdditionalFlags;
+			ReadOnlySpan<MethodInfo> methods = type.GetMethods(bindingFlags);
 
 			if (methods.Length == 0)
 			{
@@ -406,14 +407,15 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	internal static unsafe void GetTypeFields(int InType, int* InFieldArray, int* InFieldCount)
+	internal static unsafe void GetTypeFields(int InType, int InAdditionalFlags, int* InFieldArray, int* InFieldCount)
 	{
 		try
 		{
 			if (!s_CachedTypes.TryGetValue(InType, out var type) || type == null)
 				return;
 
-			ReadOnlySpan<FieldInfo> fields = type.GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
+			var bindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | (BindingFlags)InAdditionalFlags;
+			ReadOnlySpan<FieldInfo> fields = type.GetFields(bindingFlags);
 
 			if (fields.Length == 0)
 			{
@@ -438,14 +440,15 @@ internal static class TypeInterface
 	}
 
 	[UnmanagedCallersOnly]
-	internal static unsafe void GetTypeProperties(int InType, int* InPropertyArray, int* InPropertyCount)
+	internal static unsafe void GetTypeProperties(int InType, int InAdditionalFlags, int* InPropertyArray, int* InPropertyCount)
 	{
 		try
 		{
 			if (!s_CachedTypes.TryGetValue(InType, out var type) || type == null)
 				return;
 
-			ReadOnlySpan<PropertyInfo> properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
+			var bindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | (BindingFlags)InAdditionalFlags;
+			ReadOnlySpan<PropertyInfo> properties = type.GetProperties(bindingFlags);
 
 			if (properties.Length == 0)
 			{

@@ -39,9 +39,9 @@ namespace Coral {
 	using IsTypeAssignableFromFn = Bool32 (*)(TypeId, TypeId);
 	using IsTypeSZArrayFn = Bool32 (*)(TypeId);
 	using GetElementTypeFn = void (*)(TypeId, TypeId*);
-	using GetTypeMethodsFn = void (*)(TypeId, ManagedHandle*, int32_t*);
-	using GetTypeFieldsFn = void (*)(TypeId, ManagedHandle*, int32_t*);
-	using GetTypePropertiesFn = void (*)(TypeId, ManagedHandle*, int32_t*);
+	using GetTypeMethodsFn = void (*)(TypeId, int32_t, ManagedHandle*, int32_t*);
+	using GetTypeFieldsFn = void (*)(TypeId, int32_t, ManagedHandle*, int32_t*);
+	using GetTypePropertiesFn = void (*)(TypeId, int32_t, ManagedHandle*, int32_t*);
 	using GetTypeConstructorsFn = void (*)(TypeId, ManagedHandle*, int32_t*);
 	using GetTypeEventsFn = void (*)(TypeId, ManagedHandle*, int32_t*);
 	using GetTypeNestedTypesFn = void (*)(TypeId, TypeId*, int32_t*);

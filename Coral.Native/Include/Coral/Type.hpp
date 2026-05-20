@@ -29,9 +29,12 @@ namespace Coral {
 		bool IsAssignableTo(const Type& InOther) const;
 		bool IsAssignableFrom(const Type& InOther) const;
 
-		std::vector<MethodInfo> GetMethods() const;
-		std::vector<FieldInfo> GetFields() const;
-		std::vector<PropertyInfo> GetProperties() const;
+		// InAdditionalFlags is OR'd with the defaults (Public | NonPublic | Instance | Static). Values
+		// correspond to System.Reflection.BindingFlags — most useful is DeclaredOnly (2) to exclude
+		// inherited members, or FlattenHierarchy (64) to include inherited statics.
+		std::vector<MethodInfo> GetMethods(int32_t InAdditionalFlags = 0) const;
+		std::vector<FieldInfo> GetFields(int32_t InAdditionalFlags = 0) const;
+		std::vector<PropertyInfo> GetProperties(int32_t InAdditionalFlags = 0) const;
 		std::vector<ConstructorInfo> GetConstructors() const;
 		std::vector<EventInfo> GetEvents() const;
 		std::vector<Type*>& GetNestedTypes();
