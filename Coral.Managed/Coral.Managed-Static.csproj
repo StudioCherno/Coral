@@ -7,6 +7,10 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<!-- Build against net9.0 but let the host run on a newer major (e.g. .NET 10) when 9.x
+		     isn't installed. Without this the SDK writes rollForward=LatestMinor, which stays on
+		     9.x and fails to start the runtime on a 10-only machine. Matches Coral.Managed.csproj. -->
+		<RollForward>Major</RollForward>
 		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<EnableDynamicLoading>true</EnableDynamicLoading>
