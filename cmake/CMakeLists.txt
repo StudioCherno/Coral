@@ -12,24 +12,28 @@ find_program(DOTNET NAMES dotnet REQUIRED)
 
 set(CORAL_ROOT ${CMAKE_CURRENT_LIST_DIR}/..)
 
-file(GLOB CORAL_MANAGED_SRC CONFIGURE_DEPENDS ${CORAL_ROOT}/Coral.Managed/Source/*.cs)
-add_custom_command(
-	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Coral.Managed.dll ${CMAKE_CURRENT_BINARY_DIR}/Coral.Managed.deps.json ${CMAKE_CURRENT_BINARY_DIR}/Coral.Managed.runtimeconfig.json
-	DEPENDS ${CORAL_MANAGED_SRC} ${CORAL_ROOT}/Coral.Managed/Coral.Managed-Static.csproj
-	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Building Coral managed code"
-    VERBATIM
-	COMMAND ${DOTNET} build ${CORAL_ROOT}/Coral.Managed/Coral.Managed-Static.csproj
-			--artifacts-path ${CMAKE_CURRENT_BINARY_DIR}
-			--output ${CMAKE_CURRENT_BINARY_DIR}
-			--self-contained $<IF:$<CONFIG:Debug>,true,false>
-)
-add_custom_target(CoralManaged DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Coral.Managed.dll)
+# Coral.Managed: the managed (.NET) half of Coral. On Visual Studio we add the .csproj to the
+# solution as-is via include_external_msproject so VS shows it as a real C# project (sources,
+# IntelliSense, NuGet). PLATFORM "Any CPU" maps the solution's x64 config onto the project, which
+# VS otherwise refuses to build. Everywhere else there's no native C# support, so we just run
+# dotnet build. Both branches define the Coral.Managed target, so dependencies behave the same.
+set(CORAL_MANAGED_CSPROJ "${CORAL_ROOT}/Coral.Managed/Coral.Managed-Static.csproj")
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+	include_external_msproject(Coral.Managed "${CORAL_MANAGED_CSPROJ}" PLATFORM "Any CPU")
+else()
+	add_custom_target(Coral.Managed ALL
+		COMMAND ${DOTNET} build "${CORAL_MANAGED_CSPROJ}"
+			--configuration $<CONFIG>
+			--output "${CORAL_ROOT}/Build/$<CONFIG>"
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMENT "Building Coral managed code"
+		VERBATIM)
+endif()
 
 add_library(Coral.Native STATIC)
 
 LinkDotnetNetHost(${DOTNET} Coral.Native)
-add_dependencies(Coral.Native CoralManaged)
+add_dependencies(Coral.Native Coral.Managed)
 
 set_target_properties(Coral.Native PROPERTIES LINKER_LANGUAGE CXX)
 target_compile_features(Coral.Native PUBLIC cxx_std_17)
@@ -52,7 +56,7 @@ if(CORAL_EXAMPLE)
 	file(GLOB EXAMPLE_MANAGED_SRC CONFIGURE_DEPENDS ${EXAMPLE_ROOT}/Example.Managed/Source/*.cs)
 	add_custom_command(
 		OUTPUT ${EXAMPLE_BINDIR}/Example.Managed.dll ${EXAMPLE_BINDIR}/Example.Managed.deps.json ${EXAMPLE_BINDIR}/Example.Managed.runtimeconfig.json
-		DEPENDS ${EXAMPLE_MANAGED_SRC} ${EXAMPLE_ROOT}/Example.Managed/Example.Managed-Static.csproj CoralManaged
+		DEPENDS ${EXAMPLE_MANAGED_SRC} ${EXAMPLE_ROOT}/Example.Managed/Example.Managed-Static.csproj Coral.Managed
 		WORKING_DIRECTORY ${EXAMPLE_ROOT}
 		COMMENT "Building example managed code"
 		VERBATIM
@@ -82,7 +86,7 @@ if(CORAL_TESTING)
 	file(GLOB TESTING_MANAGED_SRC CONFIGURE_DEPENDS ${TESTING_ROOT}/Testing.Managed/Source/*.cs)
 	add_custom_command(
 		OUTPUT ${TESTING_BINDIR}/Testing.Managed.dll ${TESTING_BINDIR}/Testing.Managed.deps.json ${TESTING_BINDIR}/Testing.Managed.runtimeconfig.json
-		DEPENDS ${TESTING_MANAGED_SRC} ${TESTING_ROOT}/Testing.Managed/Testing.Managed-Static.csproj CoralManaged
+		DEPENDS ${TESTING_MANAGED_SRC} ${TESTING_ROOT}/Testing.Managed/Testing.Managed-Static.csproj Coral.Managed
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		COMMENT "Building testing managed code"
 		VERBATIM
