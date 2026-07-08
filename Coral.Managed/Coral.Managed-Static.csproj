@@ -3,6 +3,7 @@
 		<OutputType>Library</OutputType>
 		<AssemblyName>Coral.Managed</AssemblyName>
 		<TargetFramework>net9.0</TargetFramework>
+		<Configurations>Debug;Release;Dist</Configurations>
 
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -14,6 +15,10 @@
 		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<EnableDynamicLoading>true</EnableDynamicLoading>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Dist'">
+		<Optimize>true</Optimize>
 	</PropertyGroup>
 
 	<ItemGroup>
