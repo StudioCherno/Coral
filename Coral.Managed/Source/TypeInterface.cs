@@ -101,6 +101,10 @@ internal static class TypeInterface
 				{
 					paramType = ManagedType.Pointer;
 				}
+				else if (methodParams[i].ParameterType.IsEnum && s_TypeConverters.TryGetValue(methodParams[i].ParameterType.GetEnumUnderlyingType(), out paramType))
+				{
+					// Nothing to do, mapped enum underlying type
+				}
 				else if (!s_TypeConverters.TryGetValue(methodParams[i].ParameterType, out paramType))
 				{
 					paramType = ManagedType.Unknown;

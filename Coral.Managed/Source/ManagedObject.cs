@@ -358,7 +358,7 @@ internal static class ManagedObject
 		}
 		catch (Exception ex)
 		{
-			HandleException(ex);
+			HandleException(new Exception($"Failed to InvokeMethod {NativeStringOrNull(InMethodName)}", ex));
 		}
 	}
 	

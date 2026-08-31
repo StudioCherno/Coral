@@ -111,8 +111,26 @@ public struct NativeArray<T> : IDisposable, IEnumerable<T>
 
 	public T? this[int InIndex]
 	{
-		get => Marshal.PtrToStructure<T>(IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()));
-		set => Marshal.StructureToPtr<T>(value!, IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()), false);
+		get
+		{
+			if (typeof(T).IsEnum)
+			{
+				return (T)Marshalling.MarshalEnum(
+					IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf(Enum.GetUnderlyingType(typeof(T)))), typeof(T));
+			}
+			return Marshal.PtrToStructure<T>(IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()));	
+		}
+		set
+		{
+			if (typeof(T).IsEnum)
+			{
+				Marshal.StructureToPtr<T>(value!, IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf(Enum.GetUnderlyingType(typeof(T)))), false);
+			}
+			else
+			{
+				Marshal.StructureToPtr<T>(value!, IntPtr.Add(m_NativeArray, InIndex * Marshal.SizeOf<T>()), false);
+			}	
+		}
 	}
 
 	public static NativeArray<T> Map(T[] array)

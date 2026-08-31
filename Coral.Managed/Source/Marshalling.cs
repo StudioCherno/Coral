@@ -216,6 +216,36 @@ public static class Marshalling
 		handle.Free();
 	}*/
 
+	public static object MarshalEnum(IntPtr InValue, Type InType)
+	{
+		if (!InType.IsEnum)
+		{
+			throw new Exception($"Type is not an enum for marshal: {InType}");
+		}
+		
+		switch (Marshal.SizeOf(InType.GetEnumUnderlyingType()))
+		{
+			case 8:
+				ulong longValue = Marshal.PtrToStructure<ulong>(InValue);
+				return Enum.ToObject(InType, longValue);
+				
+			case 4:
+				uint intValue = Marshal.PtrToStructure<uint>(InValue);
+				return Enum.ToObject(InType, intValue);
+				
+			case 2:
+				ushort shortValue = Marshal.PtrToStructure<ushort>(InValue);
+				return Enum.ToObject(InType, shortValue);
+				
+			case 1:
+				byte byteValue = Marshal.PtrToStructure<byte>(InValue);
+				return Enum.ToObject(InType, byteValue);
+			
+			default:
+				throw new Exception($"Type is too large to be an enum for marshal: {InType}");
+		}
+	}
+
 	public static object? MarshalPointer(IntPtr InValue, Type InType)
 	{
 		if (InType.IsPointer || InType == typeof(IntPtr))
@@ -234,6 +264,11 @@ public static class Marshalling
 		else if (InType == typeof(NativeString))
 		{
 			return Marshal.PtrToStructure<NativeString>(InValue);
+		}
+
+		if (InType.IsEnum)
+		{
+			return MarshalEnum(InValue, InType);
 		}
 
 		if (InType.IsSZArray)
@@ -296,7 +331,15 @@ public static class Marshalling
 
 		for (int i = 0; i < parameterPointers.Length; i++)
 		{
-			result[i] = MarshalPointer(parameterPointers[i], parameterInfos[i].ParameterType);
+			try
+			{
+				result[i] = MarshalPointer(parameterPointers[i], parameterInfos[i].ParameterType);
+			}
+			catch (Exception ex)
+			{
+				ManagedHost.HandleException(new Exception($"Failed to marshal parameter[{i}] of type '{parameterInfos[i].ParameterType.Name}' with value: {parameterPointers[i]}", ex));
+				return [];
+			}
 		}
 
 		return result;

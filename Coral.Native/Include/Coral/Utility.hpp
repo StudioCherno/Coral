@@ -64,7 +64,19 @@ namespace Coral {
 	template <typename TArg, size_t TIndex>
 	inline void AddToArrayI(const void** InArgumentsArr, ManagedType* InParameterTypes, TArg&& InArg)
 	{
+		using UnqualifiedType = std::remove_cv_t<std::remove_reference_t<TArg>>;
+
+		// Use the underlying C++ enum type for signature matching
 		ManagedType managedType = GetManagedType<std::remove_const_t<std::remove_reference_t<TArg>>>();
+		if constexpr (std::is_enum_v<UnqualifiedType>)
+		{
+			managedType = GetManagedType<std::underlying_type_t<UnqualifiedType>>();
+		}
+		else
+		{
+			managedType = GetManagedType<UnqualifiedType>();
+		}
+
 		InParameterTypes[TIndex] = managedType;
 
 		if constexpr (std::is_pointer_v<std::remove_reference_t<TArg>>)
