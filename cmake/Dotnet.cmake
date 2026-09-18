@@ -56,21 +56,23 @@ function(LinkDotnetNetHost DOTNET TARGET)
 		endif()
 
 		file(GLOB PACKS "${SDK_PATH}/packs/Microsoft.NETCore.App.Host*-${DOTNET_ARCH}")
+		list(GET PACKS 0 PACK)
 	endif()
 
-	file(GLOB NATIVES "${PACKS}/${RUNTIME_VERSION}/runtimes/*")
+	file(GLOB NATIVES "${PACK}/${RUNTIME_VERSION}/runtimes/*")
+	list(GET NATIVES 0 NATIVE)
 
-	target_include_directories(${TARGET} PUBLIC ${NATIVES}/native)
+	target_include_directories(${TARGET} PUBLIC ${NATIVE}/native)
 
 	block()
 		if(NOT WINDOWS)
 			list(REMOVE_ITEM CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_SHARED_LIBRARY_SUFFIX})
 		endif()
-	
+
 		find_library(
 			NETHOST
 			NAMES nethost
-			PATHS ${NATIVES}/native
+			PATHS ${NATIVE}/native
 			NO_DEFAULT_PATH
 			REQUIRED
 		)
