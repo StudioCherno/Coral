@@ -15,7 +15,7 @@ namespace Coral {
 		template<typename TReturn>
 		TReturn GetFieldValue(std::string_view InFieldName)
 		{
-			TReturn result;
+			TReturn result{};
 			GetFieldValueInternal(InFieldName, &result);
 			return result;
 		}

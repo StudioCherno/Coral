@@ -111,6 +111,7 @@ namespace Coral {
 		auto [idx, result] = m_LoadedAssemblies.EmplaceBack();
 		result.m_Host = m_Host;
 		result.m_AssemblyId = s_ManagedFunctions.LoadAssemblyFromMemoryFptr(m_ContextId, data, dataLength);
+		result.m_OwnerContextId = m_ContextId;
 		result.m_LoadStatus = s_ManagedFunctions.GetLastLoadStatusFptr();
 
 		if (result.m_LoadStatus == AssemblyLoadStatus::Success)
@@ -124,11 +125,22 @@ namespace Coral {
 			std::vector<TypeId> typeIds(static_cast<size_t>(typeCount));
 			s_ManagedFunctions.GetAssemblyTypesFptr(m_ContextId, result.m_AssemblyId, typeIds.data(), &typeCount);
 
+			// Runtime byte loads need the same context-local lookup authority as file
+			// loads. Global name lookup can select a type from another live context.
+			result.m_LocalTypes.reserve(typeIds.size());
+			result.m_LocalTypeIdCache.reserve(typeIds.size());
+			result.m_LocalTypeNameCache.reserve(typeIds.size());
 			for (auto typeId : typeIds)
 			{
 				Type type;
 				type.m_Id = typeId;
 				result.m_Types.push_back(TypeCache::Get().CacheType(std::move(type)));
+
+				Type localType;
+				localType.m_Id = typeId;
+				Type& inserted = result.m_LocalTypes.emplace_back(std::move(localType));
+				result.m_LocalTypeIdCache[inserted.GetTypeId()] = &inserted;
+				result.m_LocalTypeNameCache[inserted.GetFullName()] = &inserted;
 			}
 		}
 

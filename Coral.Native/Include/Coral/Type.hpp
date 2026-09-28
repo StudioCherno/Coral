@@ -81,7 +81,7 @@ namespace Coral {
 		{
 			constexpr size_t parameterCount = sizeof...(InParameters);
 
-			TReturn result;
+			TReturn result{};
 
 			if constexpr (parameterCount > 0)
 			{

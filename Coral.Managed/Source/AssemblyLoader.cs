@@ -26,7 +26,7 @@ public static class AssemblyLoader
 	private static readonly Dictionary<Type, AssemblyLoadStatus> s_AssemblyLoadErrorLookup = new();
 	private static readonly Dictionary<int, Dictionary<int, Assembly>> s_AssemblyCache = new();
 #if DEBUG
-	private static readonly Dictionary<int, List<GCHandle>> s_AllocatedHandles = new();
+	private static readonly Dictionary<Assembly, List<GCHandle>> s_AllocatedHandles = new(ReferenceEqualityComparer.Instance);
 #endif
 	private static AssemblyLoadStatus s_LastLoadStatus = AssemblyLoadStatus.Success;
 
@@ -183,6 +183,16 @@ public static class AssemblyLoader
 	[UnmanagedCallersOnly]
 	internal static void UnloadAssemblyLoadContext(int InContextId)
 	{
+		try { UnloadContext(InContextId); }
+		catch (Exception error)
+		{
+			// Diagnostics can allocate too; no managed exception may cross the native boundary.
+			try { HandleException(error); } catch { }
+		}
+	}
+
+	private static void UnloadContext(int InContextId)
+	{
 		if (!s_AssemblyContexts.TryGetValue(InContextId, out var alc))
 		{
 			LogMessage($"Cannot unload AssemblyLoadContext '{InContextId}', it was either never loaded or already unloaded.", MessageLevel.Warning);
@@ -199,9 +209,8 @@ public static class AssemblyLoader
 		foreach (var assembly in alc.Assemblies)
 		{
 			var assemblyName = assembly.GetName();
-			int assemblyId = assemblyName.Name!.GetHashCode();
 
-			if (!s_AllocatedHandles.TryGetValue(assemblyId, out var handles))
+			if (!s_AllocatedHandles.TryGetValue(assembly, out var handles))
 			{
 				continue;
 			}
@@ -232,17 +241,14 @@ public static class AssemblyLoader
 				handle.Free();
 			}
 
-			s_AllocatedHandles.Remove(assemblyId);
+			s_AllocatedHandles.Remove(assembly);
 		}
 #endif
 
-		ManagedObject.s_CachedMethods.Clear();
-
-		TypeInterface.s_CachedTypes.Clear();
-		TypeInterface.s_CachedMethods.Clear();
-		TypeInterface.s_CachedFields.Clear();
-		TypeInterface.s_CachedProperties.Clear();
-		TypeInterface.s_CachedAttributes.Clear();
+		// Preserve every still-live peer's native reflection handles. Remove all
+		// managed cache roots owned by (or constructed with types from) this context.
+		ManagedObject.RemoveContext(alc);
+		TypeInterface.RemoveContext(alc);
 
 		s_AssemblyContexts.Remove(InContextId);
 		s_AlcDllPaths.Remove(InContextId);
@@ -368,13 +374,11 @@ public static class AssemblyLoader
 	// so that we can check that they've all been freed when the assembly is unloaded.
 	internal static void RegisterHandle(Assembly InAssembly, GCHandle InHandle)
 	{
-		var assemblyName = InAssembly.GetName();
-		int assemblyId = assemblyName.Name!.GetHashCode();
 
-		if (!s_AllocatedHandles.TryGetValue(assemblyId, out var handles))
+		if (!s_AllocatedHandles.TryGetValue(InAssembly, out var handles))
 		{
-			s_AllocatedHandles.Add(assemblyId, new List<GCHandle>());
-			handles = s_AllocatedHandles[assemblyId];
+			s_AllocatedHandles.Add(InAssembly, new List<GCHandle>());
+			handles = s_AllocatedHandles[InAssembly];
 		}
 
 		handles.Add(InHandle);
@@ -383,9 +387,8 @@ public static class AssemblyLoader
 	internal static void DeregisterHandle(Assembly InAssembly, GCHandle InHandle)
 	{
 		var assemblyName = InAssembly.GetName();
-		int assemblyId = assemblyName.Name!.GetHashCode();
 
-		if (!s_AllocatedHandles.TryGetValue(assemblyId, out var handles))
+		if (!s_AllocatedHandles.TryGetValue(InAssembly, out var handles))
 		{
 			return;
 		}
