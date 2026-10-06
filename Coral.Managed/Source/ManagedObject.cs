@@ -2,10 +2,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 
 namespace Coral.Managed;
 
@@ -39,14 +41,16 @@ internal static class ManagedObject
 
 	public readonly struct MethodKey : IEquatable<MethodKey>
 	{
-		public readonly string TypeName;
+		public readonly Type DeclaringType;
+		public readonly BindingFlags Flags;
 		public readonly string Name;
 		public readonly ManagedType[] Types;
 		public readonly int ParameterCount;
 
-		public MethodKey(string InTypeName, string InName, ManagedType[] InTypes, int InParameterCount)
+		public MethodKey(Type InType, string InName, ManagedType[] InTypes, int InParameterCount, BindingFlags InFlags)
 		{
-			TypeName = InTypeName;
+			DeclaringType = InType;
+			Flags = InFlags;
 			Name = InName;
 			Types = InTypes;
 			ParameterCount = InParameterCount;
@@ -54,9 +58,10 @@ internal static class ManagedObject
 
 		public override bool Equals([NotNullWhen(true)] object? obj) => obj is MethodKey other && Equals(other);
 
-		bool IEquatable<MethodKey>.Equals(MethodKey other)
+		public bool Equals(MethodKey other)
 		{
-			if (TypeName != other.TypeName || Name != other.Name)
+			if (DeclaringType != other.DeclaringType || Flags != other.Flags || Name != other.Name
+				|| ParameterCount != other.ParameterCount || Types.Length != other.Types.Length)
 				return false;
 
 			for (int i = 0; i < Types.Length; i++)
@@ -75,7 +80,8 @@ internal static class ManagedObject
 			{
 				int hash = 17;
 
-				hash = hash * 23 + TypeName.GetHashCode();
+				hash = hash * 23 + DeclaringType.GetHashCode();
+				hash = hash * 23 + Flags.GetHashCode();
 				hash = hash * 23 + Name.GetHashCode();
 				foreach (var type in Types)
 					hash = hash * 23 + type.GetHashCode();
@@ -86,7 +92,18 @@ internal static class ManagedObject
 		}
 	}
 
-	internal static Dictionary<MethodKey, MethodInfo> s_CachedMethods = new Dictionary<MethodKey, MethodInfo>();
+	// Reflection Type identity includes the defining assembly and load context. FullName does not.
+	private static readonly ConcurrentDictionary<MethodKey, MethodInfo> s_CachedMethods = new();
+
+	internal static void RemoveContext(AssemblyLoadContext context)
+	{
+		foreach (var entry in s_CachedMethods)
+		{
+			if (ReflectionCacheContext.References(entry.Key.DeclaringType, context)
+				|| ReflectionCacheContext.References(entry.Value, context))
+				s_CachedMethods.TryRemove(entry.Key, out _);
+		}
+	}
 
 	static string TypeNameOrNull(Type? InType) {
 		if (InType != null) {
@@ -239,7 +256,7 @@ internal static class ManagedObject
 			}
 		}
 
-		var methodKey = new MethodKey(TypeNameOrNull(InType), InMethodName, parameterTypes, InParameterCount);
+		var methodKey = new MethodKey(InType, InMethodName, parameterTypes, InParameterCount, InBindingFlags);
 
 		if (!s_CachedMethods.TryGetValue(methodKey, out methodInfo))
 		{
@@ -260,7 +277,7 @@ internal static class ManagedObject
 				return null;
 			}
 
-			s_CachedMethods.Add(methodKey, methodInfo);
+			s_CachedMethods.TryAdd(methodKey, methodInfo);
 		}
 
 		return methodInfo;

@@ -25,7 +25,7 @@ namespace Coral {
 		{
 			constexpr size_t parameterCount = sizeof...(InParameters);
 
-			TReturn result;
+			TReturn result{};
 			
 			if constexpr (parameterCount > 0)
 			{
@@ -69,7 +69,7 @@ namespace Coral {
 		template<typename TReturn>
 		TReturn GetFieldValue(std::string_view InFieldName) const
 		{
-			TReturn result;
+			TReturn result{};
 			GetFieldValueRaw(InFieldName, &result);
 			return result;
 		}
@@ -83,7 +83,7 @@ namespace Coral {
 		template<typename TReturn>
 		TReturn GetPropertyValue(std::string_view InPropertyName) const
 		{
-			TReturn result;
+			TReturn result{};
 			GetPropertyValueRaw(InPropertyName, &result);
 			return result;
 		}

@@ -26,6 +26,20 @@ internal static class TypeInterface
 	internal readonly static UniqueIdList<EventInfo> s_CachedEvents = new();
 	internal readonly static UniqueIdList<Attribute> s_CachedAttributes = new();
 
+	internal static void RemoveContext(AssemblyLoadContext context)
+	{
+		s_CachedMethods.RemoveWhere((value, _) => ReflectionCacheContext.References(value, context));
+		s_CachedFields.RemoveWhere((value, _) => ReflectionCacheContext.References(value, context));
+		s_CachedProperties.RemoveWhere((value, _) => ReflectionCacheContext.References(value, context));
+		s_CachedConstructors.RemoveWhere((value, _) => ReflectionCacheContext.References(value, context));
+		s_CachedEvents.RemoveWhere((value, _) => ReflectionCacheContext.References(value, context));
+		// Framework-defined attributes can hold plugin values. Retain their declaring
+		// member as provenance; the attribute's own assembly is not sufficient.
+		s_CachedAttributes.RemoveWhere((value, owner) => ReflectionCacheContext.References(value.GetType(), context)
+			|| (owner is MemberInfo member && ReflectionCacheContext.References(member, context)));
+		s_CachedTypes.RemoveWhere((value, _) => ReflectionCacheContext.References(value, context));
+	}
+
 	internal static Type? FindType(int InAssemblyLoadContextId, string? InTypeName)
 	{
 		var type = Type.GetType(InTypeName!,
@@ -517,7 +531,7 @@ internal static class TypeInterface
 			for (int i = 0; i < attributes.Length; i++)
 			{
 				var attribute = attributes[i];
-				OutAttributes[i] = s_CachedAttributes.Add(attribute);
+				OutAttributes[i] = s_CachedAttributes.Add(attribute, type);
 			}
 		}
 		catch (Exception ex)
@@ -807,7 +821,7 @@ internal static class TypeInterface
 
 			for (int i = 0; i < attributes.Length; i++)
 			{
-				OutAttributes[i] = s_CachedAttributes.Add(attributes[i]);
+				OutAttributes[i] = s_CachedAttributes.Add(attributes[i], methodInfo);
 			}
 		}
 		catch (Exception ex)
@@ -989,7 +1003,7 @@ internal static class TypeInterface
 
 			for (int i = 0; i < attributes.Length; i++)
 			{
-				OutAttributes[i] = s_CachedAttributes.Add(attributes[i]);
+				OutAttributes[i] = s_CachedAttributes.Add(attributes[i], fieldInfo);
 			}
 		}
 		catch (Exception ex)
@@ -1142,7 +1156,7 @@ internal static class TypeInterface
 
 			for (int i = 0; i < attributes.Length; i++)
 			{
-				OutAttributes[i] = s_CachedAttributes.Add(attributes[i]);
+				OutAttributes[i] = s_CachedAttributes.Add(attributes[i], propertyInfo);
 			}
 		}
 		catch (Exception ex)
@@ -1240,7 +1254,7 @@ internal static class TypeInterface
 
 			for (int i = 0; i < attributes.Length; i++)
 			{
-				OutAttributes[i] = s_CachedAttributes.Add(attributes[i]);
+				OutAttributes[i] = s_CachedAttributes.Add(attributes[i], ctorInfo);
 			}
 		}
 		catch (Exception ex)
@@ -1406,7 +1420,7 @@ internal static class TypeInterface
 
 			for (int i = 0; i < attributes.Length; i++)
 			{
-				OutAttributes[i] = s_CachedAttributes.Add(attributes[i]);
+				OutAttributes[i] = s_CachedAttributes.Add(attributes[i], eventInfo);
 			}
 		}
 		catch (Exception ex)
