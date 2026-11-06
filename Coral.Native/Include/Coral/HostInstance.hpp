@@ -45,6 +45,17 @@ namespace Coral {
 		// This does not affect the behaviour of LoadAssembly from native code.
 		AssemblyLoadContext CreateAssemblyLoadContext(std::string_view InName, std::string_view InDllPath);
 
+		// Loads an assembly into the runtime's default load context, which never unloads (hostfxr's hdt_load_assembly,
+		// .NET 8+). Coral.Managed itself lives in an isolated component context, so assemblies loaded here can't share
+		// Coral's types; this is for hosts that need their own static entry points. False, with an error message, on
+		// failure.
+		bool LoadAssemblyIntoDefaultContext(const std::filesystem::path& InAssemblyPath);
+
+		// The address of a static [UnmanagedCallersOnly] method of a type in the default load context (hostfxr's
+		// hdt_get_function_pointer). `InTypeName` is assembly-qualified: "Namespace.Type, AssemblyName". Nullptr, with
+		// an error message, when it can't be resolved.
+		void* GetDefaultContextFunction(std::string_view InTypeName, std::string_view InMethodName);
+
 	private:
 		bool LoadHostFXR() const;
 		bool InitializeCoralManaged();

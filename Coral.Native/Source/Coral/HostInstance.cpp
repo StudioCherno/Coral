@@ -22,6 +22,8 @@ namespace Coral {
 		hostfxr_get_runtime_delegate_fn GetRuntimeDelegate = nullptr;
 		hostfxr_close_fn CloseHostFXR = nullptr;
 		load_assembly_and_get_function_pointer_fn GetManagedFunctionPtr = nullptr;
+		load_assembly_fn LoadAssembly = nullptr;
+		get_function_pointer_fn GetFunctionPointer = nullptr;
 	};
 	static CoreCLRFunctions s_CoreCLRFunctions;
 
@@ -123,6 +125,77 @@ namespace Coral {
 		s_ManagedFunctions.UnloadAssemblyLoadContextFptr(InLoadContext.m_ContextId);
 		InLoadContext.m_ContextId = -1;
 		InLoadContext.m_LoadedAssemblies.Clear();
+	}
+
+	// These may be called before Initialize has installed the message callback.
+	static void ReportHostError(const std::string& InMessage)
+	{
+		if (MessageCallback)
+			MessageCallback(InMessage, MessageLevel::Error);
+	}
+
+	// Fetched on first use, so hosts that never load into the default context pay nothing.
+	static bool EnsureRuntimeDelegate(void* InHostFXRContext, hostfxr_delegate_type InType, void** OutDelegate, const char* InName)
+	{
+		if (*OutDelegate)
+			return true;
+
+		if (!InHostFXRContext || !s_CoreCLRFunctions.GetRuntimeDelegate)
+		{
+			ReportHostError(std::string("Can't get ") + InName + ": the .NET runtime is not initialized.");
+			return false;
+		}
+
+		const int status = s_CoreCLRFunctions.GetRuntimeDelegate(InHostFXRContext, InType, OutDelegate);
+		if (status != StatusCode::Success || !*OutDelegate)
+		{
+			*OutDelegate = nullptr;
+			ReportHostError(std::string("The .NET runtime did not provide ") + InName + " (status: " + std::to_string(status) + "). "
+				"It needs .NET 8 or newer.");
+			return false;
+		}
+
+		return true;
+	}
+
+	bool HostInstance::LoadAssemblyIntoDefaultContext(const std::filesystem::path& InAssemblyPath)
+	{
+		if (!EnsureRuntimeDelegate(m_HostFXRContext, hdt_load_assembly, reinterpret_cast<void**>(&s_CoreCLRFunctions.LoadAssembly), "hdt_load_assembly"))
+			return false;
+
+		if (!std::filesystem::exists(InAssemblyPath))
+		{
+			ReportHostError("Can't load '" + InAssemblyPath.string() + "' into the default load context: the file does not exist.");
+			return false;
+		}
+
+		const int status = s_CoreCLRFunctions.LoadAssembly(InAssemblyPath.c_str(), nullptr, nullptr);
+		if (status != StatusCode::Success)
+		{
+			ReportHostError("Failed to load '" + InAssemblyPath.string() + "' into the default load context (status: " + std::to_string(status) + ").");
+			return false;
+		}
+
+		return true;
+	}
+
+	void* HostInstance::GetDefaultContextFunction(std::string_view InTypeName, std::string_view InMethodName)
+	{
+		if (!EnsureRuntimeDelegate(m_HostFXRContext, hdt_get_function_pointer, reinterpret_cast<void**>(&s_CoreCLRFunctions.GetFunctionPointer), "hdt_get_function_pointer"))
+			return nullptr;
+
+		const UCString typeName = StringHelper::ConvertUtf8ToWide(InTypeName);
+		const UCString methodName = StringHelper::ConvertUtf8ToWide(InMethodName);
+		void* function = nullptr;
+		const int status = s_CoreCLRFunctions.GetFunctionPointer(typeName.c_str(), methodName.c_str(), UNMANAGEDCALLERSONLY_METHOD, nullptr, nullptr, &function);
+		if (status != StatusCode::Success || !function)
+		{
+			ReportHostError("Failed to get [UnmanagedCallersOnly] method '" + std::string(InMethodName) + "' of '" + std::string(InTypeName)
+				+ "' from the default load context (status: " + std::to_string(status) + ").");
+			return nullptr;
+		}
+
+		return function;
 	}
 
 #ifdef CORAL_WINDOWS
