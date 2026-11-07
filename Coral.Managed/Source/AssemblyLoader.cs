@@ -33,6 +33,15 @@ public static class AssemblyLoader
 	private static readonly int CORAL_ALC_CACHE_ID = -1;
 	private static readonly AssemblyLoadContext? s_CoralAssemblyLoadContext;
 
+	// Non-collectible contexts whose assemblies every other context shares, such as a host API
+	// library that every script context references. Resolved by name before a context probes its
+	// own folders, so each is loaded once however many contexts reference it. Never unloaded.
+	private static readonly List<AssemblyLoadContext> s_SharedContexts = new();
+	private static readonly HashSet<int> s_SharedContextIds = new();
+	// Each unloaded context, weakly, so a host can check it was freed. Keyed by context id, the
+	// name's hash: creating a context of the same name forgets the entry.
+	private static readonly Dictionary<int, WeakReference> s_UnloadedContexts = new();
+
 	static AssemblyLoader()
 	{
 		s_AssemblyLoadErrorLookup.Add(typeof(BadImageFormatException), AssemblyLoadStatus.InvalidAssembly);
@@ -99,6 +108,16 @@ public static class AssemblyLoader
 				return cachedAssembly;
 			}
 
+			// A shared context's copy before anything is probed, so there is only ever one.
+			foreach (var shared in s_SharedContexts)
+			{
+				foreach (var assembly in shared.Assemblies)
+				{
+					if (assembly.GetName().Name == InAssemblyName.Name)
+						return assembly;
+				}
+			}
+
 			if (s_CoralAssemblyLoadContext != null)
 			{
 				foreach (var assembly in s_CoralAssemblyLoadContext.Assemblies)
@@ -160,24 +179,68 @@ public static class AssemblyLoader
 	[UnmanagedCallersOnly]
 	internal static int CreateAssemblyLoadContext(NativeString InName, NativeString InDllPath)
 	{
+		return CreateContext(InName, InDllPath, collectible: true);
+	}
+
+	// A context whose assemblies every other context shares (see s_SharedContexts).
+	[UnmanagedCallersOnly]
+	internal static int CreateSharedAssemblyLoadContext(NativeString InName, NativeString InDllPath)
+	{
+		try
+		{
+			return CreateContext(InName, InDllPath, collectible: false);
+		}
+		catch (Exception error)
+		{
+			try { HandleException(error); } catch { }
+			return -1;
+		}
+	}
+
+	private static int CreateContext(NativeString InName, NativeString InDllPath, bool collectible)
+	{
 		string? name = InName;
 
 		if (name == null)
 			return -1;
 
-		var alc = new AssemblyLoadContext(name, true);
+		// A shared context outlives the HostInstance that made it; a later one gets it back.
+		int existingId = name.GetHashCode();
+		if (!collectible && s_SharedContextIds.Contains(existingId))
+			return existingId;
+
+		var alc = new AssemblyLoadContext(name, collectible);
 		alc.Resolving += ResolveAssembly;
-		alc.Unloading += ctx => s_AssemblyCache.Remove(ctx.Name!.GetHashCode());
+		if (collectible)
+			alc.Unloading += ctx => s_AssemblyCache.Remove(ctx.Name!.GetHashCode());
 
 		int contextId = name.GetHashCode();
+		// A new context under an unloaded one's name is live, so QueryContextCollected forgets it.
+		s_UnloadedContexts.Remove(contextId);
 		s_AssemblyContexts.Add(contextId, alc);
 		s_AssemblyCache.Add(contextId, new());
+		if (!collectible)
+		{
+			s_SharedContexts.Add(alc);
+			s_SharedContextIds.Add(contextId);
+		}
 
 		var path = InDllPath.ToString();
 		LogMessage($"Added ALC '{name}' with ID '{contextId}'", MessageLevel.Trace);
 		s_AlcDllPaths.Add(contextId, (path ?? "").Split(':'));
 
 		return contextId;
+	}
+
+	// 1 once an unloaded context has been freed, 0 while something still holds it, -1 for a
+	// context that was never unloaded. Meaningful after a full collection.
+	[UnmanagedCallersOnly]
+	internal static int QueryContextCollected(int InContextId)
+	{
+		if (!s_UnloadedContexts.TryGetValue(InContextId, out var context))
+			return -1;
+
+		return context.IsAlive ? 0 : 1;
 	}
 
 	[UnmanagedCallersOnly]
@@ -202,6 +265,12 @@ public static class AssemblyLoader
 		if (alc == null)
 		{
 			LogMessage($"AssemblyLoadContext '{InContextId}' was found in dictionary but was null. This is most likely a bug.", MessageLevel.Error);
+			return;
+		}
+
+		if (s_SharedContextIds.Contains(InContextId))
+		{
+			LogMessage($"AssemblyLoadContext '{alc.Name}' is shared by every other context and can't be unloaded.", MessageLevel.Error);
 			return;
 		}
 
@@ -252,6 +321,7 @@ public static class AssemblyLoader
 
 		s_AssemblyContexts.Remove(InContextId);
 		s_AlcDllPaths.Remove(InContextId);
+		s_UnloadedContexts[InContextId] = new WeakReference(alc);
 		alc.Unload();
 	}
 
@@ -288,6 +358,23 @@ public static class AssemblyLoader
 			}
 
 			Assembly? assembly = null;
+
+			// A shared context holds one copy of each assembly; loading it again (from a later
+			// HostInstance, say) returns that copy.
+			if (s_SharedContextIds.Contains(InContextId))
+			{
+				string requested = Path.GetFileNameWithoutExtension(InAssemblyFilePath!);
+				foreach (var loaded in alc.Assemblies)
+				{
+					if (loaded.GetName().Name != requested)
+						continue;
+
+					int loadedId = requested.GetHashCode();
+					s_AssemblyCache[InContextId].TryAdd(loadedId, loaded);
+					s_LastLoadStatus = AssemblyLoadStatus.Success;
+					return loadedId;
+				}
+			}
 
 			using (var file = MemoryMappedFile.CreateFromFile(InAssemblyFilePath!, FileMode.Open, null, 0, MemoryMappedFileAccess.Read))
 			{

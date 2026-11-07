@@ -1,29 +1,90 @@
-# LuckyEngine local additions
+# Fork patches
 
-This records the memory-loading correction added on 2026-09-14; it is not a complete inventory of earlier changes in this Coral checkout.
+Changes this fork makes to upstream Coral (StudioCherno/Coral), and why, so each can be carried
+forward when the fork is updated, or dropped once upstream has an equivalent. The record starts
+with the changes of 2026-09-14; it is not a complete inventory of earlier ones.
 
-`Coral.Native/Source/Coral/Assembly.cpp`: keep `AssemblyLoadContext::LoadAssemblyFromMemory` in parity with file loading for owner context and assembly-local type lookup. Set the owner context ID, reserve the owned local type vector before publishing its element pointers, and populate both local name and ID maps. Each local entry retains its actual managed type ID; names are not resolved through the process-wide cache.
+## Memory-loaded assemblies (2026-09-14)
 
-Without this correction, byte-loaded assemblies report a successful load and populate the legacy global list, while `ManagedAssembly::GetLocalType` always returns null. LuckyEngine deliberately uses local lookup so two live engine load contexts cannot select each other's classes by name. The owner context also belongs to subsequent internal-call registration.
+`Coral.Native/Source/Coral/Assembly.cpp`: `AssemblyLoadContext::LoadAssemblyFromMemory` matches
+file loading for owner context and assembly-local type lookup. It sets the owner context ID,
+reserves the owned local type vector before publishing its element pointers, and populates both
+local name and ID maps. Each local entry retains its actual managed type ID; names are not resolved
+through the process-wide cache.
 
-Native qualification lives in `UnitTests/src/Script/ScriptAuthoringTest.cpp`: a real managed static command uses the ordinary generated authoring glue, and a separate control loads the same DLL into two contexts, checks independent static state, unloads one, then invokes the surviving local type. Reapply this correction when updating the fork unless upstream supplies equivalent local ownership for both loading paths.
+Without this, a byte-loaded assembly reports a successful load and populates the legacy global
+list, while `ManagedAssembly::GetLocalType` always returns null. Local lookup is what keeps two live
+load contexts from selecting each other's classes by name, and later internal-call registration
+uses the owner context. Reapply this when updating the fork unless upstream supplies equivalent
+local ownership for both loading paths.
 
 ## Collectible context cache isolation (2026-09-14)
 
-`Coral.Managed/Source/ManagedObject.cs` keys invocation lookup by the actual managed `Type`, binding flags, method name and complete native parameter signature. Same-named classes from different assemblies or load contexts cannot share a `MethodInfo`. Method equality checks arity before indexing parameter arrays.
+`Coral.Managed/Source/ManagedObject.cs` keys invocation lookup by the actual managed `Type`,
+binding flags, method name and complete native parameter signature. Same-named classes from
+different assemblies or load contexts cannot share a `MethodInfo`. Method equality checks arity
+before indexing parameter arrays.
 
-`AssemblyLoader.cs`, `TypeInterface.cs` and `ReflectionCacheContext.cs` remove only cache entries that reference the quiesced, unloading context. All reflection categories are included, including constructors and events. Constructed framework generics, arrays/pointers/function pointers and reflected member signatures are traced through their component types. Cached attributes retain their declaring member as ownership information: a framework attribute can still belong to a collectible plugin. Debug `GCHandle` tracking uses actual assembly identity instead of an assembly-name hash, so unloading a peer cannot free the surviving context's object handles. These are owner-controlled unload semantics; unloading concurrently with active calls into that same context remains unsupported.
+`AssemblyLoader.cs`, `TypeInterface.cs` and `ReflectionCacheContext.cs` remove only cache entries
+that reference the quiesced, unloading context. All reflection categories are included, including
+constructors and events. Constructed framework generics, arrays/pointers/function pointers and
+reflected member signatures are traced through their component types. Cached attributes retain
+their declaring member as ownership information: a framework attribute can still belong to a
+collectible context's assembly. Debug `GCHandle` tracking uses actual assembly identity instead of
+an assembly-name hash, so unloading a peer cannot free the surviving context's object handles.
+These are owner-controlled unload semantics; unloading concurrently with active calls into that
+same context remains unsupported.
 
-`UniqueList.cs` assigns monotonic positive native handles to reference-identity entries (and their optional declaration owners), with synchronized insertion/removal and no reuse after removal or clear. Runtime object hash codes are dictionary hashes only, never native identity. Exhausting the signed 32-bit handle space raises a managed error instead of wrapping. Native return-value templates in `Type.hpp`, `ManagedObject.hpp` and `Attribute.hpp` initialize their storage so a refused managed lookup does not expose uninitialized native bytes. A default value is not an invocation-success signal; the managed exception/log channel and the authoring bridge's explicit receipts remain authoritative.
+`UniqueList.cs` assigns monotonic positive native handles to reference-identity entries (and their
+optional declaration owners), with synchronized insertion/removal and no reuse after removal or
+clear. Runtime object hash codes are dictionary hashes only, never native identity. Exhausting the
+signed 32-bit handle space raises a managed error instead of wrapping. Native return-value
+templates in `Type.hpp`, `ManagedObject.hpp` and `Attribute.hpp` initialize their storage so a
+refused managed lookup does not expose uninitialized native bytes. A default value is not an
+invocation-success signal: failures are reported through the managed exception and log channel.
 
-The original two-context static-counter regression remains unchanged. The additional `ScriptAuthoringFixture.PeerUnloadPreservesOwnedObjectsAndReflectionHandlesAndRetiresOnlyPeerIds` retains a first-context object, methods, fields, properties, constructors, events and all six attribute owners through peer unload; it also checks framework-attribute and constructed-generic eviction, replacement-load stale handles, overload signatures and subsequent survivor calls. The engine test rebuild must rebuild both `Coral.Managed-Static.csproj` and `UnitTests/ManagedAuthoringFixture/AuthoringFixture.csproj`. The CMake SDK project globs managed sources; Premake must regenerate its generated project after adding the helper source. No generated project file is a maintained patch target.
+The CMake build globs managed sources; a Premake build must regenerate its project after a source
+such as `ReflectionCacheContext.cs` is added. No generated project file is a maintained patch
+target.
 
 ## .NET discovery (2026-11-05)
 
-`cmake/Dotnet.cmake` requires the .NET major in `CORAL_DOTNET_MAJOR_VERSION` (currently 9, the `TargetFramework` of `Coral.Managed/*.csproj`) or newer, and selects more strictly than upstream:
-- **Runtime:** only `Microsoft.NETCore.App` lines count. Upstream took the first listed runtime of any framework, usually ASP.NET Core.
-- **Host pack:** the newest pack of a supported major in the selected SDK's dotnet root, skipping musl packs. Upstream required a pack whose version equalled that runtime's, which fails when a runtime is newer than the SDK's own pack.
+`cmake/Dotnet.cmake` requires the .NET major in `CORAL_DOTNET_MAJOR_VERSION` (currently 9, the
+`TargetFramework` of `Coral.Managed/*.csproj`) or newer, and selects more strictly than upstream:
+- **Runtime:** only `Microsoft.NETCore.App` lines count. Upstream took the first listed runtime of
+  any framework, usually ASP.NET Core.
+- **Host pack:** the newest pack of a supported major in the selected SDK's dotnet root, skipping
+  musl packs. Upstream required a pack whose version equalled that runtime's, which fails when a
+  runtime is newer than the SDK's own pack.
 
 ## Default load context entry points (2026-11-05)
 
-`HostInstance::LoadAssemblyIntoDefaultContext(path)` and `HostInstance::GetDefaultContextFunction(typeName, methodName)` wrap hostfxr's `hdt_load_assembly` and `hdt_get_function_pointer` (with `UNMANAGEDCALLERSONLY_METHOD`), fetched lazily from the same hostfxr context Coral initializes. Coral.Managed itself stays in hostfxr's isolated component context, so an assembly loaded this way must not reference Coral.Managed's types: it would resolve a second copy with a different identity. LuckyEngine's plugin host (`Hazel.Plugins.Host`) uses them to hand native code one table of `[UnmanagedCallersOnly]` pointers instead of going through Coral's reflection invoke. Errors go through the message callback and return false or nullptr; both may be called before `Initialize`, in which case they only fail.
+`HostInstance::LoadAssemblyIntoDefaultContext(path)` and
+`HostInstance::GetDefaultContextFunction(typeName, methodName)` wrap hostfxr's
+`hdt_load_assembly` and `hdt_get_function_pointer` (with `UNMANAGEDCALLERSONLY_METHOD`), fetched
+lazily from the same hostfxr context Coral initializes. Coral.Managed itself stays in hostfxr's
+isolated component context, so an assembly loaded this way must not reference Coral.Managed's
+types: it would resolve a second copy with a different identity. A host can use them to hand
+native code a table of `[UnmanagedCallersOnly]` pointers instead of calling through Coral's
+reflection invoke. Errors go through the message callback and return false or nullptr; both may
+be called before `Initialize`, in which case they only fail.
+
+## Shared load contexts and unload checks (2026-11-07)
+
+`Coral.Managed/Source/AssemblyLoader.cs` gains shared contexts: non-collectible contexts whose
+assemblies every other context resolves by simple name (`CreateSharedAssemblyLoadContext`, native
+`HostInstance::CreateSharedAssemblyLoadContext`). `ResolveAssembly` returns a shared context's copy
+right after the requesting context's own cache, before Coral's own context or any folder is
+probed. A library that many collectible contexts reference, such as a host API that every script
+context uses, is then loaded once, and every context sees the same types.
+
+- A shared context is never unloaded: managed `UnloadContext` refuses it, and so does native
+  `HostInstance::UnloadAssemblyLoadContext`, which leaves its assemblies listed.
+- Creating one under a name that is already shared returns it, and loading an assembly it already
+  holds returns that copy, so a later `HostInstance` in the same process gets the same context
+  back.
+- `UnloadContext` keeps a `WeakReference` to each unloaded context. `QueryContextCollected` (native
+  `HostInstance::IsAssemblyLoadContextCollected`) reads it after a collection, so a host can tell
+  whether something still holds an unloaded context's assemblies.
+  `AssemblyLoadContext::GetContextId` gives native code the id to ask with. Ids are name hashes, so
+  creating a context forgets an unloaded one of the same name.

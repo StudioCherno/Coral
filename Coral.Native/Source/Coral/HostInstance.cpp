@@ -120,8 +120,35 @@ namespace Coral {
 		return alc;
 	}
 
+	AssemblyLoadContext HostInstance::CreateSharedAssemblyLoadContext(std::string_view InName, std::string_view InDllPath)
+	{
+		ScopedString name = String::New(InName);
+		ScopedString dllPath = String::New(InDllPath);
+		AssemblyLoadContext alc;
+		alc.m_ContextId = s_ManagedFunctions.CreateSharedAssemblyLoadContextFptr(name, dllPath);
+		alc.m_IsShared = true;
+		alc.m_Host = this;
+		return alc;
+	}
+
+	std::optional<bool> HostInstance::IsAssemblyLoadContextCollected(int32_t InContextId) const
+	{
+		const int32_t collected = s_ManagedFunctions.QueryContextCollectedFptr(InContextId);
+		if (collected < 0)
+			return std::nullopt;
+
+		return collected != 0;
+	}
+
 	void HostInstance::UnloadAssemblyLoadContext(AssemblyLoadContext& InLoadContext)
 	{
+		// The managed side refuses a shared context too; this keeps its assemblies listed.
+		if (InLoadContext.m_IsShared)
+		{
+			MessageCallback("A shared AssemblyLoadContext can't be unloaded", MessageLevel::Error);
+			return;
+		}
+
 		s_ManagedFunctions.UnloadAssemblyLoadContextFptr(InLoadContext.m_ContextId);
 		InLoadContext.m_ContextId = -1;
 		InLoadContext.m_LoadedAssemblies.Clear();
@@ -344,6 +371,8 @@ namespace Coral {
 	{
 		s_ManagedFunctions.CreateAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<CreateAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("CreateAssemblyLoadContext"));
 		s_ManagedFunctions.UnloadAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<UnloadAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("UnloadAssemblyLoadContext"));
+		s_ManagedFunctions.CreateSharedAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<CreateAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("CreateSharedAssemblyLoadContext"));
+		s_ManagedFunctions.QueryContextCollectedFptr = LoadCoralManagedFunctionPtr<QueryContextCollectedFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("QueryContextCollected"));
 		s_ManagedFunctions.LoadAssemblyFptr = LoadCoralManagedFunctionPtr<LoadAssemblyFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssembly"));
 		s_ManagedFunctions.LoadAssemblyFromMemoryFptr = LoadCoralManagedFunctionPtr<LoadAssemblyFromMemoryFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("LoadAssemblyFromMemory"));
 		s_ManagedFunctions.UnloadAssemblyLoadContextFptr = LoadCoralManagedFunctionPtr<UnloadAssemblyLoadContextFn>(CORAL_STR("Coral.Managed.AssemblyLoader, Coral.Managed"), CORAL_STR("UnloadAssemblyLoadContext"));

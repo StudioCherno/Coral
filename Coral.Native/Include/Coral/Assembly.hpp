@@ -67,10 +67,15 @@ namespace Coral {
 		ManagedAssembly& LoadAssembly(std::string_view InFilePath);
 		ManagedAssembly& LoadAssemblyFromMemory(const std::byte* data, int64_t dataLength);
 		const StableVector<ManagedAssembly>& GetLoadedAssemblies() const { return m_LoadedAssemblies; }
+		// The managed context's id, -1 once unloaded (see
+		// HostInstance::IsAssemblyLoadContextCollected).
+		int32_t GetContextId() const { return m_ContextId; }
 
 	private:
 		int32_t m_ContextId;
 		StableVector<ManagedAssembly> m_LoadedAssemblies;
+		// Made by HostInstance::CreateSharedAssemblyLoadContext, so never unloaded.
+		bool m_IsShared = false;
 
 		HostInstance* m_Host = nullptr;
 

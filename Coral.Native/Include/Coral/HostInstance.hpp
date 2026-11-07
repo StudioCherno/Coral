@@ -6,6 +6,7 @@
 #include "ManagedObject.hpp"
 
 #include <functional>
+#include <optional>
 
 namespace Coral {
 
@@ -44,6 +45,18 @@ namespace Coral {
 		// `InDllPath` is a colon-separated list of paths from which AssemblyLoader will try and resolve load paths at runtime.
 		// This does not affect the behaviour of LoadAssembly from native code.
 		AssemblyLoadContext CreateAssemblyLoadContext(std::string_view InName, std::string_view InDllPath);
+
+		// A context that is never unloaded, whose assemblies every other context resolves by name
+		// before probing its own folders, so they are loaded once however many contexts reference
+		// them: a host API library shared by every script context, say. Its own references
+		// resolve as any context's do. UnloadAssemblyLoadContext refuses it. Creating one again
+		// under the same name, from this or a later HostInstance, returns the same context.
+		AssemblyLoadContext CreateSharedAssemblyLoadContext(std::string_view InName, std::string_view InDllPath);
+
+		// After UnloadAssemblyLoadContext and a full collection, whether the context was freed.
+		// Nullopt for a context that was never unloaded, or that a new context of the same name
+		// has replaced. Takes the id the context had before it was unloaded.
+		std::optional<bool> IsAssemblyLoadContextCollected(int32_t InContextId) const;
 
 		// Loads an assembly into the runtime's default load context, which never unloads (hostfxr's hdt_load_assembly,
 		// .NET 8+). Coral.Managed itself lives in an isolated component context, so assemblies loaded here can't share
