@@ -49,13 +49,23 @@ target.
 
 ## .NET discovery (2026-11-05)
 
-`cmake/Dotnet.cmake` requires the .NET major in `CORAL_DOTNET_MAJOR_VERSION` (currently 9, the
+`cmake/Dotnet.cmake` requires the .NET major in `CORAL_DOTNET_MAJOR_VERSION` (currently 10, the
 `TargetFramework` of `Coral.Managed/*.csproj`) or newer, and selects more strictly than upstream:
 - **Runtime:** only `Microsoft.NETCore.App` lines count. Upstream took the first listed runtime of
   any framework, usually ASP.NET Core.
 - **Host pack:** the newest pack of a supported major in the selected SDK's dotnet root, skipping
   musl packs. Upstream required a pack whose version equalled that runtime's, which fails when a
   runtime is newer than the SDK's own pack.
+- **nethost:** a cached `NETHOST` from another pack, such as the previous major's after a move to a
+  new one, is looked up again in the selected pack, so the library matches its headers. Upstream's
+  `find_library` kept the cached one.
+
+## Coral.Managed built with dotnet build everywhere (2026-11-11)
+
+`cmake/CMakeLists.txt` builds `Coral.Managed` with `dotnet build` on every generator. Upstream added
+the `.csproj` to Visual Studio solutions with `include_external_msproject`, which Visual Studio
+2022's MSBuild 17.14 builds with the newest SDK it can load; the .NET 10 SDK needs MSBuild 18, so
+that fell back to .NET 9's and failed to target `net10.0`.
 
 ## Default load context entry points (2026-11-05)
 

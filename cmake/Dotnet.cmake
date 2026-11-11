@@ -4,7 +4,7 @@
 # runtime and an SDK of that major or newer; a newer major runs Coral.Managed through RollForward=Major.
 function(LinkDotnetNetHost DOTNET TARGET)
 	# Keep in step with the TargetFramework of Coral.Managed/*.csproj.
-	set(CORAL_DOTNET_MAJOR_VERSION 9)
+	set(CORAL_DOTNET_MAJOR_VERSION 10)
 
 	execute_process(
 		COMMAND ${DOTNET} --list-runtimes
@@ -97,6 +97,18 @@ function(LinkDotnetNetHost DOTNET TARGET)
 	block()
 		if(NOT WINDOWS)
 			list(REMOVE_ITEM CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_SHARED_LIBRARY_SUFFIX})
+		endif()
+
+		# find_library keeps a cached result, so a nethost from another pack (the previous major's,
+		# once the SDK has moved on) is looked up again, to match the headers above.
+		if(NETHOST)
+			file(TO_CMAKE_PATH "${HOST_PACK_DIR}/" PACK_PREFIX)
+			file(TO_CMAKE_PATH "${NETHOST}" CACHED_NETHOST)
+			string(FIND "${CACHED_NETHOST}" "${PACK_PREFIX}" PACK_AT)
+			if(NOT PACK_AT EQUAL 0)
+				message(STATUS "Replacing nethost ${NETHOST}, which isn't from the selected host pack")
+				unset(NETHOST CACHE)
+			endif()
 		endif()
 
 		find_library(
