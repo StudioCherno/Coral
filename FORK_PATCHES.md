@@ -60,12 +60,13 @@ target.
   new one, is looked up again in the selected pack, so the library matches its headers. Upstream's
   `find_library` kept the cached one.
 
-## Coral.Managed built with dotnet build everywhere (2026-11-11)
+## Coral.Managed in the solution from Visual Studio 2026 only (2026-11-11)
 
-`cmake/CMakeLists.txt` builds `Coral.Managed` with `dotnet build` on every generator. Upstream added
-the `.csproj` to Visual Studio solutions with `include_external_msproject`, which Visual Studio
-2022's MSBuild 17.14 builds with the newest SDK it can load; the .NET 10 SDK needs MSBuild 18, so
-that fell back to .NET 9's and failed to target `net10.0`.
+`cmake/CMakeLists.txt` adds `Coral.Managed` to the solution with `include_external_msproject`, as
+upstream does, only for the Visual Studio 18 2026 generator and later. Every other generator,
+Visual Studio 2022's included, builds it with `dotnet build`. Visual Studio 2022's MSBuild 17.14
+builds with the newest SDK it can load; the .NET 10 SDK needs MSBuild 18, so that fell back to
+.NET 9's and failed to target `net10.0`.
 
 ## Default load context entry points (2026-11-05)
 

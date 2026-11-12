@@ -12,17 +12,31 @@ find_program(DOTNET NAMES dotnet REQUIRED)
 
 set(CORAL_ROOT ${CMAKE_CURRENT_LIST_DIR}/..)
 
-# Coral.Managed: the managed (.NET) half of Coral, built with dotnet build on every generator.
-# Visual Studio's own MSBuild can't stand in: the .NET 10 SDK needs MSBuild 18, and Visual Studio
-# 2022's MSBuild 17.14 falls back to an older SDK that can't target net10.0.
+# Coral.Managed: the managed (.NET) half of Coral. On Visual Studio 2026 and later we add the
+# .csproj to the solution as-is via include_external_msproject so VS shows it as a real C# project
+# (sources, IntelliSense, NuGet). PLATFORM "Any CPU" maps the solution's x64 config onto the
+# project, which VS otherwise refuses to build. Everywhere else, Visual Studio 2022 included, we run
+# dotnet build: the .NET 10 SDK needs MSBuild 18, and Visual Studio 2022's MSBuild 17.14 falls back
+# to an older SDK that can't target net10.0. Both branches define the Coral.Managed target, so
+# dependencies behave the same.
 set(CORAL_MANAGED_CSPROJ "${CORAL_ROOT}/Coral.Managed/Coral.Managed-Static.csproj")
-add_custom_target(Coral.Managed ALL
-	COMMAND ${DOTNET} build "${CORAL_MANAGED_CSPROJ}"
-		--configuration $<CONFIG>
-		--output "${CORAL_ROOT}/Build/$<CONFIG>"
-	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	COMMENT "Building Coral managed code"
-	VERBATIM)
+set(CORAL_MANAGED_IN_SOLUTION OFF)
+if(CMAKE_GENERATOR MATCHES "^Visual Studio ([0-9]+)")
+	if(CMAKE_MATCH_1 GREATER_EQUAL 18)
+		set(CORAL_MANAGED_IN_SOLUTION ON)
+	endif()
+endif()
+if(CORAL_MANAGED_IN_SOLUTION)
+	include_external_msproject(Coral.Managed "${CORAL_MANAGED_CSPROJ}" PLATFORM "Any CPU")
+else()
+	add_custom_target(Coral.Managed ALL
+		COMMAND ${DOTNET} build "${CORAL_MANAGED_CSPROJ}"
+			--configuration $<CONFIG>
+			--output "${CORAL_ROOT}/Build/$<CONFIG>"
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMENT "Building Coral managed code"
+		VERBATIM)
+endif()
 
 add_library(Coral.Native STATIC)
 
