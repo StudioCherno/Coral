@@ -66,9 +66,9 @@ public static class Marshalling
 				Marshal.WriteIntPtr(OutValue, IntPtr.Zero);
 			}
 		}
-		else if (type == typeof(string) && InValue != null)
+		else if (type == typeof(string))
 		{
-			NativeString nativeString = (NativeString) (string) InValue;
+			NativeString nativeString = InValue != null ? (NativeString)(string)InValue : NativeString.Null();
 			Marshal.StructureToPtr(nativeString, OutValue, false);
 		}
 		else if (type == typeof(bool) && InValue != null)
